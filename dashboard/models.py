@@ -1,50 +1,56 @@
 from django.db import models
-import os
 
-DEPARTMENT_CHOICES = [
-    ('cardiology', 'Cardiology'),
-    ('neurology', 'Neurology'),
-    ('orthopedics', 'Orthopedics'),
-    # Add more departments as needed
+DEPARTMENTS_NAMES = [
+    'sim-center',
+    'oncology',
+    'primary-care',
+    'neurology',
+    'fmaily-medicine',
 ]
 
-VISIT_TYPE_CHOICES = [
+ENCOUNTER_MEDIA_TYPE_CHOICES = [
+    ('VATO', 'Video + Audio + Transcript + Annotations'),
     ('VAT', 'Video + Audio + Transcript'),
+    ('VA', 'Video + Audio'),
+    ('AT', 'Audio + Transcript'),
+    ('VT', 'Video + Transcript'),
+    ('VO', 'Video + Annotations'),
+    ('AO', 'Audio + Annotations'),
+    ('TO', 'Transcript + Annotations'),
+    ('VAT', 'Video + Audio + Transcript'),
+    ('VAO', 'Video + Audio + Annotations'),
+    ('VTO', 'Video + Transcript + Annotations'),
+    ('ATO', 'Audio + Transcript + Annotations'),
     ('V', 'Video Only'),
     ('A', 'Audio Only'),
     ('T', 'Transcript Only'),
+    ('O', 'Annotations Only'),
     ('OTH', 'Others'),
 ]
 
+BOOLEAN_CHOICES = [
+    (True, 'Yes'),
+    (False, 'No'),
+]
+
+
 class Department(models.Model):
-    department_name = models.CharField(max_length=200, choices=DEPARTMENT_CHOICES)
+    name = models.CharField(max_length=200)
 
     def __str__(self):
-        return self.department_name.capitalize()
+        return self.name
+
 
 class Encounter(models.Model):
     case_id = models.CharField(max_length=200, unique=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
-    visit_type = models.CharField(max_length=10, choices=VISIT_TYPE_CHOICES, default='VAT')
-    audio = models.FileField(upload_to='audio/', blank=True, null=True)
-    video = models.FileField(upload_to='video/', blank=True, null=True)
-    transcript = models.FileField(upload_to='transcript/', blank=True, null=True)
-    other_files = models.FileField(upload_to='other_files/', blank=True, null=True)
+    visit_type = models.CharField(
+        max_length=10, choices=ENCOUNTER_MEDIA_TYPE_CHOICES, default='VAT')
+    is_deidentified = models.BooleanField(
+        choices=BOOLEAN_CHOICES, default=False)
+    is_restricted = models.BooleanField(choices=BOOLEAN_CHOICES, default=True)
+    visit_date = models.DateField()
     timestamp = models.DateTimeField(auto_now_add=True)
-
-    def save(self, *args, **kwargs):
-        try:
-            existing = Encounter.objects.get(case_id=self.case_id)
-            self.pk = existing.pk  # set the primary key to the existing object to update it
-        except Encounter.DoesNotExist:
-            pass  # if the Encounter does not exist, do nothing and proceed with the save
-
-        for field_name in ['audio', 'video', 'transcript', 'other_files']:
-            field = getattr(self, field_name)
-            if field:
-                filename = self.case_id + os.path.splitext(field.name)[1]
-                field.save(filename, field.file, save=False)
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.case_id
