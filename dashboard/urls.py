@@ -6,6 +6,7 @@ router = DefaultRouter()
 router.register(r'encounters', EncounterViewSet, basename='encounter')
 router.register(r'departments', DepartmentViewSet, basename='department')
 
+
 urlpatterns = [
     path('api/', include(router.urls)),
     path('api/encounter_media_type_choices/', EncounterMediaTypeChoicesView.as_view(), name='encounter_media_type_choices'),

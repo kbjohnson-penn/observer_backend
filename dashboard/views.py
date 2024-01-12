@@ -10,6 +10,11 @@ class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        data = {item['id']: item['name'] for item in serializer.data}
+        return Response(data)
 
 class EncounterViewSet(viewsets.ModelViewSet):
     queryset = Encounter.objects.all()
