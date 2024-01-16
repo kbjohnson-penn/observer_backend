@@ -9,8 +9,9 @@ class DepartmentSerializer(serializers.ModelSerializer):
         model = Department
         fields = ['id', 'name']
 
+
 class EncounterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Encounter
-        fields = ['id', 'case_id', 'department', 'visit_type',
+        fields = ['id', 'case_id', 'department', 'visit_type', 'racial_category', 'ethnic_category', 'gender', 'age_range',
                   'is_deidentified', 'is_restricted', 'visit_date']
