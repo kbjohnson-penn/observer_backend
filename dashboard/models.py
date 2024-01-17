@@ -9,23 +9,10 @@ DEPARTMENTS_NAMES = [
 ]
 
 ENCOUNTER_MEDIA_TYPE_CHOICES = [
-    ('VATO', 'Video + Audio + Transcript + Annotations'),
-    ('VAT', 'Video + Audio + Transcript'),
-    ('VA', 'Video + Audio'),
-    ('AT', 'Audio + Transcript'),
-    ('VT', 'Video + Transcript'),
-    ('VO', 'Video + Annotations'),
-    ('AO', 'Audio + Annotations'),
-    ('TO', 'Transcript + Annotations'),
-    ('VAT', 'Video + Audio + Transcript'),
-    ('VAO', 'Video + Audio + Annotations'),
-    ('VTO', 'Video + Transcript + Annotations'),
-    ('ATO', 'Audio + Transcript + Annotations'),
-    ('V', 'Video Only'),
-    ('A', 'Audio Only'),
-    ('T', 'Transcript Only'),
-    ('O', 'Annotations Only'),
-    ('OTH', 'Others'),
+    ('Video', 'Video'),
+    ('Audio', 'Audio'),
+    ('Transcript', 'Transcript'),
+    ('Annotation', 'Annotation'),
 ]
 
 BOOLEAN_CHOICES = [
@@ -64,7 +51,15 @@ AGE_RANGES = [
     ('61-70', '61-70'),
     ('71-80', '71-80'),
     ('81+', '81+'),
+    ('UN', 'Unknown or Not Reported'),
 ]
+
+
+class Choice(models.Model):
+    name = models.CharField(max_length=10, choices=ENCOUNTER_MEDIA_TYPE_CHOICES)
+
+    def __str__(self):
+        return self.name
 
 
 class Department(models.Model):
@@ -85,8 +80,7 @@ class Encounter(models.Model):
         max_length=2, choices=GENDER_CATEGORIES, null=True)
     age_range = models.CharField(max_length=5, choices=AGE_RANGES, null=True)
     visit_date = models.DateField()
-    visit_type = models.CharField(
-        max_length=10, choices=ENCOUNTER_MEDIA_TYPE_CHOICES, default='VAT')
+    media_types = models.ManyToManyField(Choice)
     is_deidentified = models.BooleanField(
         choices=BOOLEAN_CHOICES, default=False)
     is_restricted = models.BooleanField(choices=BOOLEAN_CHOICES, default=True)
