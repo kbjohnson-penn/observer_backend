@@ -1,50 +1,90 @@
 from django.db import models
-import os
 
-DEPARTMENT_CHOICES = [
-    ('cardiology', 'Cardiology'),
-    ('neurology', 'Neurology'),
-    ('orthopedics', 'Orthopedics'),
-    # Add more departments as needed
+DEPARTMENTS_NAMES = [
+    'sim-center',
+    'oncology',
+    'primary-care',
+    'neurology',
+    'fmaily-medicine',
 ]
 
-VISIT_TYPE_CHOICES = [
-    ('VAT', 'Video + Audio + Transcript'),
-    ('V', 'Video Only'),
-    ('A', 'Audio Only'),
-    ('T', 'Transcript Only'),
-    ('OTH', 'Others'),
+ENCOUNTER_MEDIA_TYPE_CHOICES = [
+    ('Video', 'Video'),
+    ('Audio', 'Audio'),
+    ('Transcript', 'Transcript'),
+    ('Annotation', 'Annotation'),
 ]
 
-class Department(models.Model):
-    department_name = models.CharField(max_length=200, choices=DEPARTMENT_CHOICES)
+BOOLEAN_CHOICES = [
+    (True, 'Yes'),
+    (False, 'No'),
+]
+
+RACIAL_CATEGORIES = [
+    ('AI', 'American Indian or Alaska Native'),
+    ('A', 'Asian'),
+    ('NHPI', 'Native Hawaiian or Other Pacific Islander'),
+    ('B', 'Black or African American'),
+    ('W', 'White'),
+    ('M', 'More than One Race'),
+    ('UN', 'Unknown or Not Reported'),
+]
+
+ETHNIC_CATEGORIES = [
+    ('H', 'Hispanic or Latino'),
+    ('NH', 'Not Hispanic or Latino'),
+    ('UN', 'Unknown or Not Reported Ethnicity'),
+]
+
+GENDER_CATEGORIES = [
+    ('M', 'Male'),
+    ('F', 'Female'),
+    ('UN', 'Unknown or Not Reported')
+]
+
+AGE_RANGES = [
+    ('18-20', '18-20'),
+    ('21-30', '21-30'),
+    ('31-40', '31-40'),
+    ('41-50', '41-50'),
+    ('51-60', '51-60'),
+    ('61-70', '61-70'),
+    ('71-80', '71-80'),
+    ('81+', '81+'),
+    ('UN', 'Unknown or Not Reported'),
+]
+
+
+class Choice(models.Model):
+    name = models.CharField(max_length=10, choices=ENCOUNTER_MEDIA_TYPE_CHOICES)
 
     def __str__(self):
-        return self.department_name.capitalize()
+        return self.name
+
+
+class Department(models.Model):
+    name = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.name
+
 
 class Encounter(models.Model):
     case_id = models.CharField(max_length=200, unique=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
-    visit_type = models.CharField(max_length=10, choices=VISIT_TYPE_CHOICES, default='VAT')
-    audio = models.FileField(upload_to='audio/', blank=True, null=True)
-    video = models.FileField(upload_to='video/', blank=True, null=True)
-    transcript = models.FileField(upload_to='transcript/', blank=True, null=True)
-    other_files = models.FileField(upload_to='other_files/', blank=True, null=True)
+    racial_category = models.CharField(
+        max_length=4, choices=RACIAL_CATEGORIES, null=True)
+    ethnic_category = models.CharField(
+        max_length=2, choices=ETHNIC_CATEGORIES, null=True)
+    gender = models.CharField(
+        max_length=2, choices=GENDER_CATEGORIES, null=True)
+    age_range = models.CharField(max_length=5, choices=AGE_RANGES, null=True)
+    visit_date = models.DateField()
+    media_types = models.ManyToManyField(Choice)
+    is_deidentified = models.BooleanField(
+        choices=BOOLEAN_CHOICES, default=False)
+    is_restricted = models.BooleanField(choices=BOOLEAN_CHOICES, default=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-
-    def save(self, *args, **kwargs):
-        try:
-            existing = Encounter.objects.get(case_id=self.case_id)
-            self.pk = existing.pk  # set the primary key to the existing object to update it
-        except Encounter.DoesNotExist:
-            pass  # if the Encounter does not exist, do nothing and proceed with the save
-
-        for field_name in ['audio', 'video', 'transcript', 'other_files']:
-            field = getattr(self, field_name)
-            if field:
-                filename = self.case_id + os.path.splitext(field.name)[1]
-                field.save(filename, field.file, save=False)
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.case_id
