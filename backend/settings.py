@@ -14,6 +14,10 @@ from pathlib import Path
 from decouple import config
 import os
 
+# Added to fix mysqlclient
+import pymysql
+pymysql.install_as_MySQLdb()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,7 +31,11 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+
+APPEND_SLASH = True
+
+CSRF_TRUSTED_ORIGINS = ['https://observer-dev.pmacs.upenn.edu']
 
 CORS_ALLOW_ALL_ORIGINS = True  # If you want to allow all origins
 
@@ -127,10 +135,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = '/media/'
+STATIC_URL = '/static/' 
+STATICFILES_DIRS=(os.path.join(BASE_DIR,'media/assets/'),)
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
