@@ -1,6 +1,38 @@
 # Observer Backend
 
-## Setting up the MySQL Database
+## Installation
+
+Follow these steps to get your development environment set up:
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/kbjohnson-penn/observer_backend.git
+cd observer_backend
+```
+
+2. Set up a virtual environment:
+
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+```
+
+3. Install the requirements:
+
+```bash
+pip install -r requirements.txt
+```
+
+4. Install [MySQL](https://www.mysql.com/) or [MariaDB](https://mariadb.com/) database.
+
+## Configuration
+
+Before running the project, configure your environment variables:
+
+Copy `.env.example` to `.env` and fill in the necessary settings.
+
+### Setting up the MySQL Database
 
 1. **Open MySQL command line tool or MySQL Shell**: You can do this by typing `mysql -u root -p` in your terminal and then entering your MySQL root password when prompted.
 
@@ -21,3 +53,32 @@ CREATE USER 'observer'@'localhost' IDENTIFIED BY 'observer123';
 GRANT ALL PRIVILEGES ON observer_dashboard_database.* TO 'observer'@'localhost';
 FLUSH PRIVILEGES;
 ```
+
+## Running the Project
+
+Apply the database migrations to create the database schema
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+Create a Django admin user
+
+```bash
+python manage.py createsuperuser
+```
+
+To run the Django project locally:
+
+```bash
+python manage.py runserver
+```
+
+## Contributing
+
+Please read [CONTRIBUTING](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
+
+## Changelog
+
+Check [CHANGELOG](CHANGELOG.md) to get the version details.
