@@ -1,26 +1,32 @@
 from rest_framework import serializers
-from .models import Encounter, Department, Choice
-import os
-from django.conf import settings
+from .models import Patient, Provider, Department, MultiModalDataPath, Encounter, AnonymizedMapping
 
-
-class ChoiceSerializer(serializers.ModelSerializer):
+class PatientSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Choice
-        fields = ['id', 'name']
+        model = Patient
+        fields = '__all__'
 
+class ProviderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Provider
+        fields = '__all__'
 
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
-        fields = ['id', 'name']
+        fields = '__all__'
 
+class MultiModalDataPathSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MultiModalDataPath
+        fields = '__all__'
 
 class EncounterSerializer(serializers.ModelSerializer):
-    department = serializers.StringRelatedField()
-    media_types = serializers.StringRelatedField(many=True)
-
     class Meta:
         model = Encounter
-        fields = ['id', 'case_id', 'department', 'media_types', 'racial_category', 'ethnic_category', 'gender', 'age_range',
-                  'is_deidentified', 'is_restricted', 'visit_date']
+        fields = '__all__'
+
+class AnonymizedMappingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AnonymizedMapping
+        fields = '__all__'
