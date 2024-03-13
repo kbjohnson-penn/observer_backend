@@ -4,21 +4,30 @@ from django.conf import settings
 # Configure the connection to your Neo4j database
 config.DATABASE_URL = settings.NEO4J_BOLT_URL
 
-# Example graph model definitions
+
+class GraphPatient(StructuredNode):
+    patient_id = StringProperty(unique_index=True)
+    date_of_birth = DateProperty()
+    sex = StringProperty()
+    race = StringProperty()
+    ethnicity = StringProperty()
 
 
-class AnonymizedPatient(StructuredNode):
-    uid = UniqueIdProperty()
-    anonymized_id = StringProperty(unique_index=True)
+class GraphProvider(StructuredNode):
+    provider_id = StringProperty(unique_index=True)
+    date_of_birth = DateProperty()
+    sex = StringProperty()
+    race = StringProperty()
+    ethnicity = StringProperty()
 
 
-class AnonymizedProvider(StructuredNode):
-    uid = UniqueIdProperty()
-    anonymized_id = StringProperty(unique_index=True)
+class GraphDepartment(StructuredNode):
+    name = StringProperty(unique_index=True)
 
 
-class AnonymizedEncounter(StructuredNode):
-    uid = UniqueIdProperty()
+class GraphEncounter(StructuredNode):
+    case_id = StringProperty(unique_index=True)
     encounter_date = DateProperty()
-    patient = RelationshipTo(AnonymizedPatient, "HAS_PATIENT")
-    provider = RelationshipTo(AnonymizedProvider, "HAS_PROVIDER")
+    patient = RelationshipTo('GraphPatient', 'VISITED_BY')
+    provider = RelationshipTo('GraphProvider', 'ATTENDED_BY')
+    department = RelationshipTo('GraphDepartment', 'BELONGS_TO')

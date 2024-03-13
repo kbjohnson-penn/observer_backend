@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Patient, Provider, Department, MultiModalDataPath, Encounter, AnonymizedMapping
+from .models import Patient, Provider, Department, MultiModalDataPath, Encounter
 
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
@@ -24,9 +24,4 @@ class MultiModalDataPathSerializer(serializers.ModelSerializer):
 class EncounterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Encounter
-        fields = '__all__'
-
-class AnonymizedMappingSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AnonymizedMapping
         fields = '__all__'
