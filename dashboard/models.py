@@ -22,7 +22,7 @@ ETHNIC_CATEGORIES = [
     ('UN', 'Unknown or Not Reported Ethnicity'),
 ]
 
-GENDER_CATEGORIES = [
+SEX_CATEGORIES = [
     ('M', 'Male'),
     ('F', 'Female'),
     ('UN', 'Unknown or Not Reported')
@@ -34,7 +34,7 @@ class Patient(models.Model):
     first_name = models.CharField(max_length=200)
     last_name = models.CharField(max_length=200)
     date_of_birth = models.DateField()
-    sex = models.CharField(max_length=5, choices=GENDER_CATEGORIES)
+    sex = models.CharField(max_length=5, choices=SEX_CATEGORIES)
     race = models.CharField(max_length=5, choices=RACIAL_CATEGORIES)
     ethnicity = models.CharField(max_length=5, choices=ETHNIC_CATEGORIES)
 
@@ -47,7 +47,7 @@ class Provider(models.Model):
     first_name = models.CharField(max_length=200)
     last_name = models.CharField(max_length=200)
     date_of_birth = models.DateField()
-    sex = models.CharField(max_length=5, choices=GENDER_CATEGORIES)
+    sex = models.CharField(max_length=5, choices=SEX_CATEGORIES)
     race = models.CharField(max_length=5, choices=RACIAL_CATEGORIES)
     ethnicity = models.CharField(max_length=5, choices=ETHNIC_CATEGORIES)
 
@@ -64,20 +64,22 @@ class Department(models.Model):
 
 class MultiModalDataPath(models.Model):
     multi_modal_data_id = models.CharField(max_length=200, unique=True)
-    provider_view = models.FileField(
-        upload_to='media/encouter/provider_views/', null=True, blank=True)
-    patient_view = models.FileField(
-        upload_to='media/encouter/patient_views/', null=True, blank=True)
-    room_view = models.FileField(
-        upload_to='media/encouter/room_views/', null=True, blank=True)
-    audio = models.FileField(
-        upload_to='media/encouter/audios/', null=True, blank=True)
-    transcript = models.FileField(
-        upload_to='media/encouter/transcripts/', null=True, blank=True)
-    patient_survey_path = models.FileField(
-        upload_to='media/encouter/patient_surveys/', null=True, blank=True)
-    provider_survey_path = models.FileField(
-        upload_to='media/encouter/provider_surveys/', null=True, blank=True)
+    encounter = models.OneToOneField(
+        'Encounter',
+        on_delete=models.CASCADE,
+        related_name='multi_modal_data',
+        null=True,
+        blank=True
+    )
+    provider_view = models.URLField(max_length=200, null=True, blank=True)
+    patient_view = models.URLField(max_length=200, null=True, blank=True)
+    room_view = models.URLField(max_length=200, null=True, blank=True)
+    audio = models.URLField(max_length=200, null=True, blank=True)
+    transcript = models.URLField(max_length=200, null=True, blank=True)
+    patient_survey_path = models.URLField(
+        max_length=200, null=True, blank=True)
+    provider_survey_path = models.URLField(
+        max_length=200, null=True, blank=True)
 
     def __str__(self):
         return f'{self.multi_modal_data_id}'
@@ -91,11 +93,9 @@ class Encounter(models.Model):
         Patient, on_delete=models.CASCADE, null=True, blank=True)
     department = models.ForeignKey(
         Department, on_delete=models.CASCADE, null=True, blank=True)
-    multi_modal_data = models.ForeignKey(
-        MultiModalDataPath, on_delete=models.CASCADE, null=True, blank=True)
-    encounter_date = models.DateField(default=datetime.now)
-    encounter_time = models.DateTimeField(default=datetime.now)
-    overall_satisfaction = models.IntegerField(default=0)
+    encounter_date_and_time = models.DateTimeField(default=datetime.now)
+    patient_satisfaction = models.IntegerField(default=0)
+    provider_satisfaction = models.IntegerField(default=0)
     is_deidentified = models.BooleanField(
         choices=BOOLEAN_CHOICES, default=False)
     is_restricted = models.BooleanField(choices=BOOLEAN_CHOICES, default=True)

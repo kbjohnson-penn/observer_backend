@@ -39,9 +39,6 @@ CSRF_TRUSTED_ORIGINS = ['https://observer-dev.pmacs.upenn.edu']
 
 CORS_ALLOW_ALL_ORIGINS = True  # If you want to allow all origins
 
-# Neo4j database connection settings
-# NEO4J_BOLT_URL = f"bolt://{config('GRAPH_DB_USER')}:{config('GRAPH_DB_PASSWORD')}@{config('GRAPH_DB_HOST')}:{config('GRAPH_DB_PORT')}"
-
 # Application definition
 
 INSTALLED_APPS = [
