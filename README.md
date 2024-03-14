@@ -78,7 +78,7 @@ python manage.py runserver
 - Open [http://127.0.0.1:8000/api](http://127.0.0.1:8000/api) to view all the API routes.
 - Open [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin) to login and add new records to the database.
 
-**Note**: Always migrate databases after any changes are applied to the models.
+**Note**: Always migrate database after any changes are applied to the models.
 
 ## Contributing
 
