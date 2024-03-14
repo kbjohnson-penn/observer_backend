@@ -58,4 +58,4 @@ class EncounterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Encounter
         fields = ['case_id', 'provider', 'patient', 'department', 'multi_modal_data',
-                  'encounter_date', 'encounter_time', 'is_deidentified', 'is_restricted', 'timestamp']
+                  'encounter_date', 'encounter_time', 'overall_satisfaction', 'is_deidentified', 'is_restricted', 'timestamp']
