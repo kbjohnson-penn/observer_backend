@@ -137,3 +137,6 @@ GitHub.sublime-settings
 
 # Media files
 media/*
+
+# System Files
+.DS_Store

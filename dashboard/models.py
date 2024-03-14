@@ -1,19 +1,5 @@
 from django.db import models
-
-DEPARTMENTS_NAMES = [
-    'sim-center',
-    'oncology',
-    'primary-care',
-    'neurology',
-    'fmaily-medicine',
-]
-
-ENCOUNTER_MEDIA_TYPE_CHOICES = [
-    ('Video', 'Video'),
-    ('Audio', 'Audio'),
-    ('Transcript', 'Transcript'),
-    ('Annotation', 'Annotation'),
-]
+from datetime import datetime
 
 BOOLEAN_CHOICES = [
     (True, 'Yes'),
@@ -42,49 +28,77 @@ GENDER_CATEGORIES = [
     ('UN', 'Unknown or Not Reported')
 ]
 
-AGE_RANGES = [
-    ('18-20', '18-20'),
-    ('21-30', '21-30'),
-    ('31-40', '31-40'),
-    ('41-50', '41-50'),
-    ('51-60', '51-60'),
-    ('61-70', '61-70'),
-    ('71-80', '71-80'),
-    ('81+', '81+'),
-    ('UN', 'Unknown or Not Reported'),
-]
 
-
-class Choice(models.Model):
-    name = models.CharField(max_length=10, choices=ENCOUNTER_MEDIA_TYPE_CHOICES)
+class Patient(models.Model):
+    patient_id = models.CharField(max_length=200, unique=True)
+    first_name = models.CharField(max_length=200)
+    last_name = models.CharField(max_length=200)
+    date_of_birth = models.DateField()
+    sex = models.CharField(max_length=5, choices=GENDER_CATEGORIES)
+    race = models.CharField(max_length=5, choices=RACIAL_CATEGORIES)
+    ethnicity = models.CharField(max_length=5, choices=ETHNIC_CATEGORIES)
 
     def __str__(self):
-        return self.name
+        return f'{self.patient_id}'
+
+
+class Provider(models.Model):
+    provider_id = models.CharField(max_length=200, unique=True)
+    first_name = models.CharField(max_length=200)
+    last_name = models.CharField(max_length=200)
+    date_of_birth = models.DateField()
+    sex = models.CharField(max_length=5, choices=GENDER_CATEGORIES)
+    race = models.CharField(max_length=5, choices=RACIAL_CATEGORIES)
+    ethnicity = models.CharField(max_length=5, choices=ETHNIC_CATEGORIES)
+
+    def __str__(self):
+        return f'{self.provider_id}'
 
 
 class Department(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
+
+
+class MultiModalDataPath(models.Model):
+    multi_modal_data_id = models.CharField(max_length=200, unique=True)
+    provider_view = models.FileField(
+        upload_to='media/encouter/provider_views/', null=True, blank=True)
+    patient_view = models.FileField(
+        upload_to='media/encouter/patient_views/', null=True, blank=True)
+    room_view = models.FileField(
+        upload_to='media/encouter/room_views/', null=True, blank=True)
+    audio = models.FileField(
+        upload_to='media/encouter/audios/', null=True, blank=True)
+    transcript = models.FileField(
+        upload_to='media/encouter/transcripts/', null=True, blank=True)
+    patient_survey_path = models.FileField(
+        upload_to='media/encouter/patient_surveys/', null=True, blank=True)
+    provider_survey_path = models.FileField(
+        upload_to='media/encouter/provider_surveys/', null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.multi_modal_data_id}'
 
 
 class Encounter(models.Model):
     case_id = models.CharField(max_length=200, unique=True)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE)
-    racial_category = models.CharField(
-        max_length=4, choices=RACIAL_CATEGORIES, null=True)
-    ethnic_category = models.CharField(
-        max_length=2, choices=ETHNIC_CATEGORIES, null=True)
-    gender = models.CharField(
-        max_length=2, choices=GENDER_CATEGORIES, null=True)
-    age_range = models.CharField(max_length=5, choices=AGE_RANGES, null=True)
-    visit_date = models.DateField()
-    media_types = models.ManyToManyField(Choice)
+    provider = models.ForeignKey(
+        Provider, on_delete=models.CASCADE, null=True, blank=True)
+    patient = models.ForeignKey(
+        Patient, on_delete=models.CASCADE, null=True, blank=True)
+    department = models.ForeignKey(
+        Department, on_delete=models.CASCADE, null=True, blank=True)
+    multi_modal_data = models.ForeignKey(
+        MultiModalDataPath, on_delete=models.CASCADE, null=True, blank=True)
+    encounter_date = models.DateField(default=datetime.now)
+    encounter_time = models.DateTimeField(default=datetime.now)
     is_deidentified = models.BooleanField(
         choices=BOOLEAN_CHOICES, default=False)
     is_restricted = models.BooleanField(choices=BOOLEAN_CHOICES, default=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.case_id
+        return f'{self.case_id}'
