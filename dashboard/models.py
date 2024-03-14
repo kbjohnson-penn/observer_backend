@@ -95,6 +95,7 @@ class Encounter(models.Model):
         MultiModalDataPath, on_delete=models.CASCADE, null=True, blank=True)
     encounter_date = models.DateField(default=datetime.now)
     encounter_time = models.DateTimeField(default=datetime.now)
+    overall_satisfaction = models.IntegerField(default=0)
     is_deidentified = models.BooleanField(
         choices=BOOLEAN_CHOICES, default=False)
     is_restricted = models.BooleanField(choices=BOOLEAN_CHOICES, default=True)
