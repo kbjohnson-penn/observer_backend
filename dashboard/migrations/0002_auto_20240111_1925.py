@@ -2,19 +2,6 @@
 
 from django.db import migrations
 
-DEPARTMENTS_NAMES = [
-    'sim-center',
-    'oncology',
-    'primary-care',
-    'neurology',
-    'fmaily-medicine',
-]
-
-def populate_departments(apps, schema_editor):
-    Departments = apps.get_model('dashboard', 'Department')
-    for name in DEPARTMENTS_NAMES:
-        Departments.objects.create(name=name)
-
 
 class Migration(migrations.Migration):
 
@@ -23,5 +10,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(populate_departments),
     ]
