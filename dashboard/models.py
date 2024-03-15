@@ -71,9 +71,9 @@ class MultiModalDataPath(models.Model):
     room_view = models.URLField(max_length=200, null=True, blank=True)
     audio = models.URLField(max_length=200, null=True, blank=True)
     transcript = models.URLField(max_length=200, null=True, blank=True)
-    patient_survey_path = models.URLField(
+    patient_survey = models.URLField(
         max_length=200, null=True, blank=True)
-    provider_survey_path = models.URLField(
+    provider_survey = models.URLField(
         max_length=200, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 

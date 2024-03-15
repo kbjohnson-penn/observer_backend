@@ -39,8 +39,10 @@ CSRF_TRUSTED_ORIGINS = ['https://observer-dev.pmacs.upenn.edu']
 
 CORS_ALLOW_ALL_ORIGINS = True  # If you want to allow all origins
 
-# Application definition
+# Neo4j database connection settings
+NEO4J_BOLT_URL = f"bolt://{config('GRAPH_DB_USER')}:{config('GRAPH_DB_PASSWORD')}@{config('GRAPH_DB_HOST')}:{config('GRAPH_DB_PORT')}"
 
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -136,9 +138,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 
-STATICFILES_DIRS=(os.path.join(BASE_DIR,'media/assets/'),)
+STATICFILES_DIRS = (os.path.join(BASE_DIR, 'media/assets/'),)
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATIC_URL = '/static/' 
+STATIC_URL = '/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
