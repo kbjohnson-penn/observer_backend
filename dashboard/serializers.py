@@ -65,11 +65,11 @@ class MultiModalDataPathSerializer(serializers.ModelSerializer):
     class Meta:
         model = MultiModalDataPath
         fields = ['multi_modal_data_id', 'provider_view', 'patient_view', 'room_view',
-                  'audio', 'transcript', 'patient_survey_path', 'provider_survey_path']
+                  'audio', 'transcript', 'patient_survey', 'provider_survey']
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        for field in ['provider_view', 'patient_view', 'room_view', 'audio', 'transcript', 'patient_survey_path', 'provider_survey_path']:
+        for field in ['provider_view', 'patient_view', 'room_view', 'audio', 'transcript', 'patient_survey', 'provider_survey']:
             rep[field] = bool(rep[field])
         return rep
 

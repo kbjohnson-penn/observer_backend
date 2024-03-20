@@ -37,6 +37,7 @@ class Patient(models.Model):
     sex = models.CharField(max_length=5, choices=SEX_CATEGORIES)
     race = models.CharField(max_length=5, choices=RACIAL_CATEGORIES)
     ethnicity = models.CharField(max_length=5, choices=ETHNIC_CATEGORIES)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'{self.patient_id}'
@@ -50,6 +51,7 @@ class Provider(models.Model):
     sex = models.CharField(max_length=5, choices=SEX_CATEGORIES)
     race = models.CharField(max_length=5, choices=RACIAL_CATEGORIES)
     ethnicity = models.CharField(max_length=5, choices=ETHNIC_CATEGORIES)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'{self.provider_id}'
@@ -64,22 +66,16 @@ class Department(models.Model):
 
 class MultiModalDataPath(models.Model):
     multi_modal_data_id = models.CharField(max_length=200, unique=True)
-    encounter = models.OneToOneField(
-        'Encounter',
-        on_delete=models.CASCADE,
-        related_name='multi_modal_data',
-        null=True,
-        blank=True
-    )
     provider_view = models.URLField(max_length=200, null=True, blank=True)
     patient_view = models.URLField(max_length=200, null=True, blank=True)
     room_view = models.URLField(max_length=200, null=True, blank=True)
     audio = models.URLField(max_length=200, null=True, blank=True)
     transcript = models.URLField(max_length=200, null=True, blank=True)
-    patient_survey_path = models.URLField(
+    patient_survey = models.URLField(
         max_length=200, null=True, blank=True)
-    provider_survey_path = models.URLField(
+    provider_survey = models.URLField(
         max_length=200, null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'{self.multi_modal_data_id}'
@@ -88,11 +84,13 @@ class MultiModalDataPath(models.Model):
 class Encounter(models.Model):
     case_id = models.CharField(max_length=200, unique=True)
     provider = models.ForeignKey(
-        Provider, on_delete=models.CASCADE, null=True, blank=True)
+        Provider, on_delete=models.CASCADE)
     patient = models.ForeignKey(
-        Patient, on_delete=models.CASCADE, null=True, blank=True)
+        Patient, on_delete=models.CASCADE)
     department = models.ForeignKey(
-        Department, on_delete=models.CASCADE, null=True, blank=True)
+        Department, on_delete=models.CASCADE)
+    multi_modal_data = models.ForeignKey(
+        MultiModalDataPath, on_delete=models.CASCADE, null=True, blank=True)
     encounter_date_and_time = models.DateTimeField(default=datetime.now)
     patient_satisfaction = models.IntegerField(default=0)
     provider_satisfaction = models.IntegerField(default=0)
