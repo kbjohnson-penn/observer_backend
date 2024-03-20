@@ -26,13 +26,17 @@ pip install -r requirements.txt
 
 4. Install [MySQL](https://www.mysql.com/) or [MariaDB](https://mariadb.com/) database.
 
+5. Install [Neo4j](https://neo4j.com/download/) database.
+
 ## Configuration
 
 Before running the project, configure your environment variables:
 
 Copy `.env.example` to `.env` and fill in the necessary settings.
 
-### Setting up the MySQL Database
+### Setting up the Databases
+
+#### MySQL
 
 1. **Open MySQL command line tool or MySQL Shell**: You can do this by typing `mysql -u root -p` in your terminal and then entering your MySQL root password when prompted.
 
@@ -53,6 +57,18 @@ CREATE USER 'observer'@'localhost' IDENTIFIED BY 'observer123';
 GRANT ALL PRIVILEGES ON observer_dashboard_database.* TO 'observer'@'localhost';
 FLUSH PRIVILEGES;
 ```
+
+#### Neo4j
+
+1. Open the Neo4j Desktop application.
+
+2. Click on **New** to create a new project, then rename it.
+
+3. Click **Add**, select **Local DBMS**, provide a database name and password, then click **Create**.
+
+4. Now, click **Start** to initiate the database.
+
+**Note**: If there are any configuration issues, a pop-up will appear. Click on **Fix Configuration**. If the issue persists, open the database settings from the dropdown menu. An **Edit Settings** pop-up will appear. Resolve the issue, apply the settings, and restart the database.
 
 ## Running the Project
 
@@ -77,6 +93,7 @@ python manage.py runserver
 
 - Open [http://127.0.0.1:8000/api](http://127.0.0.1:8000/api) to view all the API routes.
 - Open [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin) to login and add new records to the database.
+- Open Neo4j browser to view the Knowledge Graph
 
 **Note**: Always migrate database after any changes are applied to the models.
 
