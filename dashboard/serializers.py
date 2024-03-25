@@ -84,3 +84,21 @@ class EncounterSerializer(serializers.ModelSerializer):
         model = Encounter
         fields = ['case_id', 'provider', 'patient', 'department', 'multi_modal_data',
                   'encounter_date_and_time', 'patient_satisfaction', 'provider_satisfaction', 'is_deidentified', 'is_restricted']
+
+
+class NodeSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    labels = serializers.ListField(child=serializers.CharField())
+    properties = serializers.DictField(child=serializers.JSONField())
+
+
+class EdgeSerializer(serializers.Serializer):
+    source = serializers.IntegerField()
+    target = serializers.IntegerField()
+    type = serializers.CharField()
+    properties = serializers.DictField(child=serializers.JSONField())
+
+
+class GraphSerializer(serializers.Serializer):
+    nodes = NodeSerializer(many=True)
+    edges = EdgeSerializer(many=True)
