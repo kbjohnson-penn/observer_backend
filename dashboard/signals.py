@@ -16,13 +16,13 @@ def create_or_update_patient(sender, instance, created, **kwargs):
                 ethnicity=instance.ethnicity
             ).save()
     else:
-        patient_node = PatientNode.nodes.get(patient_id=instance.patient_id)
-        patient_node.date_of_birth = instance.date_of_birth
-        patient_node.sex = instance.sex
-        patient_node.race = instance.race
-        patient_node.ethnicity = instance.ethnicity
-        patient_node.save()
-
+        patient_nodes = PatientNode.nodes.filter(patient_id=instance.patient_id)
+        for patient_node in patient_nodes:
+            patient_node.date_of_birth = instance.date_of_birth
+            patient_node.sex = instance.sex
+            patient_node.race = instance.race
+            patient_node.ethnicity = instance.ethnicity
+            patient_node.save()
 
 @receiver(post_delete, sender=Patient)
 def delete_patient(sender, instance, **kwargs):
@@ -45,13 +45,14 @@ def create_or_update_provider(sender, instance, created, **kwargs):
                 ethnicity=instance.ethnicity
             ).save()
     else:
-        provider_node = ProviderNode.nodes.get(
-            provider_id=instance.provider_id)
-        provider_node.date_of_birth = instance.date_of_birth
-        provider_node.sex = instance.sex
-        provider_node.race = instance.race
-        provider_node.ethnicity = instance.ethnicity
-        provider_node.save()
+        provider_nodes = ProviderNode.nodes.filter(provider_id=instance.provider_id)
+        for provider_node in provider_nodes:
+            provider_node.date_of_birth = instance.date_of_birth
+            provider_node.sex = instance.sex
+            provider_node.race = instance.race
+            provider_node.ethnicity = instance.ethnicity
+            provider_node.save()
+
 
 
 @receiver(post_delete, sender=Provider)
@@ -70,9 +71,10 @@ def create_or_update_department(sender, instance, created, **kwargs):
         if not DepartmentNode.nodes.filter(name=instance.name):
             DepartmentNode(name=instance.name).save()
     else:
-        department_node = DepartmentNode.nodes.get(name=instance.name)
-        department_node.name = instance.name
-        department_node.save()
+        department_nodes = DepartmentNode.nodes.filter(name=instance.name)
+        for department_node in department_nodes:
+            department_node.name = instance.name
+            department_node.save()
 
 
 @receiver(post_delete, sender=Department)
@@ -99,16 +101,16 @@ def create_or_update_multi_modal_data_path(sender, instance, created, **kwargs):
                 provider_survey=instance.provider_survey
             ).save()
     else:
-        multi_modal_data_path_node = MultiModalDataPathNode.nodes.get(
-            multi_modal_data_id=instance.multi_modal_data_id)
-        multi_modal_data_path_node.provider_view = instance.provider_view
-        multi_modal_data_path_node.patient_view = instance.patient_view
-        multi_modal_data_path_node.room_view = instance.room_view
-        multi_modal_data_path_node.audio = instance.audio
-        multi_modal_data_path_node.transcript = instance.transcript
-        multi_modal_data_path_node.patient_survey = instance.patient_survey
-        multi_modal_data_path_node.provider_survey = instance.provider_survey
-        multi_modal_data_path_node.save()
+        multi_modal_data_path_nodes = MultiModalDataPathNode.nodes.filter(multi_modal_data_id=instance.multi_modal_data_id)
+        for multi_modal_data_path_node in multi_modal_data_path_nodes:
+            multi_modal_data_path_node.provider_view = instance.provider_view
+            multi_modal_data_path_node.patient_view = instance.patient_view
+            multi_modal_data_path_node.room_view = instance.room_view
+            multi_modal_data_path_node.audio = instance.audio
+            multi_modal_data_path_node.transcript = instance.transcript
+            multi_modal_data_path_node.patient_survey = instance.patient_survey
+            multi_modal_data_path_node.provider_survey = instance.provider_survey
+            multi_modal_data_path_node.save()
 
 
 @receiver(post_delete, sender=MultiModalDataPath)
@@ -144,23 +146,28 @@ def create_or_update_encounter(sender, instance, created, **kwargs):
             is_restricted=instance.is_restricted
         ).save()
     else:
-        encounter = EncounterNode.nodes.get(case_id=instance.case_id)
-        encounter.encounter_date_and_time = instance.encounter_date_and_time
-        encounter.patient_satisfaction = instance.patient_satisfaction
-        encounter.provider_satisfaction = instance.provider_satisfaction
-        encounter.is_deidentified = instance.is_deidentified
-        encounter.is_restricted = instance.is_restricted
-        encounter.save()
+        encounter_nodes = EncounterNode.nodes.filter(case_id=instance.case_id)
+        for encounter_node in encounter_nodes:
+            encounter_node.encounter_date_and_time = instance.encounter_date_and_time
+            encounter_node.patient_satisfaction = instance.patient_satisfaction
+            encounter_node.provider_satisfaction = instance.provider_satisfaction
+            encounter_node.is_deidentified = instance.is_deidentified
+            encounter_node.is_restricted = instance.is_restricted
+            encounter_node.save()
 
     # Connect EncounterNode to related objects
     if patient is not None:
-        encounter.patient.connect(patient)
+        for encounter_node in encounter_nodes:
+            encounter_node.patient.connect(patient)
     if provider is not None:
-        encounter.provider.connect(provider)
+        for encounter_node in encounter_nodes:
+            encounter_node.provider.connect(provider)
     if department is not None:
-        encounter.department.connect(department)
+        for encounter_node in encounter_nodes:
+            encounter_node.department.connect(department)
     if multi_modal_data is not None:
-        encounter.data_paths.connect(multi_modal_data)
+        for encounter_node in encounter_nodes:
+            encounter_node.data_paths.connect(multi_modal_data)
 
 
 @receiver(post_delete, sender=Encounter)
