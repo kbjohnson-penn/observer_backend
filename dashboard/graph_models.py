@@ -37,7 +37,11 @@ class MultiModalDataPathNode(StructuredNode):
     transcript = StringProperty()
     patient_survey = StringProperty()
     provider_survey = StringProperty()
-    encounter = RelationshipFrom('EncounterNode', 'ASSOCIATED_WITH_MULTI_MODAL_DATA')
+    rias_transcript = StringProperty()
+    rias_codes = StringProperty()
+    encounter = RelationshipFrom(
+        'EncounterNode', 'ASSOCIATED_WITH_MULTI_MODAL_DATA')
+    rias = RelationshipFrom('RIASNode', 'ASSOCIATED_WITH_MULTI_MODAL_DATA')
 
 
 class EncounterNode(StructuredNode):
@@ -51,5 +55,14 @@ class EncounterNode(StructuredNode):
     patient = RelationshipTo('PatientNode', 'HAS_PATIENT')
     provider = RelationshipTo('ProviderNode', 'HAS_PROVIDER')
     department = RelationshipTo('DepartmentNode', 'OCCURRED_IN_DEPARTMENT')
+    data_paths = RelationshipTo(
+        'MultiModalDataPathNode', 'ASSOCIATED_WITH_MULTI_MODAL_DATA')
+
+
+class RIASNode(StructuredNode):
+    rias_case_id = StringProperty(unique_index=True)
+    is_deidentified = BooleanProperty()
+    is_restricted = BooleanProperty()
+
     data_paths = RelationshipTo(
         'MultiModalDataPathNode', 'ASSOCIATED_WITH_MULTI_MODAL_DATA')

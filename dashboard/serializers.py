@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Patient, Provider, Department, MultiModalDataPath, Encounter
+from .models import Patient, Provider, Department, MultiModalDataPath, Encounter, RIAS
 
 BOOLEAN_CHOICES = {
     True: 'Yes',
@@ -84,6 +84,18 @@ class EncounterSerializer(serializers.ModelSerializer):
         model = Encounter
         fields = ['case_id', 'provider', 'patient', 'department', 'multi_modal_data',
                   'encounter_date_and_time', 'patient_satisfaction', 'provider_satisfaction', 'is_deidentified', 'is_restricted']
+
+
+class RIASSerializer(serializers.ModelSerializer):
+    rias_case_id = serializers.StringRelatedField()
+    multi_modal_data = serializers.StringRelatedField()
+    is_deidentified = serializers.StringRelatedField()
+    is_restricted = serializers.StringRelatedField()
+
+    class Meta:
+        model = RIAS
+        fields = ['rias_case_id', 'multi_modal_data',
+                  'is_deidentified', 'is_restricted']
 
 
 class NodeSerializer(serializers.Serializer):
