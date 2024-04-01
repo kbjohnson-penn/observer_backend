@@ -5,8 +5,8 @@ from rest_framework.views import APIView
 
 from neomodel import db
 
-from .models import Patient, Provider, Department, MultiModalDataPath, Encounter, RIAS
-from .serializers import PatientSerializer, ProviderSerializer, DepartmentSerializer, MultiModalDataPathSerializer, EncounterSerializer, RIASSerializer
+from .models import Patient, Provider, EncounterSource, Department, MultiModalDataPath, Encounter
+from .serializers import PatientSerializer, ProviderSerializer, EncounterSourceSerializer, DepartmentSerializer, MultiModalDataPathSerializer, EncounterSerializer
 from .serializers import GraphSerializer
 
 
@@ -27,6 +27,12 @@ class ProviderViewSet(viewsets.ModelViewSet):
     permission_classes = [ReadOnly]
 
 
+class EncounterSourceViewSet(viewsets.ModelViewSet):
+    queryset = EncounterSource.objects.all()
+    serializer_class = EncounterSourceSerializer
+    permission_classes = [ReadOnly]
+
+
 class DepartmentViewSet(viewsets.ModelViewSet):
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
@@ -42,12 +48,6 @@ class MultiModalDataPathViewSet(viewsets.ModelViewSet):
 class EncounterViewSet(viewsets.ModelViewSet):
     queryset = Encounter.objects.all()
     serializer_class = EncounterSerializer
-    permission_classes = [ReadOnly]
-
-
-class RIASViewSet(viewsets.ModelViewSet):
-    queryset = RIAS.objects.all()
-    serializer_class = RIASSerializer
     permission_classes = [ReadOnly]
 
 

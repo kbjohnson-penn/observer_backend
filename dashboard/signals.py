@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from .models import Patient, Provider, Department, Encounter, MultiModalDataPath, RIAS
-from .graph_models import PatientNode, ProviderNode, DepartmentNode, EncounterNode, MultiModalDataPathNode, RIASNode
+from .models import Patient, Provider, Department, Encounter, MultiModalDataPath, EncounterSource
+from .graph_models import PatientNode, ProviderNode, DepartmentNode, EncounterNode, MultiModalDataPathNode, EncounterSourceNode
 
 
 @receiver(post_save, sender=Patient)
@@ -64,6 +64,31 @@ def delete_provider(sender, instance, **kwargs):
             provider_id=instance.provider_id)
         provider_node.delete()
     except ProviderNode.DoesNotExist:
+        pass
+
+
+@receiver(post_save, sender=EncounterSource)
+def create_or_update_encounter_source(sender, instance, created, **kwargs):
+    if created:
+        if not EncounterSourceNode.nodes.filter(name=instance.name):
+            EncounterSourceNode(
+                name=instance.name
+            ).save()
+    else:
+        encounter_source_nodes = EncounterSourceNode.nodes.filter(
+            name=instance.name)
+        for encounter_source_node in encounter_source_nodes:
+            encounter_source_node.name = instance.name
+            encounter_source_node.save()
+
+
+@receiver(post_delete, sender=EncounterSource)
+def delete_encounter_source(sender, instance, **kwargs):
+    try:
+        encounter_source_node = EncounterSourceNode.nodes.get(
+            name=instance.name)
+        encounter_source_node.delete()
+    except EncounterSourceNode.DoesNotExist:
         pass
 
 
@@ -131,7 +156,7 @@ def delete_multi_modal_data_path(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=Encounter)
-def create_or_update_encounter(sender, instance, created, **kwargs):
+def create_or_update_encounter_node(sender, instance, created, **kwargs):
     patient = PatientNode.nodes.get_or_none(
         patient_id=instance.patient.patient_id) if instance.patient else None
     provider = ProviderNode.nodes.get_or_none(
@@ -140,18 +165,22 @@ def create_or_update_encounter(sender, instance, created, **kwargs):
         name=instance.department.name) if instance.department else None
     multi_modal_data = MultiModalDataPathNode.nodes.get_or_none(
         multi_modal_data_id=instance.multi_modal_data.multi_modal_data_id) if instance.multi_modal_data else None
+    encounter_source = EncounterSourceNode.nodes.get_or_none(
+        name=instance.encounter_source.name) if instance.encounter_source else None
+
+    encounter_nodes = EncounterNode.nodes.filter(case_id=instance.case_id)
 
     if created:
-        encounter = EncounterNode(
-            case_id=instance.case_id,
-            encounter_date_and_time=instance.encounter_date_and_time,
-            patient_satisfaction=instance.patient_satisfaction,
-            provider_satisfaction=instance.provider_satisfaction,
-            is_deidentified=instance.is_deidentified,
-            is_restricted=instance.is_restricted
-        ).save()
+        if not encounter_nodes:
+            EncounterNode(
+                case_id=instance.case_id,
+                encounter_date_and_time=instance.encounter_date_and_time,
+                patient_satisfaction=instance.patient_satisfaction,
+                provider_satisfaction=instance.provider_satisfaction,
+                is_deidentified=instance.is_deidentified,
+                is_restricted=instance.is_restricted
+            ).save()
     else:
-        encounter_nodes = EncounterNode.nodes.filter(case_id=instance.case_id)
         for encounter_node in encounter_nodes:
             encounter_node.encounter_date_and_time = instance.encounter_date_and_time
             encounter_node.patient_satisfaction = instance.patient_satisfaction
@@ -172,6 +201,9 @@ def create_or_update_encounter(sender, instance, created, **kwargs):
     if multi_modal_data is not None:
         for encounter_node in encounter_nodes:
             encounter_node.data_paths.connect(multi_modal_data)
+    if encounter_source is not None:
+        for encounter_node in encounter_nodes:
+            encounter_node.encounter_source.connect(encounter_source)
 
 
 @receiver(post_delete, sender=Encounter)
@@ -180,38 +212,4 @@ def delete_encounter(sender, instance, **kwargs):
         encounter = EncounterNode.nodes.get(case_id=instance.case_id)
         encounter.delete()
     except EncounterNode.DoesNotExist:
-        pass
-
-
-@receiver(post_save, sender=RIAS)
-def create_or_update_rias_node(sender, instance, created, **kwargs):
-    multi_modal_data = MultiModalDataPathNode.nodes.get_or_none(
-        multi_modal_data_id=instance.multi_modal_data.multi_modal_data_id) if instance.multi_modal_data else None
-
-    rias_nodes = RIASNode.nodes.filter(rias_case_id=instance.rias_case_id)
-
-    if created:
-        if not rias_nodes:
-            RIASNode(
-                rias_case_id=instance.rias_case_id,
-                is_deidentified=instance.is_deidentified,
-                is_restricted=instance.is_restricted
-            ).save()
-    else:
-        for rias_node in rias_nodes:
-            rias_node.is_deidentified = instance.is_deidentified
-            rias_node.is_restricted = instance.is_restricted
-            rias_node.save()
-
-    if multi_modal_data is not None:
-        for rias_node in rias_nodes:
-            rias_node.data_paths.connect(multi_modal_data)
-
-
-@receiver(post_delete, sender=RIAS)
-def delete_rias(sender, instance, **kwargs):
-    try:
-        rias_node = RIASNode.nodes.get(rias_case_id=instance.rias_case_id)
-        rias_node.delete()
-    except RIASNode.DoesNotExist:
         pass

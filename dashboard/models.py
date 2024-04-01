@@ -31,12 +31,14 @@ SEX_CATEGORIES = [
 
 class Patient(models.Model):
     patient_id = models.CharField(max_length=200, unique=True)
-    first_name = models.CharField(max_length=200)
-    last_name = models.CharField(max_length=200)
-    date_of_birth = models.DateField()
-    sex = models.CharField(max_length=5, choices=SEX_CATEGORIES)
-    race = models.CharField(max_length=5, choices=RACIAL_CATEGORIES)
-    ethnicity = models.CharField(max_length=5, choices=ETHNIC_CATEGORIES)
+    first_name = models.CharField(max_length=200, blank=True)
+    last_name = models.CharField(max_length=200, blank=True)
+    date_of_birth = models.DateField(blank=True, null=True)
+    sex = models.CharField(max_length=5, choices=SEX_CATEGORIES, blank=True)
+    race = models.CharField(
+        max_length=5, choices=RACIAL_CATEGORIES, blank=True)
+    ethnicity = models.CharField(
+        max_length=5, choices=ETHNIC_CATEGORIES, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -49,12 +51,14 @@ class Patient(models.Model):
 
 class Provider(models.Model):
     provider_id = models.CharField(max_length=200, unique=True)
-    first_name = models.CharField(max_length=200)
-    last_name = models.CharField(max_length=200)
-    date_of_birth = models.DateField()
-    sex = models.CharField(max_length=5, choices=SEX_CATEGORIES)
-    race = models.CharField(max_length=5, choices=RACIAL_CATEGORIES)
-    ethnicity = models.CharField(max_length=5, choices=ETHNIC_CATEGORIES)
+    first_name = models.CharField(max_length=200, blank=True)
+    last_name = models.CharField(max_length=200, blank=True)
+    date_of_birth = models.DateField(blank=True, null=True)
+    sex = models.CharField(max_length=5, choices=SEX_CATEGORIES, blank=True)
+    race = models.CharField(
+        max_length=5, choices=RACIAL_CATEGORIES, blank=True)
+    ethnicity = models.CharField(
+        max_length=5, choices=ETHNIC_CATEGORIES, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -63,6 +67,17 @@ class Provider(models.Model):
     class Meta:
         verbose_name = 'Provider'
         verbose_name_plural = 'Providers'
+
+
+class EncounterSource(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = 'Encounter Source'
+        verbose_name_plural = 'Encounter Source'
 
 
 class Department(models.Model):
@@ -109,20 +124,26 @@ class MultiModalDataPath(models.Model):
 
 class Encounter(models.Model):
     case_id = models.CharField(max_length=200, unique=True)
-    provider = models.ForeignKey(
-        Provider, on_delete=models.CASCADE)
-    patient = models.ForeignKey(
-        Patient, on_delete=models.CASCADE)
+    encounter_source = models.ForeignKey(
+        EncounterSource, on_delete=models.CASCADE, verbose_name="Encounter Source")
     department = models.ForeignKey(
         Department, on_delete=models.CASCADE)
+    provider = models.ForeignKey(
+        Provider, on_delete=models.CASCADE, blank=True)
+    patient = models.ForeignKey(
+        Patient, on_delete=models.CASCADE, blank=True)
     multi_modal_data = models.ForeignKey(
-        MultiModalDataPath, on_delete=models.CASCADE, null=True, blank=True)
-    encounter_date_and_time = models.DateTimeField(default=datetime.now)
-    patient_satisfaction = models.IntegerField(default=0)
-    provider_satisfaction = models.IntegerField(default=0)
+        MultiModalDataPath, on_delete=models.CASCADE, verbose_name="Multi Modal Data Path")
+    encounter_date_and_time = models.DateTimeField(
+        default=datetime.now, verbose_name="Encounter Date and Time")
+    patient_satisfaction = models.IntegerField(
+        default=0, verbose_name="Patient Satisfaction")
+    provider_satisfaction = models.IntegerField(
+        default=0, verbose_name="Provider Satisfaction")
     is_deidentified = models.BooleanField(
-        choices=BOOLEAN_CHOICES, default=False)
-    is_restricted = models.BooleanField(choices=BOOLEAN_CHOICES, default=True)
+        choices=BOOLEAN_CHOICES, default=False, verbose_name="Is Deidentified")
+    is_restricted = models.BooleanField(
+        choices=BOOLEAN_CHOICES, default=True, verbose_name="Is Restricted")
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -131,22 +152,3 @@ class Encounter(models.Model):
     class Meta:
         verbose_name = 'Encounter'
         verbose_name_plural = 'Encounters'
-
-
-class RIAS(models.Model):
-    rias_case_id = models.CharField(
-        max_length=200, unique=True, verbose_name="RIAS Case ID")
-    multi_modal_data = models.ForeignKey(
-        MultiModalDataPath, on_delete=models.CASCADE, null=True, blank=True, verbose_name="Multi Modal Data")
-    is_deidentified = models.BooleanField(
-        choices=BOOLEAN_CHOICES, default=False, verbose_name="Is Deidentified")
-    is_restricted = models.BooleanField(
-        choices=BOOLEAN_CHOICES, default=True, verbose_name="Is Restricted")
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f'{self.rias_case_id}'
-
-    class Meta:
-        verbose_name = 'RIAS'
-        verbose_name_plural = 'RIAS Codes'

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Patient, Provider, Department, MultiModalDataPath, Encounter, RIAS
+from .models import Patient, Provider, Department, MultiModalDataPath, Encounter, EncounterSource
 
 BOOLEAN_CHOICES = {
     True: 'Yes',
@@ -55,6 +55,12 @@ class ProviderSerializer(serializers.ModelSerializer):
         return rep
 
 
+class EncounterSourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EncounterSource
+        fields = ['name']
+
+
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
@@ -65,16 +71,17 @@ class MultiModalDataPathSerializer(serializers.ModelSerializer):
     class Meta:
         model = MultiModalDataPath
         fields = ['multi_modal_data_id', 'provider_view', 'patient_view', 'room_view',
-                  'audio', 'transcript', 'patient_survey', 'provider_survey']
+                  'audio', 'transcript', 'patient_survey', 'provider_survey', 'rias_transcript', 'rias_codes']
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        for field in ['provider_view', 'patient_view', 'room_view', 'audio', 'transcript', 'patient_survey', 'provider_survey']:
+        for field in ['provider_view', 'patient_view', 'room_view', 'audio', 'transcript', 'patient_survey', 'provider_survey', 'rias_transcript', 'rias_codes']:
             rep[field] = bool(rep[field])
         return rep
 
 
 class EncounterSerializer(serializers.ModelSerializer):
+    encounter_source = serializers.StringRelatedField()
     department = serializers.StringRelatedField()
     patient = serializers.StringRelatedField()
     provider = serializers.StringRelatedField()
@@ -82,20 +89,8 @@ class EncounterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Encounter
-        fields = ['case_id', 'provider', 'patient', 'department', 'multi_modal_data',
+        fields = ['case_id', 'provider', 'patient', 'encounter_source', 'department', 'multi_modal_data',
                   'encounter_date_and_time', 'patient_satisfaction', 'provider_satisfaction', 'is_deidentified', 'is_restricted']
-
-
-class RIASSerializer(serializers.ModelSerializer):
-    rias_case_id = serializers.StringRelatedField()
-    multi_modal_data = serializers.StringRelatedField()
-    is_deidentified = serializers.StringRelatedField()
-    is_restricted = serializers.StringRelatedField()
-
-    class Meta:
-        model = RIAS
-        fields = ['rias_case_id', 'multi_modal_data',
-                  'is_deidentified', 'is_restricted']
 
 
 class NodeSerializer(serializers.Serializer):
