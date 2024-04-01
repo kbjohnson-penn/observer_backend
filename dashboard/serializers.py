@@ -6,28 +6,6 @@ BOOLEAN_CHOICES = {
     False: 'No',
 }
 
-RACIAL_CATEGORIES = {
-    'AI': 'American Indian or Alaska Native',
-    'A': 'Asian',
-    'NHPI': 'Native Hawaiian or Other Pacific Islander',
-    'B': 'Black or African American',
-    'W': 'White',
-    'M': 'More than One Race',
-    'UN': 'Unknown or Not Reported',
-}
-
-ETHNIC_CATEGORIES = {
-    'H': 'Hispanic or Latino',
-    'NH': 'Not Hispanic or Latino',
-    'UN': 'Unknown or Not Reported Ethnicity',
-}
-
-SEX_CATEGORIES = {
-    'M': 'Male',
-    'F': 'Female',
-    'UN': 'Unknown or Not Reported'
-}
-
 
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
@@ -36,9 +14,10 @@ class PatientSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        rep['race'] = RACIAL_CATEGORIES[rep['race']]
-        rep['ethnicity'] = ETHNIC_CATEGORIES[rep['ethnicity']]
-        rep['sex'] = SEX_CATEGORIES[rep['sex']]
+        rep['race'] = 'UN' if rep.get('race') == '' else rep['race']
+        rep['sex'] = 'UN' if rep.get('sex') == '' else rep['sex']
+        rep['ethnicity'] = 'UN' if rep.get(
+            'ethnicity') == '' else rep['ethnicity']
         return rep
 
 
@@ -49,9 +28,10 @@ class ProviderSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
-        rep['race'] = RACIAL_CATEGORIES[rep['race']]
-        rep['ethnicity'] = ETHNIC_CATEGORIES[rep['ethnicity']]
-        rep['sex'] = SEX_CATEGORIES[rep['sex']]
+        rep['race'] = 'UN' if rep.get('race') == '' else rep['race']
+        rep['sex'] = 'UN' if rep.get('sex') == '' else rep['sex']
+        rep['ethnicity'] = 'UN' if rep.get(
+            'ethnicity') == '' else rep['ethnicity']
         return rep
 
 
