@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from .models import Patient, Provider, Department, Encounter, MultiModalDataPath
-from .graph_models import PatientNode, ProviderNode, DepartmentNode, EncounterNode, MultiModalDataPathNode
+from .models import Patient, Provider, Department, Encounter, MultiModalDataPath, EncounterSource
+from .graph_models import PatientNode, ProviderNode, DepartmentNode, EncounterNode, MultiModalDataPathNode, EncounterSourceNode
 
 
 @receiver(post_save, sender=Patient)
@@ -16,13 +16,15 @@ def create_or_update_patient(sender, instance, created, **kwargs):
                 ethnicity=instance.ethnicity
             ).save()
     else:
-        patient_nodes = PatientNode.nodes.filter(patient_id=instance.patient_id)
+        patient_nodes = PatientNode.nodes.filter(
+            patient_id=instance.patient_id)
         for patient_node in patient_nodes:
             patient_node.date_of_birth = instance.date_of_birth
             patient_node.sex = instance.sex
             patient_node.race = instance.race
             patient_node.ethnicity = instance.ethnicity
             patient_node.save()
+
 
 @receiver(post_delete, sender=Patient)
 def delete_patient(sender, instance, **kwargs):
@@ -45,14 +47,14 @@ def create_or_update_provider(sender, instance, created, **kwargs):
                 ethnicity=instance.ethnicity
             ).save()
     else:
-        provider_nodes = ProviderNode.nodes.filter(provider_id=instance.provider_id)
+        provider_nodes = ProviderNode.nodes.filter(
+            provider_id=instance.provider_id)
         for provider_node in provider_nodes:
             provider_node.date_of_birth = instance.date_of_birth
             provider_node.sex = instance.sex
             provider_node.race = instance.race
             provider_node.ethnicity = instance.ethnicity
             provider_node.save()
-
 
 
 @receiver(post_delete, sender=Provider)
@@ -62,6 +64,31 @@ def delete_provider(sender, instance, **kwargs):
             provider_id=instance.provider_id)
         provider_node.delete()
     except ProviderNode.DoesNotExist:
+        pass
+
+
+@receiver(post_save, sender=EncounterSource)
+def create_or_update_encounter_source(sender, instance, created, **kwargs):
+    if created:
+        if not EncounterSourceNode.nodes.filter(name=instance.name):
+            EncounterSourceNode(
+                name=instance.name
+            ).save()
+    else:
+        encounter_source_nodes = EncounterSourceNode.nodes.filter(
+            name=instance.name)
+        for encounter_source_node in encounter_source_nodes:
+            encounter_source_node.name = instance.name
+            encounter_source_node.save()
+
+
+@receiver(post_delete, sender=EncounterSource)
+def delete_encounter_source(sender, instance, **kwargs):
+    try:
+        encounter_source_node = EncounterSourceNode.nodes.get(
+            name=instance.name)
+        encounter_source_node.delete()
+    except EncounterSourceNode.DoesNotExist:
         pass
 
 
@@ -98,10 +125,13 @@ def create_or_update_multi_modal_data_path(sender, instance, created, **kwargs):
                 audio=instance.audio,
                 transcript=instance.transcript,
                 patient_survey=instance.patient_survey,
-                provider_survey=instance.provider_survey
+                provider_survey=instance.provider_survey,
+                rias_transcript=instance.rias_transcript,
+                rias_codes=instance.rias_codes,
             ).save()
     else:
-        multi_modal_data_path_nodes = MultiModalDataPathNode.nodes.filter(multi_modal_data_id=instance.multi_modal_data_id)
+        multi_modal_data_path_nodes = MultiModalDataPathNode.nodes.filter(
+            multi_modal_data_id=instance.multi_modal_data_id)
         for multi_modal_data_path_node in multi_modal_data_path_nodes:
             multi_modal_data_path_node.provider_view = instance.provider_view
             multi_modal_data_path_node.patient_view = instance.patient_view
@@ -110,6 +140,8 @@ def create_or_update_multi_modal_data_path(sender, instance, created, **kwargs):
             multi_modal_data_path_node.transcript = instance.transcript
             multi_modal_data_path_node.patient_survey = instance.patient_survey
             multi_modal_data_path_node.provider_survey = instance.provider_survey
+            multi_modal_data_path_node.rias_transcript = instance.rias_transcript
+            multi_modal_data_path_node.rias_codes = instance.rias_codes
             multi_modal_data_path_node.save()
 
 
@@ -124,8 +156,7 @@ def delete_multi_modal_data_path(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=Encounter)
-def create_or_update_encounter(sender, instance, created, **kwargs):
-    # Fetch related objects in bulk
+def create_or_update_encounter_node(sender, instance, created, **kwargs):
     patient = PatientNode.nodes.get_or_none(
         patient_id=instance.patient.patient_id) if instance.patient else None
     provider = ProviderNode.nodes.get_or_none(
@@ -134,19 +165,22 @@ def create_or_update_encounter(sender, instance, created, **kwargs):
         name=instance.department.name) if instance.department else None
     multi_modal_data = MultiModalDataPathNode.nodes.get_or_none(
         multi_modal_data_id=instance.multi_modal_data.multi_modal_data_id) if instance.multi_modal_data else None
+    encounter_source = EncounterSourceNode.nodes.get_or_none(
+        name=instance.encounter_source.name) if instance.encounter_source else None
 
-    # Create or update EncounterNode
+    encounter_nodes = EncounterNode.nodes.filter(case_id=instance.case_id)
+
     if created:
-        encounter = EncounterNode(
-            case_id=instance.case_id,
-            encounter_date_and_time=instance.encounter_date_and_time,
-            patient_satisfaction=instance.patient_satisfaction,
-            provider_satisfaction=instance.provider_satisfaction,
-            is_deidentified=instance.is_deidentified,
-            is_restricted=instance.is_restricted
-        ).save()
+        if not encounter_nodes:
+            EncounterNode(
+                case_id=instance.case_id,
+                encounter_date_and_time=instance.encounter_date_and_time,
+                patient_satisfaction=instance.patient_satisfaction,
+                provider_satisfaction=instance.provider_satisfaction,
+                is_deidentified=instance.is_deidentified,
+                is_restricted=instance.is_restricted
+            ).save()
     else:
-        encounter_nodes = EncounterNode.nodes.filter(case_id=instance.case_id)
         for encounter_node in encounter_nodes:
             encounter_node.encounter_date_and_time = instance.encounter_date_and_time
             encounter_node.patient_satisfaction = instance.patient_satisfaction
@@ -155,7 +189,6 @@ def create_or_update_encounter(sender, instance, created, **kwargs):
             encounter_node.is_restricted = instance.is_restricted
             encounter_node.save()
 
-    # Connect EncounterNode to related objects
     if patient is not None:
         for encounter_node in encounter_nodes:
             encounter_node.patient.connect(patient)
@@ -168,6 +201,9 @@ def create_or_update_encounter(sender, instance, created, **kwargs):
     if multi_modal_data is not None:
         for encounter_node in encounter_nodes:
             encounter_node.data_paths.connect(multi_modal_data)
+    if encounter_source is not None:
+        for encounter_node in encounter_nodes:
+            encounter_node.encounter_source.connect(encounter_source)
 
 
 @receiver(post_delete, sender=Encounter)
