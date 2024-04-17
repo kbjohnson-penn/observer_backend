@@ -1,5 +1,9 @@
+from django import forms
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.exceptions import ValidationError
 from datetime import datetime
+import re
 
 BOOLEAN_CHOICES = [
     (True, 'Yes'),
@@ -30,9 +34,9 @@ SEX_CATEGORIES = [
 
 
 class Patient(models.Model):
-    patient_id = models.CharField(max_length=200, unique=True)
-    first_name = models.CharField(max_length=200, blank=True)
-    last_name = models.CharField(max_length=200, blank=True)
+    patient_id = models.CharField(max_length=255, unique=True)
+    first_name = models.CharField(max_length=255, blank=True)
+    last_name = models.CharField(max_length=255, blank=True)
     date_of_birth = models.DateField(blank=True, null=True)
     sex = models.CharField(max_length=5, choices=SEX_CATEGORIES, blank=True)
     race = models.CharField(
@@ -44,15 +48,36 @@ class Patient(models.Model):
     def __str__(self):
         return f'{self.patient_id}'
 
+    def clean_patient_id(self, patient_id):
+        # Check if patient_id only contains numbers
+        if not re.match('^[0-9]+$', patient_id):
+            raise forms.ValidationError(
+                "patient_id should only contain numbers")
+
+        # Remove leading zeros from patient_id
+        patient_id = str(int(patient_id.lstrip('0')))
+        # Attach 'P' to the patient_id
+        patient_id = 'P' + patient_id
+
+        # Check if patient_id already exists in the database
+        if Patient.objects.filter(patient_id=patient_id).exists():
+            raise forms.ValidationError("patient_id already exists")
+
+        return patient_id
+
+    def save(self, *args, **kwargs):
+        self.patient_id = self.clean_patient_id(self.patient_id)
+        super(Patient, self).save(*args, **kwargs)
+
     class Meta:
         verbose_name = 'Patient'
         verbose_name_plural = 'Patients'
 
 
 class Provider(models.Model):
-    provider_id = models.CharField(max_length=200, unique=True)
-    first_name = models.CharField(max_length=200, blank=True)
-    last_name = models.CharField(max_length=200, blank=True)
+    provider_id = models.CharField(max_length=255, unique=True)
+    first_name = models.CharField(max_length=255, blank=True)
+    last_name = models.CharField(max_length=255, blank=True)
     date_of_birth = models.DateField(blank=True, null=True)
     sex = models.CharField(max_length=5, choices=SEX_CATEGORIES, blank=True)
     race = models.CharField(
@@ -63,6 +88,21 @@ class Provider(models.Model):
 
     def __str__(self):
         return f'{self.provider_id}'
+
+    def clean_provider_id(self, provider_id):
+        # Check if provider_id only contains numbers
+        if not re.match('^[0-9]+$', provider_id):
+            raise ValidationError("provider_id should only contain numbers")
+
+        # Remove leading zeros from provider_id
+        provider_id = str(int(provider_id.lstrip('0')))
+        # Attach 'PR' to the provider_id
+        provider_id = 'PR' + provider_id
+        return provider_id
+
+    def save(self, *args, **kwargs):
+        self.provider_id = self.clean_provider_id(self.provider_id)
+        super(Provider, self).save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Provider'
@@ -93,7 +133,7 @@ class Department(models.Model):
 
 class MultiModalDataPath(models.Model):
     multi_modal_data_id = models.CharField(
-        max_length=200, unique=True, verbose_name="Multi Modal Data ID")
+        max_length=255, unique=True, verbose_name="Multi Modal Data ID")
     provider_view = models.URLField(
         max_length=200, null=True, blank=True, verbose_name="Provider View")
     patient_view = models.URLField(
@@ -117,13 +157,30 @@ class MultiModalDataPath(models.Model):
     def __str__(self):
         return f'{self.multi_modal_data_id}'
 
+    def clean_multi_modal_data_id(self, multi_modal_data_id):
+        # Check if multi_modal_data_id only contains numbers
+        if not re.match('^[0-9]+$', multi_modal_data_id):
+            raise ValidationError(
+                "multi_modal_data_id should only contain numbers")
+
+        # Remove leading zeros from multi_modal_data_id
+        multi_modal_data_id = str(int(multi_modal_data_id.lstrip('0')))
+        # Attach 'MMD' to the multi_modal_data_id
+        multi_modal_data_id = 'MMD' + multi_modal_data_id
+        return multi_modal_data_id
+
+    def save(self, *args, **kwargs):
+        self.multi_modal_data_id = self.clean_multi_modal_data_id(
+            self.multi_modal_data_id)
+        super(MultiModalDataPath, self).save(*args, **kwargs)
+
     class Meta:
         verbose_name = 'Multi Modal Data Path'
         verbose_name_plural = 'Multi Modal Data Paths'
 
 
 class Encounter(models.Model):
-    case_id = models.CharField(max_length=200, unique=True)
+    case_id = models.CharField(max_length=255, unique=True)
     encounter_source = models.ForeignKey(
         EncounterSource, on_delete=models.CASCADE, verbose_name="Encounter Source")
     department = models.ForeignKey(
@@ -136,10 +193,16 @@ class Encounter(models.Model):
         MultiModalDataPath, on_delete=models.CASCADE, verbose_name="Multi Modal Data Path")
     encounter_date_and_time = models.DateTimeField(
         default=datetime.now, verbose_name="Encounter Date and Time")
-    patient_satisfaction = models.IntegerField(
-        default=0, verbose_name="Patient Satisfaction")
     provider_satisfaction = models.IntegerField(
-        default=0, verbose_name="Provider Satisfaction")
+        validators=[MinValueValidator(0), MaxValueValidator(5)],
+        default=0,
+        verbose_name="Provider Satisfaction"
+    )
+    patient_satisfaction = models.IntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(5)],
+        default=0,
+        verbose_name="Patient Satisfaction"
+    )
     is_deidentified = models.BooleanField(
         choices=BOOLEAN_CHOICES, default=False, verbose_name="Is Deidentified")
     is_restricted = models.BooleanField(
@@ -148,6 +211,21 @@ class Encounter(models.Model):
 
     def __str__(self):
         return f'{self.case_id}'
+
+    def clean_case_id(self, case_id):
+        # Check if case_id only contains numbers
+        if not re.match('^[0-9]+$', case_id):
+            raise ValidationError("case_id should only contain numbers")
+
+        # Remove leading zeros from case_id
+        case_id = str(int(case_id.lstrip('0')))
+        # Attach 'E' to the case_id
+        case_id = 'E' + case_id
+        return case_id
+
+    def save(self, *args, **kwargs):
+        self.case_id = self.clean_case_id(self.case_id)
+        super(Encounter, self).save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Encounter'
