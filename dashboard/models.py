@@ -3,6 +3,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
 from datetime import datetime
+from django.utils import timezone
 import re
 
 BOOLEAN_CHOICES = [
@@ -98,6 +99,11 @@ class Provider(models.Model):
         provider_id = str(int(provider_id.lstrip('0')))
         # Attach 'PR' to the provider_id
         provider_id = 'PR' + provider_id
+
+        # Check if provider_id already exists in the database
+        if Provider.objects.filter(provider_id=provider_id).exists():
+            raise forms.ValidationError("provider_id already exists")
+
         return provider_id
 
     def save(self, *args, **kwargs):
@@ -223,8 +229,22 @@ class Encounter(models.Model):
         case_id = 'E' + case_id
         return case_id
 
+    def clean(self):
+        if self.patient_satisfaction < 0:
+            raise ValidationError('Patient satisfaction cannot be negative.')
+
+        if self.provider_satisfaction < 0:
+            raise ValidationError('Provider satisfaction cannot be negative.')
+
     def save(self, *args, **kwargs):
         self.case_id = self.clean_case_id(self.case_id)
+
+        if timezone.is_naive(self.encounter_date_and_time):
+            self.encounter_date_and_time = timezone.make_aware(
+                self.encounter_date_and_time)
+
+        self.clean()
+
         super(Encounter, self).save(*args, **kwargs)
 
     class Meta:
