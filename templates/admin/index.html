@@ -1,0 +1,15 @@
+{% extends "admin/index.html" %}
+
+{% load static %}
+
+{% block content %}
+<div class="module">
+    <h2>Documentation</h2>
+    <ul>
+        <li>
+            <a href="{{ DOCUMENTATION_URL }}">View Documentation</a>
+        </li>
+    </ul>
+</div>
+{{ block.super }}
+{% endblock %}
