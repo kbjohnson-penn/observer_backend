@@ -42,6 +42,9 @@ CORS_ALLOW_ALL_ORIGINS = True  # If you want to allow all origins
 # Neo4j database connection settings
 NEO4J_BOLT_URL = f"bolt://{config('GRAPH_DB_USER')}:{config('GRAPH_DB_PASSWORD')}@{config('GRAPH_DB_HOST')}:{config('GRAPH_DB_PORT')}"
 
+# Documentation URL
+DOCUMENTATION_URL = config('DOCUMENTATION_URL')
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -72,7 +75,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -80,6 +83,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'dashboard.context_processors.documentation_url',
             ],
         },
     },
