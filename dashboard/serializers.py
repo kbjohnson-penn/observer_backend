@@ -63,14 +63,23 @@ class MultiModalDataPathSerializer(serializers.ModelSerializer):
 class EncounterSerializer(serializers.ModelSerializer):
     encounter_source = serializers.StringRelatedField()
     department = serializers.StringRelatedField()
-    patient = serializers.StringRelatedField()
-    provider = serializers.StringRelatedField()
-    multi_modal_data = serializers.StringRelatedField()
+    patient_id = serializers.SerializerMethodField()
+    provider_id = serializers.SerializerMethodField()
+    multi_modal_data_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Encounter
-        fields = ['id', 'provider', 'patient', 'encounter_source', 'department', 'multi_modal_data',
+        fields = ['id', 'provider_id', 'patient_id', 'encounter_source', 'department', 'multi_modal_data_id',
                   'encounter_date_and_time', 'patient_satisfaction', 'provider_satisfaction', 'is_deidentified', 'is_restricted']
+
+    def get_patient_id(self, obj):
+        return obj.patient.patient_id
+
+    def get_provider_id(self, obj):
+        return obj.provider.provider_id
+
+    def get_multi_modal_data_id(self, obj):
+        return obj.multi_modal_data.id
 
 
 class NodeSerializer(serializers.Serializer):
