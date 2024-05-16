@@ -50,7 +50,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
 class MultiModalDataPathSerializer(serializers.ModelSerializer):
     class Meta:
         model = MultiModalDataPath
-        fields = ['multi_modal_data_id', 'provider_view', 'patient_view', 'room_view',
+        fields = ['id', 'provider_view', 'patient_view', 'room_view',
                   'audio', 'transcript', 'patient_survey', 'provider_survey', 'rias_transcript', 'rias_codes']
 
     def to_representation(self, instance):
@@ -69,7 +69,7 @@ class EncounterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Encounter
-        fields = ['case_id', 'provider', 'patient', 'encounter_source', 'department', 'multi_modal_data',
+        fields = ['id', 'provider', 'patient', 'encounter_source', 'department', 'multi_modal_data',
                   'encounter_date_and_time', 'patient_satisfaction', 'provider_satisfaction', 'is_deidentified', 'is_restricted']
 
 
