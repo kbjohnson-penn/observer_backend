@@ -6,7 +6,9 @@ config.DATABASE_URL = settings.NEO4J_BOLT_URL
 
 
 class PatientNode(StructuredNode):
+    django_id = IntegerProperty(unique_index=True)
     patient_id = StringProperty(unique_index=True)
+    patient_id_display = StringProperty(unique_index=True)
     date_of_birth = DateProperty()
     sex = StringProperty()
     race = StringProperty()
@@ -15,7 +17,9 @@ class PatientNode(StructuredNode):
 
 
 class ProviderNode(StructuredNode):
+    django_id = IntegerProperty(unique_index=True)
     provider_id = StringProperty(unique_index=True)
+    provider_id_display = StringProperty(unique_index=True)
     date_of_birth = DateProperty()
     sex = StringProperty()
     race = StringProperty()
@@ -24,17 +28,21 @@ class ProviderNode(StructuredNode):
 
 
 class EncounterSourceNode(StructuredNode):
+    django_id = IntegerProperty(unique_index=True)
     name = StringProperty(unique_index=True)
     encounters = RelationshipFrom('EncounterNode', 'HAS_SOURCE')
 
 
 class DepartmentNode(StructuredNode):
+    django_id = IntegerProperty(unique_index=True)
     name = StringProperty(unique_index=True)
     encounters = RelationshipFrom('EncounterNode', 'OCCURRED_IN_DEPARTMENT')
 
 
 class MultiModalDataPathNode(StructuredNode):
+    django_id = IntegerProperty(unique_index=True)
     multi_modal_data_id = StringProperty(unique_index=True)
+    multi_modal_data_id_display = StringProperty()
     provider_view = StringProperty()
     patient_view = StringProperty()
     room_view = StringProperty()
@@ -49,7 +57,9 @@ class MultiModalDataPathNode(StructuredNode):
 
 
 class EncounterNode(StructuredNode):
-    case_id = StringProperty(unique_index=True)
+    django_id = IntegerProperty(unique_index=True)
+    encouter_id = StringProperty(unique_index=True)
+    encouter_id_display = StringProperty()
     encounter_date_and_time = DateProperty()
     patient_satisfaction = IntegerProperty()
     provider_satisfaction = IntegerProperty()
