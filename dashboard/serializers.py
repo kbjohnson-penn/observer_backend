@@ -1,10 +1,22 @@
 from rest_framework import serializers
-from .models import Patient, Provider, Department, MultiModalDataPath, Encounter, EncounterSource
+from .models import Patient, Provider, Department, MultiModalDataPath, Encounter, EncounterSource, EncounterSimCenter, EncounterRIAS
 
 BOOLEAN_CHOICES = {
     True: 'Yes',
     False: 'No',
 }
+
+
+class EncounterSourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EncounterSource
+        fields = ['name']
+
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
+        fields = ['name']
 
 
 class PatientSerializer(serializers.ModelSerializer):
@@ -35,18 +47,6 @@ class ProviderSerializer(serializers.ModelSerializer):
         return rep
 
 
-class EncounterSourceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EncounterSource
-        fields = ['name']
-
-
-class DepartmentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Department
-        fields = ['name']
-
-
 class MultiModalDataPathSerializer(serializers.ModelSerializer):
     class Meta:
         model = MultiModalDataPath
@@ -73,10 +73,54 @@ class EncounterSerializer(serializers.ModelSerializer):
                   'encounter_date_and_time', 'patient_satisfaction', 'provider_satisfaction', 'is_deidentified', 'is_restricted']
 
     def get_patient_id(self, obj):
-        return obj.patient.patient_id
+        return obj.patient.id
 
     def get_provider_id(self, obj):
-        return obj.provider.provider_id
+        return obj.provider.id
+
+    def get_multi_modal_data_id(self, obj):
+        return obj.multi_modal_data.id
+
+
+class EncounterSimCenterSerializer(serializers.ModelSerializer):
+    encounter_source = serializers.StringRelatedField()
+    department = serializers.StringRelatedField()
+    patient_id = serializers.SerializerMethodField()
+    provider_id = serializers.SerializerMethodField()
+    multi_modal_data_id = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EncounterSimCenter
+        fields = ['id', 'provider_id', 'patient_id', 'encounter_source', 'department', 'case_id', 'multi_modal_data_id',
+                  'encounter_date_and_time', 'is_deidentified', 'is_restricted']
+
+    def get_patient_id(self, obj):
+        return obj.patient.id
+
+    def get_provider_id(self, obj):
+        return obj.provider.id
+
+    def get_multi_modal_data_id(self, obj):
+        return obj.multi_modal_data.id
+
+
+class EncounterRIASSerializer(serializers.ModelSerializer):
+    encounter_source = serializers.StringRelatedField()
+    department = serializers.StringRelatedField()
+    patient_id = serializers.SerializerMethodField()
+    provider_id = serializers.SerializerMethodField()
+    multi_modal_data_id = serializers.SerializerMethodField()
+
+    class Meta:
+        model = EncounterRIAS
+        fields = ['id', 'provider_id', 'patient_id', 'encounter_source', 'department', 'case_id', 'multi_modal_data_id',
+                  'is_deidentified', 'is_restricted']
+
+    def get_patient_id(self, obj):
+        return obj.patient.id
+
+    def get_provider_id(self, obj):
+        return obj.provider.id
 
     def get_multi_modal_data_id(self, obj):
         return obj.multi_modal_data.id

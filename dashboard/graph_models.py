@@ -72,3 +72,37 @@ class EncounterNode(StructuredNode):
     department = RelationshipTo('DepartmentNode', 'OCCURRED_IN_DEPARTMENT')
     data_paths = RelationshipTo(
         'MultiModalDataPathNode', 'ASSOCIATED_WITH_MULTI_MODAL_DATA')
+
+
+class EncounterSimCenterNode(StructuredNode):
+    django_id = IntegerProperty(unique_index=True)
+    encounter_id = StringProperty(unique_index=True)
+    encounter_id_display = StringProperty()
+    case_id = StringProperty(unique_index=True)
+    encounter_date_and_time = DateProperty()
+    is_deidentified = BooleanProperty()
+    is_restricted = BooleanProperty()
+
+    patient = RelationshipTo('PatientNode', 'HAS_PATIENT')
+    provider = RelationshipTo('ProviderNode', 'HAS_PROVIDER')
+    encounter_source = RelationshipTo('EncounterSourceNode', 'HAS_SOURCE')
+    department = RelationshipTo('DepartmentNode', 'OCCURRED_IN_DEPARTMENT')
+    data_paths = RelationshipTo(
+        'MultiModalDataPathNode', 'ASSOCIATED_WITH_MULTI_MODAL_DATA')
+
+
+class EncounterRIASNode(StructuredNode):
+    django_id = IntegerProperty(unique_index=True)
+    encounter_id = StringProperty(unique_index=True)
+    encounter_id_display = StringProperty()
+    case_id = StringProperty(unique_index=True)
+    encounter_date_and_time = DateProperty()
+    is_deidentified = BooleanProperty()
+    is_restricted = BooleanProperty()
+
+    patient = RelationshipTo('PatientNode', 'HAS_PATIENT')
+    provider = RelationshipTo('ProviderNode', 'HAS_PROVIDER')
+    encounter_source = RelationshipTo('EncounterSourceNode', 'HAS_SOURCE')
+    department = RelationshipTo('DepartmentNode', 'OCCURRED_IN_DEPARTMENT')
+    data_paths = RelationshipTo(
+        'MultiModalDataPathNode', 'ASSOCIATED_WITH_MULTI_MODAL_DATA')

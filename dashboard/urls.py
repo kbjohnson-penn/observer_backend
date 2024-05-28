@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import PatientViewSet, ProviderViewSet, DepartmentViewSet, MultiModalDataPathViewSet, EncounterViewSet, EncounterSourceViewSet
+from .views import PatientViewSet, ProviderViewSet, DepartmentViewSet, MultiModalDataPathViewSet, EncounterViewSet, EncounterSourceViewSet, EncounterSimCenterViewSet, EncounterRIASViewSet
 from .views import GetKnowledgeGraph
 
 router = DefaultRouter()
@@ -11,6 +11,10 @@ router.register(r'encountersources', EncounterSourceViewSet,
 router.register(r'departments', DepartmentViewSet, basename='department')
 router.register(r'datapaths', MultiModalDataPathViewSet, basename='datapath')
 router.register(r'encounters', EncounterViewSet, basename='encounter')
+router.register(r'encounters-simcenter', EncounterSimCenterViewSet,
+                basename='encounter-simcenter')
+router.register(r'encounters-rias', EncounterRIASViewSet,
+                basename='encounter-rias')
 
 urlpatterns = [
     path('api/', include(router.urls)),
