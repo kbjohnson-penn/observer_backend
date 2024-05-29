@@ -22,7 +22,8 @@ class DepartmentSerializer(serializers.ModelSerializer):
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
-        fields = ['patient_id', 'date_of_birth', 'sex', 'race', 'ethnicity']
+        fields = ['id', 'patient_id', 'date_of_birth',
+                  'sex', 'race', 'ethnicity']
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
@@ -36,7 +37,8 @@ class PatientSerializer(serializers.ModelSerializer):
 class ProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Provider
-        fields = ['provider_id', 'date_of_birth', 'sex', 'race', 'ethnicity']
+        fields = ['id', 'provider_id', 'date_of_birth',
+                  'sex', 'race', 'ethnicity']
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
