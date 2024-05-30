@@ -93,7 +93,7 @@ class EncounterSimCenterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EncounterSimCenter
-        fields = ['id', 'provider_id', 'patient_id', 'encounter_source', 'department', 'case_id', 'multi_modal_data_id',
+        fields = ['id', 'provider_id', 'patient_id', 'encounter_source', 'department', 'multi_modal_data_id',
                   'encounter_date_and_time', 'is_deidentified', 'is_restricted']
 
     def get_patient_id(self, obj):
@@ -115,7 +115,7 @@ class EncounterRIASSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EncounterRIAS
-        fields = ['id', 'provider_id', 'patient_id', 'encounter_source', 'department', 'case_id', 'multi_modal_data_id',
+        fields = ['id', 'provider_id', 'patient_id', 'encounter_source', 'department', 'multi_modal_data_id',
                   'is_deidentified', 'is_restricted']
 
     def get_patient_id(self, obj):
