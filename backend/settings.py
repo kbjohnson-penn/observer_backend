@@ -31,11 +31,11 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = config('ALLOWED_HOSTS').split(',')
 
 APPEND_SLASH = True
 
-CSRF_TRUSTED_ORIGINS = ['https://observer-dev.pmacs.upenn.edu']
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS').split(',')
 
 CORS_ALLOW_ALL_ORIGINS = True  # If you want to allow all origins
 
