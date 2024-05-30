@@ -72,6 +72,12 @@ FLUSH PRIVILEGES;
 
 ## Running the Project
 
+Test if SQL and Neo4j connections work.
+
+```bash
+python manage.py test_connections
+```
+
 Apply the database migrations to create the database schema
 
 ```bash
