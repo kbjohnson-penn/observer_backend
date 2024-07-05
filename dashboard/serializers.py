@@ -1,10 +1,20 @@
 from rest_framework import serializers
+from datetime import date
+from dateutil.relativedelta import relativedelta
 from .models import Patient, Provider, Department, MultiModalDataPath, Encounter, EncounterSource, EncounterSimCenter, EncounterRIAS
 
 BOOLEAN_CHOICES = {
     True: 'Yes',
     False: 'No',
 }
+
+
+def calculate_age(date_of_birth):
+    if date_of_birth is None:
+        return None  # or a default value, e.g., 0 or 'Unknown'
+    today = date.today()
+    age = relativedelta(today, date_of_birth).years
+    return age
 
 
 class EncounterSourceSerializer(serializers.ModelSerializer):
@@ -19,11 +29,22 @@ class DepartmentSerializer(serializers.ModelSerializer):
         fields = ['name']
 
 
-class PatientSerializer(serializers.ModelSerializer):
+class ProviderSerializer(serializers.ModelSerializer):
+    year_of_birth = serializers.SerializerMethodField()
+
     class Meta:
-        model = Patient
-        fields = ['id', 'patient_id', 'date_of_birth',
+        model = Provider
+        fields = ['id', 'provider_id', 'year_of_birth',
                   'sex', 'race', 'ethnicity']
+
+    def get_year_of_birth(self, instance):
+        age = calculate_age(instance.date_of_birth)
+        if age is None:
+            return None
+        if age > 89:
+            max_year_of_birth = date.today().year - 89
+            return max_year_of_birth
+        return instance.date_of_birth.year
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
@@ -34,11 +55,22 @@ class PatientSerializer(serializers.ModelSerializer):
         return rep
 
 
-class ProviderSerializer(serializers.ModelSerializer):
+class PatientSerializer(serializers.ModelSerializer):
+    year_of_birth = serializers.SerializerMethodField()
+
     class Meta:
-        model = Provider
-        fields = ['id', 'provider_id', 'date_of_birth',
+        model = Patient
+        fields = ['id', 'patient_id', 'year_of_birth',
                   'sex', 'race', 'ethnicity']
+
+    def get_year_of_birth(self, instance):
+        age = calculate_age(instance.date_of_birth)
+        if age is None:
+            return None
+        if age > 89:
+            max_year_of_birth = date.today().year - 89
+            return max_year_of_birth
+        return instance.date_of_birth.year
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
