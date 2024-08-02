@@ -133,7 +133,6 @@ class Encounter(models.Model):
         unique=True,
         max_length=10,
         verbose_name="CSN Number",
-        validators=[numeric_validator]
     )
     encounter_source = models.ForeignKey(
         EncounterSource,
