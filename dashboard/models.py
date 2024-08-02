@@ -1,5 +1,5 @@
 from django.db import models, transaction
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from datetime import datetime
 from django.utils import timezone
@@ -32,6 +32,9 @@ SEX_CATEGORIES = [
     ('F', 'Female'),
     ('UN', 'Unknown or Not Reported')
 ]
+
+numeric_validator = RegexValidator(
+    r'^[0-9]*$', 'Only numeric characters are allowed.')
 
 
 class EncounterSource(models.Model):
@@ -126,6 +129,11 @@ class MultiModalDataPath(models.Model):
 
 
 class Encounter(models.Model):
+    csn_number = models.CharField(
+        unique=True,
+        max_length=10,
+        verbose_name="CSN Number",
+    )
     encounter_source = models.ForeignKey(
         EncounterSource,
         on_delete=models.CASCADE,
