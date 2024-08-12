@@ -163,6 +163,8 @@ def create_or_update_multi_modal_data_path(sender, instance, created, **kwargs):
             transcript=instance.transcript,
             patient_survey=instance.patient_survey,
             provider_survey=instance.provider_survey,
+            patient_annotation=instance.patient_annotation,
+            provider_annotation=instance.provider_annotation,
             rias_transcript=instance.rias_transcript,
             rias_codes=instance.rias_codes,
             django_id=instance.id
@@ -178,6 +180,8 @@ def create_or_update_multi_modal_data_path(sender, instance, created, **kwargs):
         multi_modal_data_path_node.transcript = instance.transcript
         multi_modal_data_path_node.patient_survey = instance.patient_survey
         multi_modal_data_path_node.provider_survey = instance.provider_survey
+        multi_modal_data_path_node.patient_annotation = instance.patient_annotation
+        multi_modal_data_path_node.provider_annotation = instance.provider_annotation
         multi_modal_data_path_node.rias_transcript = instance.rias_transcript
         multi_modal_data_path_node.rias_codes = instance.rias_codes
         multi_modal_data_path_node.save()
