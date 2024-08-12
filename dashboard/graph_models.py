@@ -50,6 +50,8 @@ class MultiModalDataPathNode(StructuredNode):
     transcript = StringProperty()
     patient_survey = StringProperty()
     provider_survey = StringProperty()
+    patient_annotation = StringProperty()
+    provider_annotation = StringProperty()
     rias_transcript = StringProperty()
     rias_codes = StringProperty()
     encounters = RelationshipFrom(

@@ -114,6 +114,10 @@ class MultiModalDataPath(models.Model):
         max_length=200, null=True, blank=True, verbose_name="Patient Survey")
     provider_survey = models.URLField(
         max_length=200, null=True, blank=True, verbose_name="Provider Survey")
+    patient_annotation = models.URLField(
+        max_length=200, null=True, blank=True, verbose_name="Patient Annotation")
+    provider_annotation = models.URLField(
+        max_length=200, null=True, blank=True, verbose_name="Provider Annotation")
     rias_transcript = models.URLField(
         max_length=200, null=True, blank=True, verbose_name="RIAS Transcript")
     rias_codes = models.URLField(
