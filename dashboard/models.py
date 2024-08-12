@@ -60,7 +60,7 @@ class Department(models.Model):
 
 
 class Patient(models.Model):
-    patient_id = models.IntegerField(unique=True)
+    patient_id = models.PositiveIntegerField(unique=True)
     first_name = models.CharField(max_length=255, blank=True)
     last_name = models.CharField(max_length=255, blank=True)
     date_of_birth = models.DateField(blank=True, null=True)
@@ -80,7 +80,7 @@ class Patient(models.Model):
 
 
 class Provider(models.Model):
-    provider_id = models.IntegerField(unique=True)
+    provider_id = models.PositiveIntegerField(unique=True)
     first_name = models.CharField(max_length=255, blank=True)
     last_name = models.CharField(max_length=255, blank=True)
     date_of_birth = models.DateField(blank=True, null=True)
@@ -155,13 +155,13 @@ class Encounter(models.Model):
         MultiModalDataPath, on_delete=models.CASCADE, verbose_name="Multi Modal Data Path")
     encounter_date_and_time = models.DateTimeField(
         default=datetime.now, verbose_name="Encounter Date and Time")
-    provider_satisfaction = models.IntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
+    provider_satisfaction = models.PositiveSmallIntegerField(
+        validators=[MaxValueValidator(5)],
         default=0,
         verbose_name="Provider Satisfaction"
     )
-    patient_satisfaction = models.IntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(5)],
+    patient_satisfaction = models.PositiveSmallIntegerField(
+        validators=[MaxValueValidator(5)],
         default=0,
         verbose_name="Patient Satisfaction"
     )
