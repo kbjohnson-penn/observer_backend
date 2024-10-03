@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 from decouple import config
 import os
+from dashboard.utils import SanitizingHandler
 
 # Added to fix mysqlclient
 import pymysql
@@ -78,6 +79,7 @@ TEMPLATES = [
         'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
+            'debug': True,
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
@@ -150,3 +152,40 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Azure Data Lake Storage settings
+AZURE_STORAGE_ACCOUNT_NAME = config('AZURE_STORAGE_ACCOUNT_NAME')
+AZURE_STORAGE_FILE_SYSTEM_NAME = config('AZURE_STORAGE_FILE_SYSTEM_NAME')
+AZURE_SAS_TOKEN = config('AZURE_SAS_TOKEN')
+
+# Logging settings
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, config('LOG_FILE')),
+            'formatter': 'verbose',
+        },
+        'sanitizing': {
+            'class': 'dashboard.utils.SanitizingHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console', 'file', 'sanitizing'],
+            'level': 'INFO',
+        },
+    },
+}

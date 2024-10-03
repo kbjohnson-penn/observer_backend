@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from .models import Patient, Provider, Department, Encounter, MultiModalDataPath, EncounterSource, EncounterSimCenter, EncounterRIAS
-from .graph_models import PatientNode, ProviderNode, DepartmentNode, EncounterNode, MultiModalDataPathNode, EncounterSourceNode, EncounterSimCenterNode, EncounterRIASNode
+from .models import Patient, Provider, Department, Encounter, EncounterSource, EncounterSimCenter, EncounterRIAS
+from .graph_models import PatientNode, ProviderNode, DepartmentNode, EncounterNode, EncounterSourceNode, EncounterSimCenterNode, EncounterRIASNode
 from datetime import date
 
 
@@ -150,53 +150,6 @@ def delete_department(sender, instance, **kwargs):
         pass
 
 
-@receiver(post_save, sender=MultiModalDataPath)
-def create_or_update_multi_modal_data_path(sender, instance, created, **kwargs):
-    if created:
-        MultiModalDataPathNode(
-            multi_modal_data_id=instance.id,
-            multi_modal_data_id_display=f'MMD{instance.id}',
-            provider_view=instance.provider_view,
-            patient_view=instance.patient_view,
-            room_view=instance.room_view,
-            audio=instance.audio,
-            transcript=instance.transcript,
-            patient_survey=instance.patient_survey,
-            provider_survey=instance.provider_survey,
-            patient_annotation=instance.patient_annotation,
-            provider_annotation=instance.provider_annotation,
-            rias_transcript=instance.rias_transcript,
-            rias_codes=instance.rias_codes,
-            django_id=instance.id
-        ).save()
-    else:
-        multi_modal_data_path_node = MultiModalDataPathNode.nodes.get(
-            django_id=instance.id)
-        multi_modal_data_path_node.multi_modal_data_id_display = f'MMD{instance.id}'
-        multi_modal_data_path_node.provider_view = instance.provider_view
-        multi_modal_data_path_node.patient_view = instance.patient_view
-        multi_modal_data_path_node.room_view = instance.room_view
-        multi_modal_data_path_node.audio = instance.audio
-        multi_modal_data_path_node.transcript = instance.transcript
-        multi_modal_data_path_node.patient_survey = instance.patient_survey
-        multi_modal_data_path_node.provider_survey = instance.provider_survey
-        multi_modal_data_path_node.patient_annotation = instance.patient_annotation
-        multi_modal_data_path_node.provider_annotation = instance.provider_annotation
-        multi_modal_data_path_node.rias_transcript = instance.rias_transcript
-        multi_modal_data_path_node.rias_codes = instance.rias_codes
-        multi_modal_data_path_node.save()
-
-
-@receiver(post_delete, sender=MultiModalDataPath)
-def delete_multi_modal_data_path(sender, instance, **kwargs):
-    try:
-        multi_modal_data_path_node = MultiModalDataPathNode.nodes.get(
-            django_id=instance.id)
-        multi_modal_data_path_node.delete()
-    except MultiModalDataPathNode.DoesNotExist:
-        pass
-
-
 @receiver(post_save, sender=Encounter)
 def create_or_update_encounter_node(sender, instance, created, **kwargs):
     patient = PatientNode.nodes.get_or_none(
@@ -205,8 +158,6 @@ def create_or_update_encounter_node(sender, instance, created, **kwargs):
         django_id=instance.provider.id) if instance.provider else None
     department = DepartmentNode.nodes.get_or_none(
         django_id=instance.department.id) if instance.department else None
-    multi_modal_data = MultiModalDataPathNode.nodes.get_or_none(
-        django_id=instance.multi_modal_data.id) if instance.multi_modal_data else None
     encounter_source = EncounterSourceNode.nodes.get_or_none(
         django_id=instance.encounter_source.id) if instance.encounter_source else None
 
@@ -245,10 +196,6 @@ def create_or_update_encounter_node(sender, instance, created, **kwargs):
         for encounter_node in encounter_nodes:
             encounter_node.department.disconnect_all()
             encounter_node.department.connect(department)
-    if multi_modal_data is not None:
-        for encounter_node in encounter_nodes:
-            encounter_node.data_paths.disconnect_all()
-            encounter_node.data_paths.connect(multi_modal_data)
     if encounter_source is not None:
         for encounter_node in encounter_nodes:
             encounter_node.encounter_source.disconnect_all()
@@ -268,8 +215,6 @@ def delete_encounter(sender, instance, **kwargs):
 def create_or_update_encounter_sim_center_node(sender, instance, created, **kwargs):
     department = DepartmentNode.nodes.get_or_none(
         django_id=instance.department.id) if instance.department else None
-    multi_modal_data = MultiModalDataPathNode.nodes.get_or_none(
-        django_id=instance.multi_modal_data.id) if instance.multi_modal_data else None
     encounter_source = EncounterSourceNode.nodes.get_or_none(
         django_id=instance.encounter_source.id) if instance.encounter_source else None
     patient = PatientNode.nodes.get_or_none(
@@ -303,10 +248,6 @@ def create_or_update_encounter_sim_center_node(sender, instance, created, **kwar
         for encounter_sim_center_node in encounter_sim_center_nodes:
             encounter_sim_center_node.department.disconnect_all()
             encounter_sim_center_node.department.connect(department)
-    if multi_modal_data is not None:
-        for encounter_sim_center_node in encounter_sim_center_nodes:
-            encounter_sim_center_node.data_paths.disconnect_all()
-            encounter_sim_center_node.data_paths.connect(multi_modal_data)
     if encounter_source is not None:
         for encounter_sim_center_node in encounter_sim_center_nodes:
             encounter_sim_center_node.encounter_source.disconnect_all()
@@ -336,8 +277,6 @@ def delete_encounter_sim_center(sender, instance, **kwargs):
 def create_or_update_encounter_rias_node(sender, instance, created, **kwargs):
     department = DepartmentNode.nodes.get_or_none(
         django_id=instance.department.id) if instance.department else None
-    multi_modal_data = MultiModalDataPathNode.nodes.get_or_none(
-        django_id=instance.multi_modal_data.id) if instance.multi_modal_data else None
     encounter_source = EncounterSourceNode.nodes.get_or_none(
         django_id=instance.encounter_source.id) if instance.encounter_source else None
     patient = PatientNode.nodes.get_or_none(
@@ -369,10 +308,6 @@ def create_or_update_encounter_rias_node(sender, instance, created, **kwargs):
         for encounter_rias_node in encounter_rias_nodes:
             encounter_rias_node.department.disconnect_all()
             encounter_rias_node.department.connect(department)
-    if multi_modal_data is not None:
-        for encounter_rias_node in encounter_rias_nodes:
-            encounter_rias_node.data_paths.disconnect_all()
-            encounter_rias_node.data_paths.connect(multi_modal_data)
     if encounter_source is not None:
         for encounter_rias_node in encounter_rias_nodes:
             encounter_rias_node.encounter_source.disconnect_all()

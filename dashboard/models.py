@@ -1,5 +1,6 @@
 from django.db import models, transaction
-from django.core.validators import MinValueValidator, MaxValueValidator, RegexValidator
+from django.conf import settings
+from django.core.validators import MaxValueValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from datetime import datetime
 from django.utils import timezone
@@ -32,6 +33,22 @@ SEX_CATEGORIES = [
     ('F', 'Female'),
     ('UN', 'Unknown or Not Reported')
 ]
+
+FILE_TYPE_CHOICES = [
+    ('room_view', 'Room View'),
+    ('provider_view', 'Provider View'),
+    ('patient_view', 'Patient View'),
+    ('audio', 'Audio'),
+    ('transcript', 'Transcript'),
+    ('patient_survey', 'Patient Survey'),
+    ('provider_survey', 'Provider Survey'),
+    ('patient_annotation', 'Patient Annotation'),
+    ('provider_annotation', 'Provider Annotation'),
+    ('rias_transcript', 'RIAS Transcript'),
+    ('rias_codes', 'RIAS Codes'),
+    ('other', 'Other'),
+]
+FILE_TYPE_CHOICES_DICT = dict(FILE_TYPE_CHOICES)
 
 numeric_validator = RegexValidator(
     r'^[0-9]*$', 'Only numeric characters are allowed.')
@@ -132,6 +149,21 @@ class MultiModalDataPath(models.Model):
         verbose_name_plural = 'Multi Modal Data Paths'
 
 
+class EncounterFile(models.Model):
+    encounter = models.ForeignKey(
+        'Encounter', on_delete=models.CASCADE, related_name='files', null=True, blank=True)
+    encounter_sim_center = models.ForeignKey(
+        'EncounterSimCenter', on_delete=models.CASCADE, related_name='files', null=True, blank=True)
+    encounter_rias = models.ForeignKey(
+        'EncounterRIAS', on_delete=models.CASCADE, related_name='files', null=True, blank=True)
+    file_type = models.CharField(
+        max_length=50, choices=FILE_TYPE_CHOICES, blank=True, null=True)
+    file_path = models.CharField(max_length=255, blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{FILE_TYPE_CHOICES_DICT.get(self.file_type, "Unknown")} - {self.encounter or self.encounter_sim_center or self.encounter_rias}'
+
 class Encounter(models.Model):
     csn_number = models.CharField(
         unique=True,
@@ -151,8 +183,6 @@ class Encounter(models.Model):
         Provider, on_delete=models.CASCADE)
     patient = models.ForeignKey(
         Patient, on_delete=models.CASCADE)
-    multi_modal_data = models.ForeignKey(
-        MultiModalDataPath, on_delete=models.CASCADE, verbose_name="Multi Modal Data Path")
     encounter_date_and_time = models.DateTimeField(
         default=datetime.now, verbose_name="Encounter Date and Time")
     provider_satisfaction = models.PositiveSmallIntegerField(
@@ -194,10 +224,6 @@ class Encounter(models.Model):
 
         super(Encounter, self).save(*args, **kwargs)
 
-    def delete(self, *args, **kwargs):
-        MultiModalDataPath.objects.filter(encounter=self).delete()
-        super(Encounter, self).delete(*args, **kwargs)
-
     class Meta:
         verbose_name = 'Encounter (Clinic)'
         verbose_name_plural = 'Encounters (Clinic)'
@@ -220,8 +246,6 @@ class EncounterSimCenter(models.Model):
     case_id = models.CharField(max_length=255, verbose_name="Case ID")
     encounter_date_and_time = models.DateTimeField(
         default=datetime.now, verbose_name="Encounter Date and Time")
-    multi_modal_data = models.ForeignKey(
-        MultiModalDataPath, on_delete=models.CASCADE, verbose_name="Multi Modal Data Path")
     is_deidentified = models.BooleanField(
         choices=BOOLEAN_CHOICES, default=False, verbose_name="Is Deidentified")
     is_restricted = models.BooleanField(
@@ -246,7 +270,7 @@ class EncounterSimCenter(models.Model):
         super(EncounterSimCenter, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        MultiModalDataPath.objects.filter(encountersimcenter=self).delete()
+        EncounterFile.objects.filter(encounter=self).delete()
         if self.patient:
             self.patient.delete()
         if self.provider:
@@ -276,8 +300,6 @@ class EncounterRIAS(models.Model):
     department = models.ForeignKey(
         Department, on_delete=models.CASCADE)
     case_id = models.CharField(max_length=255, verbose_name="Case ID")
-    multi_modal_data = models.ForeignKey(
-        MultiModalDataPath, on_delete=models.CASCADE, verbose_name="Multi Modal Data Path")
     is_deidentified = models.BooleanField(
         choices=BOOLEAN_CHOICES, default=False, verbose_name="Is Deidentified")
     is_restricted = models.BooleanField(
@@ -302,7 +324,7 @@ class EncounterRIAS(models.Model):
         super(EncounterRIAS, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        MultiModalDataPath.objects.filter(encounterrias=self).delete()
+        EncounterFile.objects.filter(encounter=self).delete()
         if self.patient:
             self.patient.delete()
         if self.provider:
