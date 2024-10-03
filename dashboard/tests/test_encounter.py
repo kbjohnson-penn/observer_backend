@@ -13,15 +13,13 @@ class EncounterModelTest(TestCase):
             provider_id='125', first_name='John', last_name='Doe')
         self.patient = Patient.objects.create(
             patient_id='125', first_name='John', last_name='Doe')
-        self.multi_modal_data_path = MultiModalDataPath.objects.create(
-            multi_modal_data_id='125')
         self.encounter = Encounter.objects.create(
             case_id='125',
             encounter_source=self.encounter_source,
             department=self.department,
             provider=self.provider,
             patient=self.patient,
-            multi_modal_data=self.multi_modal_data_path,
+
             encounter_date_and_time=timezone.now()  # Use timezone-aware datetime
         )
 
@@ -33,8 +31,6 @@ class EncounterModelTest(TestCase):
         self.assertEqual(self.encounter.department, self.department)
         self.assertEqual(self.encounter.provider, self.provider)
         self.assertEqual(self.encounter.patient, self.patient)
-        self.assertEqual(self.encounter.multi_modal_data,
-                         self.multi_modal_data_path)
 
     def test_encounter_str(self):
         self.assertEqual(str(self.encounter), 'E125')
@@ -47,7 +43,7 @@ class EncounterModelTest(TestCase):
                 department=self.department,
                 provider=self.provider,
                 patient=self.patient,
-                multi_modal_data=self.multi_modal_data_path
+
             )
 
     def test_encounter_case_id_validation(self):
@@ -58,7 +54,7 @@ class EncounterModelTest(TestCase):
                 department=self.department,
                 provider=self.provider,
                 patient=self.patient,
-                multi_modal_data=self.multi_modal_data_path
+
             )
 
     def test_encounter_date(self):
@@ -85,7 +81,7 @@ class EncounterModelTest(TestCase):
                 department=self.department,
                 provider=self.provider,
                 patient=self.patient,
-                multi_modal_data=self.multi_modal_data_path
+
             )
 
     def test_encounter_case_id_whitespace(self):
@@ -96,7 +92,7 @@ class EncounterModelTest(TestCase):
                 department=self.department,
                 provider=self.provider,
                 patient=self.patient,
-                multi_modal_data=self.multi_modal_data_path
+
             )
 
     def test_patient_satisfaction_negative(self):
@@ -107,7 +103,7 @@ class EncounterModelTest(TestCase):
                 department=self.department,
                 provider=self.provider,
                 patient=self.patient,
-                multi_modal_data=self.multi_modal_data_path,
+
                 patient_satisfaction=-1
             )
 
@@ -119,7 +115,7 @@ class EncounterModelTest(TestCase):
                 department=self.department,
                 provider=self.provider,
                 patient=self.patient,
-                multi_modal_data=self.multi_modal_data_path,
+
                 provider_satisfaction=-1
             )
 
@@ -131,7 +127,7 @@ class EncounterModelTest(TestCase):
             department=self.department,
             provider=self.provider,
             patient=self.patient,
-            multi_modal_data=self.multi_modal_data_path,
+
             encounter_date_and_time=future_date
         )
         self.assertEqual(

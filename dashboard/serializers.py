@@ -158,21 +158,3 @@ class EncounterRIASSerializer(serializers.ModelSerializer):
 
     def get_multi_modal_data_id(self, obj):
         return obj.multi_modal_data.id
-
-
-class NodeSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    labels = serializers.ListField(child=serializers.CharField())
-    properties = serializers.DictField(child=serializers.JSONField())
-
-
-class EdgeSerializer(serializers.Serializer):
-    source = serializers.IntegerField()
-    target = serializers.IntegerField()
-    type = serializers.CharField()
-    properties = serializers.DictField(child=serializers.JSONField())
-
-
-class GraphSerializer(serializers.Serializer):
-    nodes = NodeSerializer(many=True)
-    edges = EdgeSerializer(many=True)

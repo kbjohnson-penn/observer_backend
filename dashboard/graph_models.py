@@ -39,25 +39,6 @@ class DepartmentNode(StructuredNode):
     encounters = RelationshipFrom('EncounterNode', 'OCCURRED_IN_DEPARTMENT')
 
 
-class MultiModalDataPathNode(StructuredNode):
-    django_id = IntegerProperty(unique_index=True)
-    multi_modal_data_id = StringProperty(unique_index=True)
-    multi_modal_data_id_display = StringProperty()
-    provider_view = StringProperty()
-    patient_view = StringProperty()
-    room_view = StringProperty()
-    audio = StringProperty()
-    transcript = StringProperty()
-    patient_survey = StringProperty()
-    provider_survey = StringProperty()
-    patient_annotation = StringProperty()
-    provider_annotation = StringProperty()
-    rias_transcript = StringProperty()
-    rias_codes = StringProperty()
-    encounters = RelationshipFrom(
-        'EncounterNode', 'ASSOCIATED_WITH_MULTI_MODAL_DATA')
-
-
 class EncounterNode(StructuredNode):
     django_id = IntegerProperty(unique_index=True)
     encouter_id = StringProperty(unique_index=True)
@@ -72,9 +53,7 @@ class EncounterNode(StructuredNode):
     provider = RelationshipTo('ProviderNode', 'HAS_PROVIDER')
     encounter_source = RelationshipTo('EncounterSourceNode', 'HAS_SOURCE')
     department = RelationshipTo('DepartmentNode', 'OCCURRED_IN_DEPARTMENT')
-    data_paths = RelationshipTo(
-        'MultiModalDataPathNode', 'ASSOCIATED_WITH_MULTI_MODAL_DATA')
-
+    
 
 class EncounterSimCenterNode(StructuredNode):
     django_id = IntegerProperty(unique_index=True)
@@ -89,9 +68,7 @@ class EncounterSimCenterNode(StructuredNode):
     provider = RelationshipTo('ProviderNode', 'HAS_PROVIDER')
     encounter_source = RelationshipTo('EncounterSourceNode', 'HAS_SOURCE')
     department = RelationshipTo('DepartmentNode', 'OCCURRED_IN_DEPARTMENT')
-    data_paths = RelationshipTo(
-        'MultiModalDataPathNode', 'ASSOCIATED_WITH_MULTI_MODAL_DATA')
-
+    
 
 class EncounterRIASNode(StructuredNode):
     django_id = IntegerProperty(unique_index=True)
@@ -106,5 +83,4 @@ class EncounterRIASNode(StructuredNode):
     provider = RelationshipTo('ProviderNode', 'HAS_PROVIDER')
     encounter_source = RelationshipTo('EncounterSourceNode', 'HAS_SOURCE')
     department = RelationshipTo('DepartmentNode', 'OCCURRED_IN_DEPARTMENT')
-    data_paths = RelationshipTo(
-        'MultiModalDataPathNode', 'ASSOCIATED_WITH_MULTI_MODAL_DATA')
+    

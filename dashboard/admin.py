@@ -1,7 +1,8 @@
 from django import forms
 from django.contrib import admin
-from .models import Patient, Provider, Department, MultiModalDataPath, Encounter, EncounterSimCenter, EncounterRIAS
-from .forms import EncounterForm, PatientForm, ProviderForm
+from .models import Patient, Provider, Department, MultiModalDataPath, Encounter, EncounterSimCenter, EncounterRIAS, EncounterFile
+from .forms import EncounterForm, PatientForm, ProviderForm, EncounterFileForm
+
 
 class PatientAdmin(admin.ModelAdmin):
     form = PatientForm
@@ -19,8 +20,22 @@ class ProviderAdmin(admin.ModelAdmin):
         return qs.exclude(provider_id__range=(100000, 999999))
 
 
+class EncounterFileInline(admin.TabularInline):
+    model = EncounterFile
+    form = EncounterFileForm
+    extra = 1
+    fields = ['file_type', 'file', 'file_path', 'delete_file']
+    readonly_fields = ['file_path']
+
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        formset.form.base_fields['delete_file'].widget = forms.CheckboxInput()
+        return formset
+
+
 class EncounterAdmin(admin.ModelAdmin):
     form = EncounterForm
+    inlines = [EncounterFileInline]
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "patient":
@@ -39,6 +54,7 @@ class EncounterAdmin(admin.ModelAdmin):
 
 class EncounterSimCenterAdmin(admin.ModelAdmin):
     form = EncounterForm
+    inlines = [EncounterFileInline]
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -49,6 +65,8 @@ class EncounterSimCenterAdmin(admin.ModelAdmin):
 
 
 class EncounterRIASAdmin(admin.ModelAdmin):
+    inlines = [EncounterFileInline]
+
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         form.base_fields['encounter_source'].widget = forms.HiddenInput()
@@ -60,7 +78,6 @@ class EncounterRIASAdmin(admin.ModelAdmin):
 admin.site.register(Patient, PatientAdmin)
 admin.site.register(Provider, ProviderAdmin)
 admin.site.register(Department)
-admin.site.register(MultiModalDataPath)
 admin.site.register(Encounter, EncounterAdmin)
 admin.site.register(EncounterSimCenter, EncounterSimCenterAdmin)
 admin.site.register(EncounterRIAS, EncounterRIASAdmin)
