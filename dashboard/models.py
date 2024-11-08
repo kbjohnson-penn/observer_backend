@@ -1,5 +1,4 @@
 from django.db import models, transaction
-from django.conf import settings
 from django.core.validators import MaxValueValidator, RegexValidator
 from django.core.exceptions import ValidationError
 from datetime import datetime
@@ -117,28 +116,17 @@ class Provider(models.Model):
 
 
 class MultiModalDataPath(models.Model):
-    provider_view = models.URLField(
-        max_length=200, null=True, blank=True, verbose_name="Provider View")
-    patient_view = models.URLField(
-        max_length=200, null=True, blank=True, verbose_name="Patient View")
-    room_view = models.URLField(
-        max_length=200, null=True, blank=True, verbose_name="Room View")
-    audio = models.URLField(max_length=200, null=True,
-                            blank=True, verbose_name="Audio")
-    transcript = models.URLField(
-        max_length=200, null=True, blank=True, verbose_name="Transcript")
-    patient_survey = models.URLField(
-        max_length=200, null=True, blank=True, verbose_name="Patient Survey")
-    provider_survey = models.URLField(
-        max_length=200, null=True, blank=True, verbose_name="Provider Survey")
-    patient_annotation = models.URLField(
-        max_length=200, null=True, blank=True, verbose_name="Patient Annotation")
-    provider_annotation = models.URLField(
-        max_length=200, null=True, blank=True, verbose_name="Provider Annotation")
-    rias_transcript = models.URLField(
-        max_length=200, null=True, blank=True, verbose_name="RIAS Transcript")
-    rias_codes = models.URLField(
-        max_length=200, null=True, blank=True, verbose_name="RIAS Codes")
+    provider_view = models.BooleanField(default=False, verbose_name="Provider View")
+    patient_view = models.BooleanField(default=False, verbose_name="Patient View")
+    room_view = models.BooleanField(default=False, verbose_name="Room View")
+    audio = models.BooleanField(default=False, verbose_name="Audio")
+    transcript = models.BooleanField(default=False, verbose_name="Transcript")
+    patient_survey = models.BooleanField(default=False, verbose_name="Patient Survey")
+    provider_survey = models.BooleanField(default=False, verbose_name="Provider Survey")
+    patient_annotation = models.BooleanField(default=False, verbose_name="Patient Annotation")
+    provider_annotation = models.BooleanField(default=False, verbose_name="Provider Annotation")
+    rias_transcript = models.BooleanField(default=False, verbose_name="RIAS Transcript")
+    rias_codes = models.BooleanField(default=False, verbose_name="RIAS Codes")
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -148,21 +136,6 @@ class MultiModalDataPath(models.Model):
         verbose_name = 'Multi Modal Data Path'
         verbose_name_plural = 'Multi Modal Data Paths'
 
-
-class EncounterFile(models.Model):
-    encounter = models.ForeignKey(
-        'Encounter', on_delete=models.CASCADE, related_name='files', null=True, blank=True)
-    encounter_sim_center = models.ForeignKey(
-        'EncounterSimCenter', on_delete=models.CASCADE, related_name='files', null=True, blank=True)
-    encounter_rias = models.ForeignKey(
-        'EncounterRIAS', on_delete=models.CASCADE, related_name='files', null=True, blank=True)
-    file_type = models.CharField(
-        max_length=50, choices=FILE_TYPE_CHOICES, blank=True, null=True)
-    file_path = models.CharField(max_length=255, blank=True, null=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f'{FILE_TYPE_CHOICES_DICT.get(self.file_type, "Unknown")} - {self.encounter or self.encounter_sim_center or self.encounter_rias}'
 
 class Encounter(models.Model):
     csn_number = models.CharField(
@@ -200,6 +173,8 @@ class Encounter(models.Model):
     is_restricted = models.BooleanField(
         choices=BOOLEAN_CHOICES, default=True, verbose_name="Is Restricted")
     timestamp = models.DateTimeField(auto_now_add=True)
+    
+    multi_modal_data = models.OneToOneField(MultiModalDataPath, on_delete=models.CASCADE, null=True, blank=True, related_name='encounter')
 
     def __str__(self):
         formatted_date = self.encounter_date_and_time.date().strftime('%m.%d.%Y')
@@ -207,22 +182,27 @@ class Encounter(models.Model):
 
     def clean(self):
         if self.patient_satisfaction < 0:
-            raise ValidationError('Patient satisfaction cannot be negative.')
+            raise ValidationError("Patient satisfaction cannot be negative.")
 
         if self.provider_satisfaction < 0:
-            raise ValidationError('Provider satisfaction cannot be negative.')
+            raise ValidationError("Provider satisfaction cannot be negative.")
 
     def save(self, *args, **kwargs):
         self.encounter_source, created = EncounterSource.objects.get_or_create(
             name='Clinic')
 
         if timezone.is_naive(self.encounter_date_and_time):
-            self.encounter_date_and_time = timezone.make_aware(
-                self.encounter_date_and_time)
+            self.encounter_date_and_time = timezone.make_aware(self.encounter_date_and_time)
 
         self.clean()
 
         super(Encounter, self).save(*args, **kwargs)
+        
+    def delete(self, *args, **kwargs):
+        MultiModalDataPath.objects.filter(encounter=self).delete()
+        
+        super(Encounter, self).delete(*args, **kwargs)
+        
 
     class Meta:
         verbose_name = 'Encounter (Clinic)'
@@ -251,10 +231,12 @@ class EncounterSimCenter(models.Model):
     is_restricted = models.BooleanField(
         choices=BOOLEAN_CHOICES, default=True, verbose_name="Is Restricted")
     timestamp = models.DateTimeField(auto_now_add=True)
+    
+    multi_modal_data = models.OneToOneField(MultiModalDataPath, on_delete=models.CASCADE, null=True, blank=True, related_name='encounter_sim_center')
 
     def save(self, *args, **kwargs):
         self.encounter_source, created = EncounterSource.objects.get_or_create(
-            name='Sim Center')
+            name='SimCenter')
 
         with transaction.atomic():
             if not self.patient:
@@ -270,7 +252,8 @@ class EncounterSimCenter(models.Model):
         super(EncounterSimCenter, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        EncounterFile.objects.filter(encounter=self).delete()
+        EncounterFile.objects.filter(encounter_sim_center=self).delete()
+        MultiModalDataPath.objects.filter(encounter_sim_center=self).delete()
         if self.patient:
             self.patient.delete()
         if self.provider:
@@ -306,6 +289,8 @@ class EncounterRIAS(models.Model):
         choices=BOOLEAN_CHOICES, default=True, verbose_name="Is Restricted")
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    multi_modal_data = models.OneToOneField(MultiModalDataPath, on_delete=models.CASCADE, null=True, blank=True, related_name='encounter_rias')
+
     def save(self, *args, **kwargs):
         self.encounter_source, created = EncounterSource.objects.get_or_create(
             name='RIAS')
@@ -324,7 +309,8 @@ class EncounterRIAS(models.Model):
         super(EncounterRIAS, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        EncounterFile.objects.filter(encounter=self).delete()
+        EncounterFile.objects.filter(encounter_rias=self).delete()
+        MultiModalDataPath.objects.filter(encounter_rias=self).delete()
         if self.patient:
             self.patient.delete()
         if self.provider:
@@ -337,3 +323,17 @@ class EncounterRIAS(models.Model):
     class Meta:
         verbose_name = 'Encounter (RIAS)'
         verbose_name_plural = 'Encounters (RIAS)'
+
+
+class EncounterFile(models.Model):
+    encounter = models.ForeignKey(Encounter, related_name='files', on_delete=models.CASCADE, null=True, blank=True)
+    encounter_sim_center = models.ForeignKey(EncounterSimCenter, related_name='files', on_delete=models.CASCADE, null=True, blank=True)
+    encounter_rias = models.ForeignKey(EncounterRIAS, related_name='files', on_delete=models.CASCADE, null=True, blank=True)
+    encounter_source = models.ForeignKey(EncounterSource, on_delete=models.CASCADE, null=True, blank=True)
+    file_type = models.CharField(max_length=50, choices=FILE_TYPE_CHOICES, blank=True, null=True)
+    file_name = models.CharField(max_length=255, blank=True, null=True)
+    file_path = models.CharField(max_length=255, blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{FILE_TYPE_CHOICES_DICT.get(self.file_type, "Unknown")}'

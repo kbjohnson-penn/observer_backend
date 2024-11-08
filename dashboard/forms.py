@@ -1,7 +1,9 @@
 import logging
 from django import forms
-from .models import Encounter, Patient, Provider, EncounterFile
+from .models import Encounter, Patient, Provider, EncounterFile, EncounterSource
 from .storage_backend import AzureDataLakeStorage
+from django.core.exceptions import ValidationError
+
 
 logger = logging.getLogger(__name__)
 
@@ -54,62 +56,65 @@ class ProviderForm(forms.ModelForm):
 
 
 class EncounterFileForm(forms.ModelForm):
-    file = forms.FileField(required=False)
-    file_path = forms.CharField(widget=forms.TextInput(
-        attrs={'readonly': 'readonly'}), required=False)
-    delete_file = forms.BooleanField(required=False, initial=False)
+    file_name = forms.CharField(required=False)
 
     class Meta:
         model = EncounterFile
-        fields = ['file_type', 'file', 'file_path', 'delete_file']
+        fields = ['file_type', 'file_name']
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance and self.instance.pk:
-            storage = AzureDataLakeStorage()
-            if self.instance.file_path and storage.file_exists(self.instance.file_path):
-                self.fields['file_path'].initial = self.instance.file_path
-
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        file = self.cleaned_data.get('file')
-        delete_file = self.cleaned_data.get('delete_file')
+    def clean(self):
+        cleaned_data = super().clean()
         storage = AzureDataLakeStorage()
 
-        if delete_file and instance.file_path:
-            logger.info(f"Deleting file: {instance.file_path}")
-            try:
-                storage.delete_from_storage(instance.file_path)
-                instance.delete()
-                return None
-            except Exception as e:
-                logger.error(f"Failed to delete file '{instance.file_path}': {str(e)}")
-                raise
+        # Extract file_name and file_type from cleaned_data
+        file_name = cleaned_data.get('file_name')
+        file_type = cleaned_data.get('file_type')
+        encounter = self.instance.encounter
+        encounter_sim_center = self.instance.encounter_sim_center
+        encounter_rias = self.instance.encounter_rias
+        encounter_source = self.instance.encounter_source
 
-        if file:
-            if instance.file_path:
-                logger.info(f"Deleting existing file before saving new one: {instance.file_path}")
-                try:
-                    storage.delete_from_storage(instance.file_path)
-                except Exception as e:
-                    logger.error(f"Failed to delete existing file '{instance.file_path}': {str(e)}")
-                    raise
-            try:
-                if instance.encounter:
-                    instance.file_path = storage.save_to_storage(
-                        file, instance.encounter, instance.file_type)
-                elif instance.encounter_sim_center:
-                    instance.file_path = storage.save_to_storage(
-                        file, instance.encounter_sim_center, instance.file_type)
-                    pass
-                elif instance.encounter_rias:
-                    instance.file_path = storage.save_to_storage(
-                        file, instance.encounter_rias, instance.file_type)
-                    pass
-            except Exception as e:
-                logger.error(f"Failed to save new file '{file.name}': {str(e)}")
-                raise
+        # Ensure encounter_source is set before validation
+        if not encounter_source:
+            if encounter:
+                encounter_source, created = EncounterSource.objects.get_or_create(name='Clinic')
+            elif encounter_sim_center:
+                encounter_source, created = EncounterSource.objects.get_or_create(name='SimCenter')
+            elif encounter_rias:
+                encounter_source, created = EncounterSource.objects.get_or_create(name='RIAS')
+            else:
+                raise ValidationError("The encounter must be set for the file.")
+            self.instance.encounter_source = encounter_source
+        
+        logger.debug(f"file_name: {file_name}, file_type: {file_type}, encounter_source: {encounter_source}")
 
-        if commit:
-            instance.save()
-        return instance
+        if not file_name:
+            raise ValidationError("File name must be present.")
+        if not file_type:
+            raise ValidationError("File type must be present.")
+        if not encounter_source:
+            raise ValidationError("Encounter source must be present.")
+
+        # Dynamically construct the file path based on the encounter source name
+        if encounter:
+            file_path = f"{encounter_source.name}/{encounter}/{file_type}/{file_name}"
+        elif encounter_sim_center:
+            file_path = f"{encounter_source.name}/{encounter_sim_center}/{file_type}/{file_name}"
+        elif encounter_rias:
+            file_path = f"{encounter_source.name}/{encounter_rias}/{file_type}/{file_name}"
+        else:
+            raise ValidationError("Encounter, EncounterSimCenter, or EncounterRias must be present.")
+        
+        logger.info(f"Checking existence of file: {file_path}")
+        
+        if not storage.file_exists(file_path):
+            logger.warning(f"File '{file_name}' does not exist in storage path '{file_path}'.")
+            raise ValidationError(
+                f"The file '{file_name}' does not exist at '{file_path}' in the storage account."
+            )
+        self.instance.file_path = file_path  # Save the valid path if exists
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        return super().save(commit=commit)
