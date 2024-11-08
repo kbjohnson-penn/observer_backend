@@ -80,8 +80,13 @@ class AzureDataLakeStorage(Storage):
             directory_client = self.file_system_client.get_directory_client(
                 directory_path)
             file_client = directory_client.get_file_client(file_name)
-            file_client.get_file_properties()
-            return True
+            properties = file_client.get_file_properties()
+            if 'metadata' in properties and properties['metadata'].get('hdi_isfolder') == 'true':
+                return False
+            if 'size' in properties:
+                return True
+            else:
+                return False
         except ResourceNotFoundError:
             return False
 
