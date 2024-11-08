@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib import admin
-from .models import Patient, Provider, Department, MultiModalDataPath, Encounter, EncounterSimCenter, EncounterRIAS, EncounterFile
+from .models import Patient, Provider, Department, Encounter, EncounterSimCenter, EncounterRIAS, EncounterFile
 from .forms import EncounterForm, PatientForm, ProviderForm, EncounterFileForm
 
 
@@ -24,13 +24,12 @@ class EncounterFileInline(admin.TabularInline):
     model = EncounterFile
     form = EncounterFileForm
     extra = 1
-    fields = ['file_type', 'file', 'file_path', 'delete_file']
     readonly_fields = ['file_path']
-
-    def get_formset(self, request, obj=None, **kwargs):
-        formset = super().get_formset(request, obj, **kwargs)
-        formset.form.base_fields['delete_file'].widget = forms.CheckboxInput()
-        return formset
+    
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        form.base_fields['encounter_source'].widget = forms.HiddenInput()
+        return form
 
 
 class EncounterAdmin(admin.ModelAdmin):
@@ -49,8 +48,12 @@ class EncounterAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         form.base_fields['encounter_source'].widget = forms.HiddenInput()
+        form.base_fields['multi_modal_data'].widget = forms.HiddenInput()
         return form
-
+    
+    def delete_queryset(self, request, queryset):
+        for obj in queryset:
+            obj.delete()
 
 class EncounterSimCenterAdmin(admin.ModelAdmin):
     form = EncounterForm
@@ -61,8 +64,12 @@ class EncounterSimCenterAdmin(admin.ModelAdmin):
         form.base_fields['encounter_source'].widget = forms.HiddenInput()
         form.base_fields['provider'].widget = forms.HiddenInput()
         form.base_fields['patient'].widget = forms.HiddenInput()
+        form.base_fields['multi_modal_data'].widget = forms.HiddenInput()
         return form
-
+    
+    def delete_queryset(self, request, queryset):
+        for obj in queryset:
+            obj.delete()
 
 class EncounterRIASAdmin(admin.ModelAdmin):
     inlines = [EncounterFileInline]
@@ -72,7 +79,12 @@ class EncounterRIASAdmin(admin.ModelAdmin):
         form.base_fields['encounter_source'].widget = forms.HiddenInput()
         form.base_fields['provider'].widget = forms.HiddenInput()
         form.base_fields['patient'].widget = forms.HiddenInput()
+        form.base_fields['multi_modal_data'].widget = forms.HiddenInput()
         return form
+
+    def delete_queryset(self, request, queryset):
+        for obj in queryset:
+            obj.delete()
 
 
 admin.site.register(Patient, PatientAdmin)
