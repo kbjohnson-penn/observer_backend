@@ -22,6 +22,7 @@ ETHNIC_CATEGORIES = [
     ('UN', 'Unknown or Not Reported Ethnicity'),
 ]
 
+
 class Patient(models.Model):
     patient_id = models.PositiveIntegerField(unique=True)
     first_name = models.CharField(max_length=255, blank=True)

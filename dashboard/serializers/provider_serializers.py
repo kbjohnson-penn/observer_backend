@@ -1,14 +1,16 @@
 from rest_framework import serializers
-from ..models.provider_models import Provider
 from datetime import date
+from ..models import Provider
 from ..utils import calculate_age
+
 
 class PublicProviderSerializer(serializers.ModelSerializer):
     year_of_birth = serializers.SerializerMethodField()
 
     class Meta:
         model = Provider
-        fields = ['id', 'provider_id', 'year_of_birth', 'sex', 'race', 'ethnicity']
+        fields = ['id', 'provider_id', 'year_of_birth',
+                  'sex', 'race', 'ethnicity']
 
     def get_year_of_birth(self, instance):
         age = calculate_age(instance.date_of_birth)

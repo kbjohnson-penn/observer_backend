@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from ..models.profile_models import Profile
 from ..serializers.profile_serializers import ProfileSerializer
 
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
@@ -22,28 +23,29 @@ def register(request):
     zip_code = request.data.get('zip_code')
     date_of_birth = request.data.get('date_of_birth')
     bio = request.data.get('bio')
-    
+
     # Check for required fields
     if not username or not password or not email or not date_of_birth:
         return Response({'error': 'Please provide all required fields'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     # Check for duplicate username
     if User.objects.filter(username=username).exists():
         return Response({'error': 'Username already exists'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     # Check for duplicate email
     if User.objects.filter(email=email).exists():
         return Response({'error': 'Email already exists'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     # Validate email format
     try:
         validate_email(email)
     except ValidationError:
         return Response({'error': 'Invalid email format'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     # Create the user
-    user = User.objects.create_user(username=username, password=password, email=email)
-    
+    user = User.objects.create_user(
+        username=username, password=password, email=email)
+
     # Check if the profile already exists
     profile, created = Profile.objects.get_or_create(user=user)
     profile.phone_number = phone_number
@@ -55,8 +57,9 @@ def register(request):
     profile.date_of_birth = date_of_birth
     profile.bio = bio
     profile.save()
-    
+
     return Response({'message': 'User created successfully'}, status=status.HTTP_201_CREATED)
+
 
 @api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
@@ -65,13 +68,14 @@ def profile(request):
         profile = request.user.profile
     except Profile.DoesNotExist:
         return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
-    
+
     if request.method == 'GET':
         serializer = ProfileSerializer(profile)
         return Response(serializer.data)
-    
+
     elif request.method == 'PUT':
-        serializer = ProfileSerializer(profile, data=request.data, partial=True)
+        serializer = ProfileSerializer(
+            profile, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

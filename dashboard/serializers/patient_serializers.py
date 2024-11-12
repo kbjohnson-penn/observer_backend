@@ -1,14 +1,16 @@
 from rest_framework import serializers
-from ..models.patient_models import Patient
 from datetime import date
+from ..models import Patient
 from ..utils import calculate_age
+
 
 class PublicPatientSerializer(serializers.ModelSerializer):
     year_of_birth = serializers.SerializerMethodField()
 
     class Meta:
         model = Patient
-        fields = ['id', 'patient_id', 'year_of_birth', 'sex', 'race', 'ethnicity']
+        fields = ['id', 'patient_id', 'year_of_birth',
+                  'sex', 'race', 'ethnicity']
 
     def get_year_of_birth(self, instance):
         age = calculate_age(instance.date_of_birth)
@@ -25,7 +27,7 @@ class PublicPatientSerializer(serializers.ModelSerializer):
             rep[field] = 'UN' if not rep.get(field) else rep[field]
         return rep
 
-    
+
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient

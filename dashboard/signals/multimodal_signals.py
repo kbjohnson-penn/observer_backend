@@ -1,24 +1,20 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from ..models.encounter_models import Encounter, EncounterSimCenter, EncounterRIAS, EncounterFile, MultiModalDataPath
+from ..models.encounter_models import Encounter, EncounterFile, MultiModalData
+
 
 @receiver(post_save, sender=Encounter)
-@receiver(post_save, sender=EncounterSimCenter)
-@receiver(post_save, sender=EncounterRIAS)
 def link_multimodal_data(sender, instance, created, **kwargs):
     if created and not instance.multi_modal_data:
-        multimodal_data = MultiModalDataPath.objects.create()
+        multimodal_data = MultiModalData.objects.create()
         instance.multi_modal_data = multimodal_data
         instance.save()
 
+
 @receiver(post_save, sender=EncounterFile)
-def update_multimodal_data_path(sender, instance, created, **kwargs):
+def update_multimodal_data(sender, instance, created, **kwargs):
     if instance.encounter:
         multimodal_data = instance.encounter.multi_modal_data
-    elif instance.encounter_sim_center:
-        multimodal_data = instance.encounter_sim_center.multi_modal_data
-    elif instance.encounter_rias:
-        multimodal_data = instance.encounter_rias.multi_modal_data
     else:
         return
     if instance.file_type == 'provider_view' and instance.file_path != '':

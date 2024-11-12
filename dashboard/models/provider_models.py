@@ -1,4 +1,5 @@
 from django.db import models
+from .source_and_department_models import Department
 
 SEX_CATEGORIES = [
     ('M', 'Male'),
@@ -22,8 +23,12 @@ ETHNIC_CATEGORIES = [
     ('UN', 'Unknown or Not Reported Ethnicity'),
 ]
 
+
+
 class Provider(models.Model):
     provider_id = models.PositiveIntegerField(unique=True)
+    department = models.ForeignKey(
+        Department, on_delete=models.CASCADE, related_name='providers', blank=True, null=True)
     first_name = models.CharField(max_length=255, blank=True)
     last_name = models.CharField(max_length=255, blank=True)
     date_of_birth = models.DateField(blank=True, null=True)

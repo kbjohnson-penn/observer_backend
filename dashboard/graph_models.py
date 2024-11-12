@@ -53,7 +53,7 @@ class EncounterNode(StructuredNode):
     provider = RelationshipTo('ProviderNode', 'HAS_PROVIDER')
     encounter_source = RelationshipTo('EncounterSourceNode', 'HAS_SOURCE')
     department = RelationshipTo('DepartmentNode', 'OCCURRED_IN_DEPARTMENT')
-    
+
 
 class EncounterSimCenterNode(StructuredNode):
     django_id = IntegerProperty(unique_index=True)
@@ -68,7 +68,7 @@ class EncounterSimCenterNode(StructuredNode):
     provider = RelationshipTo('ProviderNode', 'HAS_PROVIDER')
     encounter_source = RelationshipTo('EncounterSourceNode', 'HAS_SOURCE')
     department = RelationshipTo('DepartmentNode', 'OCCURRED_IN_DEPARTMENT')
-    
+
 
 class EncounterRIASNode(StructuredNode):
     django_id = IntegerProperty(unique_index=True)
@@ -83,4 +83,3 @@ class EncounterRIASNode(StructuredNode):
     provider = RelationshipTo('ProviderNode', 'HAS_PROVIDER')
     encounter_source = RelationshipTo('EncounterSourceNode', 'HAS_SOURCE')
     department = RelationshipTo('DepartmentNode', 'OCCURRED_IN_DEPARTMENT')
-    
