@@ -1,8 +1,8 @@
 from rest_framework import viewsets
 from rest_framework import permissions
 
-from .models import Patient, Provider, EncounterSource, Department, MultiModalDataPath, Encounter, EncounterSimCenter, EncounterRIAS
-from .serializers import PatientSerializer, ProviderSerializer, EncounterSourceSerializer, DepartmentSerializer, MultiModalDataPathSerializer, EncounterSerializer, EncounterSimCenterSerializer, EncounterRIASSerializer
+from ..models import Patient, Provider, EncounterSource, Department, MultiModalDataPath, Encounter, EncounterSimCenter, EncounterRIAS
+from ..serializers import PatientSerializer, ProviderSerializer, EncounterSourceSerializer, DepartmentSerializer, MultiModalDataPathSerializer, EncounterSerializer, EncounterSimCenterSerializer, EncounterRIASSerializer
 
 
 class ReadOnly(permissions.BasePermission):

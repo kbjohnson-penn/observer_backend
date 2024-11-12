@@ -1,6 +1,6 @@
 import logging
 from django import forms
-from .models import Encounter, Patient, Provider, EncounterFile, EncounterSource
+from .models import Encounter, Patient, Provider, EncounterFile, EncounterSource, Profile
 from .storage_backend import AzureDataLakeStorage
 from django.core.exceptions import ValidationError
 
@@ -118,3 +118,12 @@ class EncounterFileForm(forms.ModelForm):
 
     def save(self, commit=True):
         return super().save(commit=commit)
+
+class ProfileForm(forms.ModelForm):
+    date_of_birth = forms.DateField(
+        widget=CustomDateInput()  # Use CustomDateInput instead of CustomDateTimeInput
+    )
+
+    class Meta:
+        model = Profile
+        fields = ['date_of_birth', 'phone_number', 'address', 'city', 'state', 'country', 'zip_code', 'bio']
