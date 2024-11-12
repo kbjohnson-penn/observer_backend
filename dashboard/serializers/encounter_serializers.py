@@ -1,16 +1,5 @@
 from rest_framework import serializers
-from datetime import date
-from dateutil.relativedelta import relativedelta
-from .models import (
-    Patient, Provider, Department, MultiModalDataPath, Encounter,
-    EncounterSource, EncounterSimCenter, EncounterRIAS
-)
-
-def calculate_age(date_of_birth):
-    if date_of_birth is None:
-        return None
-    today = date.today()
-    return relativedelta(today, date_of_birth).years
+from ..models.encounter_models import Encounter, EncounterSource, Department, MultiModalDataPath, EncounterSimCenter, EncounterRIAS
 
 
 class EncounterSourceSerializer(serializers.ModelSerializer):
@@ -19,57 +8,19 @@ class EncounterSourceSerializer(serializers.ModelSerializer):
         fields = ['name']
 
 
+
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
+        fields = "__all__"
+
+
+class PublicDepartmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
         fields = ['name']
-
-
-class ProviderSerializer(serializers.ModelSerializer):
-    year_of_birth = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Provider
-        fields = ['id', 'provider_id', 'year_of_birth', 'sex', 'race', 'ethnicity']
-
-    def get_year_of_birth(self, instance):
-        age = calculate_age(instance.date_of_birth)
-        if age is None:
-            return None
-        if age > 89:
-            max_year_of_birth = date.today().year - 89
-            return str(max_year_of_birth)
-        return str(instance.date_of_birth.year) if instance.date_of_birth else None
-
-    def to_representation(self, instance):
-        rep = super().to_representation(instance)
-        for field in ['race', 'sex', 'ethnicity']:
-            rep[field] = 'UN' if not rep.get(field) else rep[field]
-        return rep
-
-
-class PatientSerializer(serializers.ModelSerializer):
-    year_of_birth = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Patient
-        fields = ['id', 'patient_id', 'year_of_birth', 'sex', 'race', 'ethnicity']
-
-    def get_year_of_birth(self, instance):
-        age = calculate_age(instance.date_of_birth)
-        if age is None:
-            return None
-        if age > 89:
-            max_year_of_birth = date.today().year - 89
-            return str(max_year_of_birth)
-        return str(instance.date_of_birth.year) if instance.date_of_birth else None
-
-    def to_representation(self, instance):
-        rep = super().to_representation(instance)
-        for field in ['race', 'sex', 'ethnicity']:
-            rep[field] = 'UN' if not rep.get(field) else rep[field]
-        return rep
-
+ 
+       
 
 class MultiModalDataPathSerializer(serializers.ModelSerializer):
     class Meta:

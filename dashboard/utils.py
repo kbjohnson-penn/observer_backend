@@ -1,5 +1,13 @@
 import re
 import logging
+from datetime import date
+from dateutil.relativedelta import relativedelta
+
+def calculate_age(date_of_birth):
+    if date_of_birth is None:
+        return None
+    today = date.today()
+    return relativedelta(today, date_of_birth).years
 
 
 def sanitize_log_message(message):
