@@ -1,5 +1,5 @@
 from django.test import TestCase
-from dashboard.models import Patient, Provider, EncounterSource, Department, MultiModalDataPath, Encounter
+from dashboard.models import Patient, Provider, EncounterSource, Department, MultiModalData, Encounter
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
