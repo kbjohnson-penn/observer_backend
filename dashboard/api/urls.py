@@ -1,29 +1,33 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import (PatientViewSet, PublicPatientViewSet, ProviderViewSet, PublicProviderViewSet, PulicDepartmentViewSet,
-                    DepartmentViewSet, MultiModalDataViewSet, EncounterViewSet, EncounterSourceViewSet)
-from .auth_views import register, profile
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from .private_views import PatientViewSet, ProviderViewSet, DepartmentViewSet, MultiModalDataViewSet, EncounterViewSet, EncounterSourceViewSet
+from .public_views import PublicPatientViewSet, PublicProviderViewSet, PublicDepartmentViewSet, PublicEncounterSourceViewSet, PublicEncounterViewSet, PublicMultiModalDataViewSet
+from .user_views import register, profile
 
 router = DefaultRouter()
 
 # Public routes
 router.register(r'public/encountersources',
-                EncounterSourceViewSet, basename='public-encountersource')
-router.register(r'public/departments', PulicDepartmentViewSet,
+                PublicEncounterSourceViewSet, basename='public-encountersource')
+router.register(r'public/departments', PublicDepartmentViewSet,
                 basename='public-department')
 router.register(r'public/providers', PublicProviderViewSet,
                 basename='public-provider')
 router.register(r'public/patients', PublicPatientViewSet,
                 basename='public-patient')
+router.register(r'public/mmdata', PublicMultiModalDataViewSet,
+                basename='public-mmdata')
+router.register(r'public/encounters', PublicEncounterViewSet,
+                basename='public-encounter')
 
 # Private routes
+router.register(r'encountersources', EncounterSourceViewSet,
+                basename='encountersource')
 router.register(r'departments', DepartmentViewSet, basename='department')
 router.register(r'patients', PatientViewSet, basename='patient')
 router.register(r'providers', ProviderViewSet, basename='provider')
-router.register(r'encountersources', EncounterSourceViewSet,
-                basename='encountersource')
-router.register(r'datapaths', MultiModalDataViewSet, basename='datapath')
+router.register(r'mmdata', MultiModalDataViewSet, basename='mmdata')
 router.register(r'encounters', EncounterViewSet, basename='encounter')
 
 urlpatterns = [

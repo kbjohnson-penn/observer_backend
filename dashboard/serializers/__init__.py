@@ -1,5 +1,5 @@
 from .profile_serializers import ProfileSerializer
 from .patient_serializers import PatientSerializer, PublicPatientSerializer
 from .provider_serializers import ProviderSerializer, PublicProviderSerializer
-from .encounter_serializers import EncounterSerializer, MultiModalDataSerializer
-from .source_and_department_serializers import PublicDepartmentSerializer, EncounterSourceSerializer, DepartmentSerializer
+from .encounter_serializers import EncounterSerializer, PublicEncounterSerializer, MultiModalDataSerializer, PublicMultiModalDataSerializer
+from .source_and_department_serializers import PublicDepartmentSerializer, EncounterSourceSerializer, DepartmentSerializer, PublicEncounterSourceSerializer

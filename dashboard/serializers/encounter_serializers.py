@@ -1,15 +1,39 @@
 from rest_framework import serializers
-from ..models import Encounter, MultiModalData
+from ..models import Encounter, MultiModalData, Department, EncounterSource, Provider, Patient
 
 
 class MultiModalDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = MultiModalData
-        fields = ['id', 'provider_view', 'patient_view', 'room_view',
-                  'audio', 'transcript', 'patient_survey', 'provider_survey', 'patient_annotation', 'provider_annotation', 'rias_transcript', 'rias_codes']
+        fields = '__all__'
+
+
+class PublicMultiModalDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MultiModalData
+        fields = '__all__'
 
 
 class EncounterSerializer(serializers.ModelSerializer):
+    encounter_source = serializers.PrimaryKeyRelatedField(
+        queryset=EncounterSource.objects.all())
+    department = serializers.PrimaryKeyRelatedField(
+        queryset=Department.objects.all())
+    provider = serializers.PrimaryKeyRelatedField(
+        queryset=Provider.objects.all())
+    patient = serializers.PrimaryKeyRelatedField(
+        queryset=Patient.objects.all())
+
+    class Meta:
+        model = Encounter
+        fields = [
+            'id', 'csn_number', 'case_id', 'encounter_source', 'department',
+            'provider', 'patient', 'encounter_date_and_time', 'provider_satisfaction',
+            'patient_satisfaction', 'is_deidentified', 'is_restricted', 'type'
+        ]
+
+
+class PublicEncounterSerializer(serializers.ModelSerializer):
     encounter_source = serializers.StringRelatedField()
     department = serializers.StringRelatedField()
     patient_id = serializers.SerializerMethodField()
@@ -21,7 +45,7 @@ class EncounterSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'provider_id', 'patient_id', 'encounter_source', 'department',
             'multi_modal_data_id', 'encounter_date_and_time', 'patient_satisfaction',
-            'provider_satisfaction', 'is_deidentified', 'is_restricted'
+            'provider_satisfaction', 'is_deidentified', 'is_restricted', 'type'
         ]
 
     def get_patient_id(self, obj):
