@@ -5,6 +5,12 @@ from ..models import EncounterSource, Department
 class EncounterSourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = EncounterSource
+        fields = "__all__"
+
+
+class PublicEncounterSourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EncounterSource
         fields = ['name']
 
 
