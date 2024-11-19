@@ -1,26 +1,5 @@
 from django.db import models
-
-SEX_CATEGORIES = [
-    ('M', 'Male'),
-    ('F', 'Female'),
-    ('UN', 'Unknown or Not Reported')
-]
-
-RACIAL_CATEGORIES = [
-    ('AI', 'American Indian or Alaska Native'),
-    ('A', 'Asian'),
-    ('NHPI', 'Native Hawaiian or Other Pacific Islander'),
-    ('B', 'Black or African American'),
-    ('W', 'White'),
-    ('M', 'More than One Race'),
-    ('UN', 'Unknown or Not Reported'),
-]
-
-ETHNIC_CATEGORIES = [
-    ('H', 'Hispanic or Latino'),
-    ('NH', 'Not Hispanic or Latino'),
-    ('UN', 'Unknown or Not Reported Ethnicity'),
-]
+from ..choices import SEX_CATEGORIES, RACIAL_CATEGORIES, ETHNIC_CATEGORIES
 
 
 class Patient(models.Model):

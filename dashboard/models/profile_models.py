@@ -2,10 +2,41 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+class Tier(models.Model):
+    tier_name = models.CharField(max_length=10)
+    complete_deidentification = models.BooleanField(default=False)
+    blur_sexually_explicit_body_parts = models.BooleanField(default=False)
+    blur_face = models.BooleanField(default=False)
+    obscure_voice = models.BooleanField(default=False)
+    dua = models.BooleanField(default=False)
+    external_access = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.tier_name
+
+
+class Organization(models.Model):
+    name = models.CharField(max_length=100)
+    address = models.TextField(blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=100, blank=True, null=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
+    zip_code = models.CharField(max_length=10, blank=True, null=True)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    website = models.URLField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     date_of_birth = models.DateField(blank=True, null=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
+    organization = models.ForeignKey(
+        Organization, on_delete=models.CASCADE, null=True, blank=True)
+    tier = models.ForeignKey(
+        Tier, on_delete=models.CASCADE, null=True, blank=True)
     address = models.TextField(blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
     state = models.CharField(max_length=100, blank=True, null=True)

@@ -1,22 +1,14 @@
 from django import forms
 from ..models import Profile
-
-
-class CustomDateInput(forms.DateInput):
-    input_type = 'date'
-    format = '%Y-%m-%d'
-
-    def __init__(self, **kwargs):
-        kwargs['format'] = self.format
-        super().__init__(**kwargs)
+from ..custom_widgets import CustomDateInput
 
 
 class ProfileForm(forms.ModelForm):
     date_of_birth = forms.DateField(
-        widget=CustomDateInput()  # Use CustomDateInput instead of CustomDateTimeInput
+        widget=CustomDateInput()
     )
 
     class Meta:
         model = Profile
         fields = ['date_of_birth', 'phone_number', 'address',
-                  'city', 'state', 'country', 'zip_code', 'bio']
+                  'city', 'state', 'country', 'zip_code', 'bio', 'organization', 'tier']

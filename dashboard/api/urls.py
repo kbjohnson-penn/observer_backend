@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .private_views import PatientViewSet, ProviderViewSet, DepartmentViewSet, MultiModalDataViewSet, EncounterViewSet, EncounterSourceViewSet
+from .private_views import PatientViewSet, ProviderViewSet, DepartmentViewSet, MultiModalDataViewSet, EncounterViewSet, EncounterSourceViewSet, EncounterFileViewSet
 from .public_views import PublicPatientViewSet, PublicProviderViewSet, PublicDepartmentViewSet, PublicEncounterSourceViewSet, PublicEncounterViewSet, PublicMultiModalDataViewSet
 from .user_views import register, profile
 
@@ -29,6 +29,8 @@ router.register(r'patients', PatientViewSet, basename='patient')
 router.register(r'providers', ProviderViewSet, basename='provider')
 router.register(r'mmdata', MultiModalDataViewSet, basename='mmdata')
 router.register(r'encounters', EncounterViewSet, basename='encounter')
+router.register(r'encounterfiles', EncounterFileViewSet,
+                basename='encounterfile')
 
 urlpatterns = [
     path('', include(router.urls)),

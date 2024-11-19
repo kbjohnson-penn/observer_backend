@@ -28,6 +28,7 @@ class AzureDataLakeStorage(Storage):
         return content_type or 'application/octet-stream'  # Default to binary if unknown
 
     def _save(self, file_name, content, encounter_id, field_type):
+        """Save a file to Azure Data Lake Storage."""
         directory_path = f"{encounter_id}/{field_type}"
         directory_client = self.file_system_client.get_directory_client(
             directory_path)
@@ -38,7 +39,6 @@ class AzureDataLakeStorage(Storage):
             pass
 
         content_type = self._get_content_type(file_name)
-
         file_client = directory_client.create_file(
             file_name, content_settings=ContentSettings(content_type=content_type))
 
@@ -54,7 +54,6 @@ class AzureDataLakeStorage(Storage):
             offset += len(chunk)
 
         file_client.flush_data(offset)
-
         return f"{directory_path}/{file_name}"
 
     def _delete(self, path):
@@ -83,10 +82,7 @@ class AzureDataLakeStorage(Storage):
             properties = file_client.get_file_properties()
             if 'metadata' in properties and properties['metadata'].get('hdi_isfolder') == 'true':
                 return False
-            if 'size' in properties:
-                return True
-            else:
-                return False
+            return 'size' in properties
         except ResourceNotFoundError:
             return False
 

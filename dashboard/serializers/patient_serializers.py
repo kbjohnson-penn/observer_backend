@@ -24,7 +24,7 @@ class PublicPatientSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         rep = super().to_representation(instance)
         for field in ['race', 'sex', 'ethnicity']:
-            rep[field] = 'UN' if not rep.get(field) else rep[field]
+            rep[field] = rep.get(field, 'UN')
         return rep
 
 

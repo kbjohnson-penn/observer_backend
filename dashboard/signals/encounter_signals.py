@@ -4,6 +4,8 @@ from ..models import Encounter, EncounterSource, Department, EncounterFile, Mult
 from ..graph_models import EncounterNode, EncounterSourceNode, DepartmentNode, PatientNode, ProviderNode
 
 
+# Graph database section
+
 @receiver(post_save, sender=EncounterSource)
 def create_or_update_encounter_source(sender, instance, created, **kwargs):
     encounter_source_nodes = EncounterSourceNode.nodes.filter(
@@ -106,6 +108,8 @@ def delete_encounter(sender, instance, **kwargs):
     except EncounterNode.DoesNotExist:
         pass
 
+
+# Non Graph code
 
 @receiver(post_save, sender=Encounter)
 def link_multimodal_data(sender, instance, created, **kwargs):
