@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 
 class Tier(models.Model):
     tier_name = models.CharField(max_length=10)
+    level = models.PositiveIntegerField(unique=True)
     complete_deidentification = models.BooleanField(default=False)
     blur_sexually_explicit_body_parts = models.BooleanField(default=False)
     blur_face = models.BooleanField(default=False)

@@ -4,10 +4,15 @@ from ..models import Profile
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField()
+
     class Meta:
         model = Profile
-        fields = ['date_of_birth', 'phone_number', 'address',
+        fields = ['username', 'date_of_birth', 'phone_number', 'address',
                   'city', 'state', 'country', 'zip_code', 'bio', 'organization', 'tier']
+
+    def get_username(self, obj):
+        return obj.user.username
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
