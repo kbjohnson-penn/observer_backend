@@ -1,18 +1,52 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from ..models import Profile
+from ..models import Profile, Organization, Tier
+
+
+class OrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = ['id', 'name']
+
+
+class TierSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tier
+        fields = ['tier_name']
 
 
 class ProfileSerializer(serializers.ModelSerializer):
     username = serializers.SerializerMethodField()
+    first_name = serializers.SerializerMethodField()
+    last_name = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
+    organization = OrganizationSerializer()
+    tier = TierSerializer()
+    date_joined = serializers.SerializerMethodField()
+    last_login = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
-        fields = ['username', 'date_of_birth', 'phone_number', 'address',
-                  'city', 'state', 'country', 'zip_code', 'bio', 'organization', 'tier']
+        fields = ['first_name', 'last_name', 'username', 'email', 'date_of_birth', 'phone_number', 'address',
+                  'city', 'state', 'country', 'zip_code', 'bio', 'organization', 'tier', 'date_joined', 'last_login']
 
     def get_username(self, obj):
         return obj.user.username
+
+    def get_first_name(self, obj):
+        return obj.user.first_name
+
+    def get_last_name(self, obj):
+        return obj.user.last_name
+
+    def get_email(self, obj):
+        return obj.user.email
+
+    def get_date_joined(self, obj):
+        return obj.user.date_joined
+
+    def get_last_login(self, obj):
+        return obj.user.last_login
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):

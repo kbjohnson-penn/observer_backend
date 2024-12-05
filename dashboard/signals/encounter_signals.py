@@ -116,7 +116,9 @@ def link_multimodal_data(sender, instance, created, **kwargs):
     if created and not instance.multi_modal_data:
         multimodal_data = MultiModalData.objects.create()
         instance.multi_modal_data = multimodal_data
-        instance.save()
+    if instance.case_id == '':
+        instance.case_id = f'{instance.patient}_{instance.provider}_{instance.encounter_date_and_time.date()}'
+    instance.save()
 
 
 @receiver(post_save, sender=EncounterFile)

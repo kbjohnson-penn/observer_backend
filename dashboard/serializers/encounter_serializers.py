@@ -26,13 +26,25 @@ class EncounterSerializer(serializers.ModelSerializer):
     encounterfile_ids = serializers.PrimaryKeyRelatedField(
         many=True, read_only=True, source='files')
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.case_id is None:
+            date_str = instance.encounter_date_and_time.strftime("%m.%d.%Y")
+            representation['case_id'] = f"{instance.provider}_{instance.patient}_{date_str}"
+        return representation
+
     class Meta:
         model = Encounter
         fields = [
-            'id', 'csn_number', 'case_id', 'encounter_source', 'department',
+            'id', 'case_id', 'encounter_source', 'department',
             'provider', 'patient', 'encounter_date_and_time', 'provider_satisfaction',
-            'patient_satisfaction', 'is_deidentified', 'is_restricted', 'type', 'encounterfile_ids', 'tier'
+            'patient_satisfaction', 'is_deidentified', 'is_restricted', 'type', 'encounterfile_ids', 'tier',
         ]
+        # fields = [
+        #     'id', 'csn_number', 'case_id', 'encounter_source', 'department',
+        #     'provider', 'patient', 'encounter_date_and_time', 'provider_satisfaction',
+        #     'patient_satisfaction', 'is_deidentified', 'is_restricted', 'type', 'encounterfile_ids', 'tier'
+        # ]
 
 
 class PublicEncounterSerializer(serializers.ModelSerializer):

@@ -1,9 +1,9 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 from .private_views import PatientViewSet, ProviderViewSet, DepartmentViewSet, MultiModalDataViewSet, EncounterViewSet, EncounterSourceViewSet, EncounterFileViewSet
 from .public_views import PublicPatientViewSet, PublicProviderViewSet, PublicDepartmentViewSet, PublicEncounterSourceViewSet, PublicEncounterViewSet, PublicMultiModalDataViewSet
-from .user_views import register, profile
+from .user_views import register, profile, logout, CustomTokenObtainPairView
 
 router = DefaultRouter()
 
@@ -34,8 +34,10 @@ router.register(r'encounterfiles', EncounterFileViewSet,
 
 urlpatterns = [
     path('', include(router.urls)),
-    # path('auth/register/', register, name='api_register'),
-    path('auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('auth/token/', CustomTokenObtainPairView.as_view(),
+         name='token_obtain_pair'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('auth/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    path('auth/logout/', logout, name='logout'),
     path('profile/', profile, name='api_profile'),
 ]
