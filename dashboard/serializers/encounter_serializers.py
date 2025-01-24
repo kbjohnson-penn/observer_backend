@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import Encounter, MultiModalData, Department, EncounterSource, Provider, Patient
+from ..models import Encounter, MultiModalData, Department, EncounterSource, Provider, Patient, EncounterFile
 
 
 class MultiModalDataSerializer(serializers.ModelSerializer):
@@ -8,9 +8,9 @@ class MultiModalDataSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class PublicMultiModalDataSerializer(serializers.ModelSerializer):
+class EncounterFileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MultiModalData
+        model = EncounterFile
         fields = '__all__'
 
 
@@ -23,14 +23,28 @@ class EncounterSerializer(serializers.ModelSerializer):
         queryset=Provider.objects.all())
     patient = serializers.PrimaryKeyRelatedField(
         queryset=Patient.objects.all())
+    encounterfile_ids = serializers.PrimaryKeyRelatedField(
+        many=True, read_only=True, source='files')
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.case_id is None:
+            date_str = instance.encounter_date_and_time.strftime("%m.%d.%Y")
+            representation['case_id'] = f"{instance.provider}_{instance.patient}_{date_str}"
+        return representation
 
     class Meta:
         model = Encounter
         fields = [
-            'id', 'csn_number', 'case_id', 'encounter_source', 'department',
+            'id', 'case_id', 'encounter_source', 'department',
             'provider', 'patient', 'encounter_date_and_time', 'provider_satisfaction',
-            'patient_satisfaction', 'is_deidentified', 'is_restricted', 'type'
+            'patient_satisfaction', 'is_deidentified', 'is_restricted', 'type', 'encounterfile_ids', 'tier',
         ]
+        # fields = [
+        #     'id', 'csn_number', 'case_id', 'encounter_source', 'department',
+        #     'provider', 'patient', 'encounter_date_and_time', 'provider_satisfaction',
+        #     'patient_satisfaction', 'is_deidentified', 'is_restricted', 'type', 'encounterfile_ids', 'tier'
+        # ]
 
 
 class PublicEncounterSerializer(serializers.ModelSerializer):
@@ -45,7 +59,7 @@ class PublicEncounterSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'provider_id', 'patient_id', 'encounter_source', 'department',
             'multi_modal_data_id', 'encounter_date_and_time', 'patient_satisfaction',
-            'provider_satisfaction', 'is_deidentified', 'is_restricted', 'type'
+            'provider_satisfaction', 'is_deidentified', 'is_restricted', 'type',
         ]
 
     def get_patient_id(self, obj):

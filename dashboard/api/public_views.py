@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from rest_framework import permissions
 
 from ..models import Patient, Provider, Department, MultiModalData, Encounter, EncounterSource
-from ..serializers import PublicPatientSerializer, PublicProviderSerializer, PublicEncounterSerializer, PublicDepartmentSerializer, PublicMultiModalDataSerializer, PublicEncounterSourceSerializer
+from ..serializers import PublicPatientSerializer, PublicProviderSerializer, PublicEncounterSerializer, PublicDepartmentSerializer, MultiModalDataSerializer, PublicEncounterSourceSerializer
 
 
 class ReadOnly(permissions.BasePermission):
@@ -10,37 +10,35 @@ class ReadOnly(permissions.BasePermission):
         return request.method in permissions.SAFE_METHODS
 
 
-class PublicEncounterSourceViewSet(viewsets.ReadOnlyModelViewSet):
+class BasePublicReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [ReadOnly]
+
+
+class PublicEncounterSourceViewSet(BasePublicReadOnlyViewSet):
     queryset = EncounterSource.objects.all()
     serializer_class = PublicEncounterSourceSerializer
-    permission_classes = [ReadOnly]
 
 
-class PublicPatientViewSet(viewsets.ReadOnlyModelViewSet):
+class PublicPatientViewSet(BasePublicReadOnlyViewSet):
     queryset = Patient.objects.all()
     serializer_class = PublicPatientSerializer
-    permission_classes = [ReadOnly]
 
 
-class PublicProviderViewSet(viewsets.ReadOnlyModelViewSet):
+class PublicProviderViewSet(BasePublicReadOnlyViewSet):
     queryset = Provider.objects.all()
     serializer_class = PublicProviderSerializer
-    permission_classes = [ReadOnly]
 
 
-class PublicEncounterViewSet(viewsets.ReadOnlyModelViewSet):
+class PublicEncounterViewSet(BasePublicReadOnlyViewSet):
     queryset = Encounter.objects.all()
     serializer_class = PublicEncounterSerializer
-    permission_classes = [ReadOnly]
 
 
-class PublicDepartmentViewSet(viewsets.ReadOnlyModelViewSet):
+class PublicDepartmentViewSet(BasePublicReadOnlyViewSet):
     queryset = Department.objects.all()
     serializer_class = PublicDepartmentSerializer
-    permission_classes = [ReadOnly]
 
 
-class PublicMultiModalDataViewSet(viewsets.ModelViewSet):
+class PublicMultiModalDataViewSet(BasePublicReadOnlyViewSet):
     queryset = MultiModalData.objects.all()
-    serializer_class = PublicMultiModalDataSerializer
-    permission_classes = [ReadOnly]
+    serializer_class = MultiModalDataSerializer

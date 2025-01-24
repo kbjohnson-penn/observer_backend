@@ -4,6 +4,8 @@ from ..models import Encounter, EncounterSource, Department, EncounterFile, Mult
 from ..graph_models import EncounterNode, EncounterSourceNode, DepartmentNode, PatientNode, ProviderNode
 
 
+# Graph database section
+
 @receiver(post_save, sender=EncounterSource)
 def create_or_update_encounter_source(sender, instance, created, **kwargs):
     encounter_source_nodes = EncounterSourceNode.nodes.filter(
@@ -107,12 +109,16 @@ def delete_encounter(sender, instance, **kwargs):
         pass
 
 
+# Non Graph code
+
 @receiver(post_save, sender=Encounter)
 def link_multimodal_data(sender, instance, created, **kwargs):
     if created and not instance.multi_modal_data:
         multimodal_data = MultiModalData.objects.create()
         instance.multi_modal_data = multimodal_data
-        instance.save()
+    if instance.case_id == '':
+        instance.case_id = f'{instance.patient}_{instance.provider}_{instance.encounter_date_and_time.date()}'
+    instance.save()
 
 
 @receiver(post_save, sender=EncounterFile)

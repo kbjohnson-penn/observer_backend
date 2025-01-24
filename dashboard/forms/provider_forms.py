@@ -1,14 +1,6 @@
 from django import forms
 from ..models import Provider
-
-
-class CustomDateInput(forms.DateInput):
-    input_type = 'date'
-    format = '%Y-%m-%d'
-
-    def __init__(self, **kwargs):
-        kwargs['format'] = self.format
-        super().__init__(**kwargs)
+from ..custom_widgets import CustomDateInput
 
 
 class ProviderForm(forms.ModelForm):

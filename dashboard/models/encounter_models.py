@@ -1,41 +1,15 @@
-from django.db import models
+from django.db import models, transaction
 from django.core.validators import MaxValueValidator
 from django.core.exceptions import ValidationError
-from datetime import datetime
 from django.utils import timezone
+from datetime import datetime
+import random
 
 from .patient_models import Patient
 from .provider_models import Provider
 from .source_and_department_models import EncounterSource, Department
-
-BOOLEAN_CHOICES = [
-    (True, 'Yes'),
-    (False, 'No'),
-]
-
-
-ENCOUNTER_TYPE_CHOICES = [
-    ('clinic', 'Clinic'),
-    ('simcenter', 'Sim Center'),
-    ('rias', 'RIAS'),
-]
-
-
-FILE_TYPE_CHOICES = [
-    ('room_view', 'Room View'),
-    ('provider_view', 'Provider View'),
-    ('patient_view', 'Patient View'),
-    ('audio', 'Audio'),
-    ('transcript', 'Transcript'),
-    ('patient_survey', 'Patient Survey'),
-    ('provider_survey', 'Provider Survey'),
-    ('patient_annotation', 'Patient Annotation'),
-    ('provider_annotation', 'Provider Annotation'),
-    ('rias_transcript', 'RIAS Transcript'),
-    ('rias_codes', 'RIAS Codes'),
-    ('other', 'Other'),
-]
-FILE_TYPE_CHOICES_DICT = dict(FILE_TYPE_CHOICES)
+from .profile_models import Tier
+from ..choices import BOOLEAN_CHOICES, ENCOUNTER_TYPE_CHOICES, FILE_TYPE_CHOICES, FILE_TYPE_CHOICES_DICT
 
 
 class MultiModalData(models.Model):
@@ -69,39 +43,22 @@ class MultiModalData(models.Model):
 
 class Encounter(models.Model):
     csn_number = models.CharField(
-        unique=True,
-        max_length=10,
-        verbose_name="CSN Number",
-        null=True,
-        blank=True
-    )
+        unique=True, max_length=10, verbose_name="CSN Number", null=True, blank=True)
     case_id = models.CharField(
         max_length=255, null=True, blank=True, verbose_name="Case ID")
     encounter_source = models.ForeignKey(
-        EncounterSource,
-        on_delete=models.CASCADE,
-        verbose_name="Source",
-        null=True,
-        blank=True
-    )
-    department = models.ForeignKey(
-        Department, on_delete=models.CASCADE)
+        EncounterSource, on_delete=models.CASCADE, verbose_name="Source", null=True, blank=True)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE)
     provider = models.ForeignKey(
-        Provider, on_delete=models.CASCADE)
+        Provider, on_delete=models.CASCADE, null=True, blank=True)
     patient = models.ForeignKey(
-        Patient, on_delete=models.CASCADE)
+        Patient, on_delete=models.CASCADE, null=True, blank=True)
     encounter_date_and_time = models.DateTimeField(
         default=datetime.now, verbose_name="Encounter Date and Time")
-    provider_satisfaction = models.PositiveSmallIntegerField(
-        validators=[MaxValueValidator(5)],
-        default=0,
-        verbose_name="Provider Satisfaction"
-    )
-    patient_satisfaction = models.PositiveSmallIntegerField(
-        validators=[MaxValueValidator(5)],
-        default=0,
-        verbose_name="Patient Satisfaction"
-    )
+    provider_satisfaction = models.PositiveSmallIntegerField(validators=[MaxValueValidator(
+        5)], default=0, verbose_name="Provider Satisfaction", null=True, blank=True)
+    patient_satisfaction = models.PositiveSmallIntegerField(validators=[MaxValueValidator(
+        5)], default=0, verbose_name="Patient Satisfaction", null=True, blank=True)
     multi_modal_data = models.OneToOneField(
         MultiModalData, on_delete=models.CASCADE, null=True, blank=True, related_name='encounter')
     type = models.CharField(
@@ -110,40 +67,48 @@ class Encounter(models.Model):
         choices=BOOLEAN_CHOICES, default=False, verbose_name="Is Deidentified")
     is_restricted = models.BooleanField(
         choices=BOOLEAN_CHOICES, default=True, verbose_name="Is Restricted")
+    tier = models.ForeignKey(Tier, related_name='encounters',
+                             on_delete=models.CASCADE, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        formatted_date = self.encounter_date_and_time.date().strftime('%m.%d.%Y')
-        return f'{self.provider}_{self.patient}_{formatted_date}'
+        if self.type == 'clinic':
+            formatted_date = self.encounter_date_and_time.date().strftime('%m.%d.%Y')
+            return f'{self.provider}_{self.patient}_{formatted_date}'
+        else:
+            return f'{self.case_id}'
 
     def clean(self):
         if self.patient_satisfaction < 0:
             raise ValidationError("Patient satisfaction cannot be negative.")
-
         if self.provider_satisfaction < 0:
             raise ValidationError("Provider satisfaction cannot be negative.")
 
     def save(self, *args, **kwargs):
-        if self.type == 'clinic':
-            self.encounter_source, created = EncounterSource.objects.get_or_create(
-                name='Clinic')
-        elif self.type == 'simcenter':
-            self.encounter_source, created = EncounterSource.objects.get_or_create(
-                name='SimCenter')
-        elif self.type == 'rias':
-            self.encounter_source, created = EncounterSource.objects.get_or_create(
-                name='RIAS')
+        self.encounter_source, created = EncounterSource.objects.get_or_create(
+            name=self.type.capitalize())
 
         if timezone.is_naive(self.encounter_date_and_time):
             self.encounter_date_and_time = timezone.make_aware(
                 self.encounter_date_and_time)
 
-        self.clean()
+        with transaction.atomic():
+            if not self.patient:
+                self.patient = Patient.objects.create(
+                    patient_id=random.randint(100000, 999999))
+            if not self.provider:
+                self.provider = Provider.objects.create(
+                    provider_id=random.randint(100000, 999999))
 
+        self.clean()
         super(Encounter, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         MultiModalData.objects.filter(encounter=self).delete()
+        if self.patient:
+            self.patient.delete()
+        if self.provider:
+            self.provider.delete()
         super(Encounter, self).delete(*args, **kwargs)
 
     class Meta:
@@ -154,8 +119,6 @@ class Encounter(models.Model):
 class EncounterFile(models.Model):
     encounter = models.ForeignKey(
         Encounter, related_name='files', on_delete=models.CASCADE, null=True, blank=True)
-    encounter_source = models.ForeignKey(
-        EncounterSource, on_delete=models.CASCADE, null=True, blank=True)
     file_type = models.CharField(
         max_length=50, choices=FILE_TYPE_CHOICES, blank=True, null=True)
     file_name = models.CharField(max_length=255, blank=True, null=True)
