@@ -4,43 +4,54 @@ from rest_framework.response import Response
 from django.http import StreamingHttpResponse, Http404
 from django.conf import settings
 from azure.storage.filedatalake import DataLakeServiceClient
-from ..models import Patient, Provider, EncounterSource, Department, MultiModalData, Encounter, EncounterFile, Tier
-from ..serializers import PatientSerializer, ProviderSerializer, MultiModalDataSerializer, EncounterSerializer, EncounterSourceSerializer, DepartmentSerializer, EncounterFileSerializer
+from azure.core.exceptions import ResourceNotFoundError
+from ..models import (
+    Patient, Provider, EncounterSource, Department, MultiModalData, Encounter, EncounterFile, Tier
+)
+from ..serializers import (
+    PatientSerializer, ProviderSerializer, MultiModalDataSerializer, EncounterSerializer,
+    EncounterSourceSerializer, DepartmentSerializer, EncounterFileSerializer
+)
 from ..storage_backend import AzureDataLakeStorage
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def filter_by_tier(queryset, user):
+    if user.is_superuser:
+        return queryset
+    if hasattr(user, 'profile') and user.profile.tier:
+        user_tier = user.profile.tier
+        accessible_tiers = Tier.objects.filter(level__lte=user_tier.level)
+        return queryset.filter(tier__in=accessible_tiers)
+    return queryset.none()
 
 
 class BaseAuthenticatedViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
+
+    def has_access_to_tier(self, user, tier):
+        if user.is_superuser:
+            return True
+        if hasattr(user, 'profile') and user.profile.tier:
+            user_tier = user.profile.tier
+            return tier.level <= user_tier.level
+        return False
 
 
 class PatientViewSet(BaseAuthenticatedViewSet):
     serializer_class = PatientSerializer
 
     def get_queryset(self):
-        user = self.request.user
-        if user.is_superuser:
-            return Patient.objects.all()
-        if hasattr(user, 'profile') and user.profile.tier:
-            user_tier = user.profile.tier
-            # Get all tiers below or equal to the user's tier
-            accessible_tiers = Tier.objects.filter(level__lte=user_tier.level)
-            return Patient.objects.filter(encounter__tier__in=accessible_tiers)
-        return Patient.objects.none()
+        return filter_by_tier(Patient.objects.all(), self.request.user)
 
 
 class ProviderViewSet(BaseAuthenticatedViewSet):
     serializer_class = ProviderSerializer
 
     def get_queryset(self):
-        user = self.request.user
-        if user.is_superuser:
-            return Provider.objects.all()
-        if hasattr(user, 'profile') and user.profile.tier:
-            user_tier = user.profile.tier
-            # Get all tiers below or equal to the user's tier
-            accessible_tiers = Tier.objects.filter(level__lte=user_tier.level)
-            return Provider.objects.filter(encounter__tier__in=accessible_tiers)
-        return Provider.objects.none()
+        return filter_by_tier(Provider.objects.all(), self.request.user)
 
 
 class EncounterSourceViewSet(BaseAuthenticatedViewSet):
@@ -64,15 +75,7 @@ class EncounterViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        if user.is_superuser:
-            return Encounter.objects.all().select_related('tier')
-        if hasattr(user, 'profile') and user.profile.tier:
-            user_tier = user.profile.tier
-            # Get all tiers below or equal to the user's tier
-            accessible_tiers = Tier.objects.filter(level__lte=user_tier.level)
-            return Encounter.objects.filter(tier__in=accessible_tiers).select_related('tier')
-        return Encounter.objects.none()
+        return filter_by_tier(Encounter.objects.all().select_related('tier'), self.request.user)
 
 
 class EncounterFileViewSet(viewsets.ReadOnlyModelViewSet):
@@ -86,19 +89,9 @@ class EncounterFileViewSet(viewsets.ReadOnlyModelViewSet):
             return EncounterFile.objects.all()
         if hasattr(user, 'profile') and user.profile.tier:
             user_tier = user.profile.tier
-            # Get all tiers below or equal to the user's tier
             accessible_tiers = Tier.objects.filter(level__lte=user_tier.level)
             return EncounterFile.objects.filter(encounter__tier__in=accessible_tiers)
         return EncounterFile.objects.none()
-
-    @action(detail=False, methods=['post'], url_path='by-ids')
-    def get_files_by_ids(self, request):
-        ids = request.data.get('ids', [])
-        if not ids:
-            return Response({"detail": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
-        files = self.get_queryset().filter(id__in=ids)
-        serializer = self.get_serializer(files, many=True)
-        return Response(serializer.data)
 
     @action(detail=True, methods=['get'], url_path='stream')
     def stream_file(self, request, pk=None):
@@ -117,7 +110,7 @@ class EncounterFileViewSet(viewsets.ReadOnlyModelViewSet):
             # Determine the content type based on the file extension
             content_type = storage._get_content_type(file_path)
 
-            # Download the file in chunks
+            # Stream the file
             download = file_client.download_file()
             file_stream = download.chunks()
 
@@ -145,7 +138,7 @@ class EncounterFileViewSet(viewsets.ReadOnlyModelViewSet):
             # Determine the content type based on the file extension
             content_type = storage._get_content_type(file_path)
 
-            # Download the file in chunks
+            # Stream the file
             download = file_client.download_file()
             file_stream = download.chunks()
 
@@ -155,6 +148,15 @@ class EncounterFileViewSet(viewsets.ReadOnlyModelViewSet):
             return response
         except Exception as e:
             raise Http404(f"File not found: {str(e)}")
+
+    @action(detail=False, methods=['post'], url_path='by-ids')
+    def get_files_by_ids(self, request):
+        ids = request.data.get('ids', [])
+        if not ids:
+            return Response({"detail": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+        files = self.get_queryset().filter(id__in=ids)
+        serializer = self.get_serializer(files, many=True)
+        return Response(serializer.data)
 
     def _has_access_to_tier(self, user, tier):
         if user.is_superuser:
