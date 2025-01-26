@@ -1,5 +1,4 @@
 from django.db import models
-from .source_and_department_models import Department
 from ..choices import SEX_CATEGORIES, RACIAL_CATEGORIES, ETHNIC_CATEGORIES
 
 
