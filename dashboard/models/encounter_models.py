@@ -85,26 +85,25 @@ class Encounter(models.Model):
             raise ValidationError("Provider satisfaction cannot be negative.")
 
     def save(self, *args, **kwargs):
-        if not self.pk:
-            if not self.encounter_source:
-                self.encounter_source, _ = EncounterSource.objects.get_or_create(
-                    name=self.type.capitalize()
-                )
+        if not self.encounter_source:
+            self.encounter_source, _ = EncounterSource.objects.get_or_create(
+                name=self.type.capitalize()
+            )
 
-            if timezone.is_naive(self.encounter_date_and_time):
-                self.encounter_date_and_time = timezone.make_aware(
-                    self.encounter_date_and_time
-                )
+        if timezone.is_naive(self.encounter_date_and_time):
+            self.encounter_date_and_time = timezone.make_aware(
+                self.encounter_date_and_time
+            )
 
-            with transaction.atomic():
-                if not self.patient:
-                    self.patient = Patient.objects.create(
-                        patient_id=random.randint(100000, 999999)
-                    )
-                if not self.provider:
-                    self.provider = Provider.objects.create(
-                        provider_id=random.randint(100000, 999999)
-                    )
+        with transaction.atomic():
+            if not self.patient:
+                self.patient = Patient.objects.create(
+                    patient_id=random.randint(100000, 999999)
+                )
+            if not self.provider:
+                self.provider = Provider.objects.create(
+                    provider_id=random.randint(100000, 999999)
+                )
 
         if self.type != 'clinic':
             self.provider_satisfaction = 0

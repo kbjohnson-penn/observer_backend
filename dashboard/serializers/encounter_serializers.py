@@ -38,7 +38,7 @@ class EncounterSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'case_id', 'encounter_source', 'department',
             'provider', 'patient', 'encounter_date_and_time', 'provider_satisfaction',
-            'patient_satisfaction', 'is_deidentified', 'is_restricted', 'type', 'encounterfile_ids', 'tier',
+            'patient_satisfaction', 'is_deidentified', 'is_restricted', 'type', 'encounterfile_ids', 'tier', 'multi_modal_data'
         ]
         # fields = [
         #     'id', 'csn_number', 'case_id', 'encounter_source', 'department',
