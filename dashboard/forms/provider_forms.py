@@ -1,6 +1,6 @@
 from django import forms
-from ..models import Provider
-from ..custom_widgets import CustomDateInput
+from dashboard.models import Provider
+from dashboard.custom_widgets import CustomDateInput
 
 
 class ProviderForm(forms.ModelForm):

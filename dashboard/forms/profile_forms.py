@@ -1,6 +1,6 @@
 from django import forms
-from ..models import Profile
-from ..custom_widgets import CustomDateInput
+from dashboard.models import Profile
+from dashboard.custom_widgets import CustomDateInput
 
 
 class ProfileForm(forms.ModelForm):

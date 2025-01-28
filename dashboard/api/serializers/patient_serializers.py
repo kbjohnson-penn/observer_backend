@@ -1,15 +1,15 @@
 from rest_framework import serializers
 from datetime import date
-from ..models import Provider
-from ..utils import calculate_age
+from dashboard.models import Patient
+from dashboard.utils import calculate_age
 
 
-class PublicProviderSerializer(serializers.ModelSerializer):
+class PublicPatientSerializer(serializers.ModelSerializer):
     year_of_birth = serializers.SerializerMethodField()
 
     class Meta:
-        model = Provider
-        fields = ['id', 'provider_id', 'year_of_birth',
+        model = Patient
+        fields = ['id', 'patient_id', 'year_of_birth',
                   'sex', 'race', 'ethnicity']
 
     def get_year_of_birth(self, instance):
@@ -28,12 +28,12 @@ class PublicProviderSerializer(serializers.ModelSerializer):
         return rep
 
 
-class ProviderSerializer(serializers.ModelSerializer):
+class PatientSerializer(serializers.ModelSerializer):
     year_of_birth = serializers.SerializerMethodField()
 
     class Meta:
-        model = Provider
-        fields = ['id', 'provider_id', 'year_of_birth',
+        model = Patient
+        fields = ['id', 'patient_id', 'year_of_birth',
                   'sex', 'race', 'ethnicity']
 
     def get_year_of_birth(self, instance):

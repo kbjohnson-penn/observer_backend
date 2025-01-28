@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import Encounter, MultiModalData, Department, EncounterSource, Provider, Patient, EncounterFile
+from dashboard.models import Encounter, MultiModalData, Department, EncounterSource, Provider, Patient, EncounterFile
 
 
 class MultiModalDataSerializer(serializers.ModelSerializer):

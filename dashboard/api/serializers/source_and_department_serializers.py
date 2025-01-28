@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import EncounterSource, Department
+from dashboard.models import EncounterSource, Department
 
 
 class EncounterSourceSerializer(serializers.ModelSerializer):

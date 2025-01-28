@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django import forms
-from ..models import Encounter, EncounterFile, Department, Patient, Provider, Tier
-from ..forms import EncounterForm, PatientForm, ProviderForm, EncounterFileForm
+from dashboard.models import Encounter, EncounterFile, Department, Patient, Provider, Tier
+from dashboard.forms import EncounterForm, PatientForm, ProviderForm, EncounterFileForm
 
 EXCLUDE_ID_RANGE = (100000, 999999)
 
