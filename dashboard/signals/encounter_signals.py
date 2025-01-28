@@ -11,7 +11,7 @@ def link_multimodal_data(sender, instance, created, **kwargs):
     if created and not instance.multi_modal_data:
         multimodal_data = MultiModalData.objects.create()
         instance.multi_modal_data = multimodal_data
-        instance.case_id = instance.case_id or f'{instance.patient}_{instance.provider}_{instance.encounter_date_and_time.date()}'
+        instance.case_id = instance.case_id or f'{instance.provider}_{instance.patient}_{instance.encounter_date_and_time.strftime("%m.%d.%Y")}'
         instance.save(update_fields=['multi_modal_data', 'case_id'])
 
 
