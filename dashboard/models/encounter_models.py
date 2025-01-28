@@ -9,7 +9,7 @@ from .patient_models import Patient
 from .provider_models import Provider
 from .source_and_department_models import EncounterSource, Department
 from .profile_models import Tier
-from ..choices import BOOLEAN_CHOICES, ENCOUNTER_TYPE_CHOICES, FILE_TYPE_CHOICES, FILE_TYPE_CHOICES_DICT
+from dashboard.choices import BOOLEAN_CHOICES, ENCOUNTER_TYPE_CHOICES, FILE_TYPE_CHOICES, FILE_TYPE_CHOICES_DICT
 
 
 class MultiModalData(models.Model):

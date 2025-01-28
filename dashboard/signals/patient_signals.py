@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from datetime import date
-from ..models import Patient
+from dashboard.models import Patient
 
 
 def calculate_year_of_birth_for_max_age(born):

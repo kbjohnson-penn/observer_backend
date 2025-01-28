@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from ..models import Profile, Tier, Organization
-from ..forms import ProfileForm
+from dashboard.models import Profile, Tier, Organization
+from dashboard.forms import ProfileForm
 
 PROFILE_FIELDS = [
     'date_of_birth', 'phone_number', 'address', 'city', 'state', 'country', 'zip_code', 'bio', 'organization', 'tier'

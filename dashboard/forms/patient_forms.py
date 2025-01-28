@@ -1,6 +1,6 @@
 from django import forms
-from ..models import Patient
-from ..custom_widgets import CustomDateInput
+from dashboard.models import Patient
+from dashboard.custom_widgets import CustomDateInput
 
 
 class PatientForm(forms.ModelForm):

@@ -1,5 +1,5 @@
 from django.db import models
-from ..choices import SEX_CATEGORIES, RACIAL_CATEGORIES, ETHNIC_CATEGORIES
+from dashboard.choices import SEX_CATEGORIES, RACIAL_CATEGORIES, ETHNIC_CATEGORIES
 
 
 class Patient(models.Model):

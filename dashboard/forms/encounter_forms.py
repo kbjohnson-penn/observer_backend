@@ -1,7 +1,7 @@
 import logging
 from django import forms
-from ..models import EncounterFile, Encounter
-from ..storage_backend import AzureDataLakeStorage
+from dashboard.models import EncounterFile, Encounter
+from dashboard.storage_backend import AzureDataLakeStorage
 from django.core.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
