@@ -1,27 +1,23 @@
-# Use the official Python image from the Docker Hub
-FROM python:3.10.14-slim
+# Use official Python image as base
+FROM python:3.10.14-slim AS base
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-# Set the working directory in the container
+# Set working directory
 WORKDIR /app
 
-# Copy the requirements file into the container
+# Install dependencies
 COPY requirements.txt .
-
-# Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code into the container
+# Copy application code
 COPY . .
 
-# Copy wait-for-it script
-COPY wait-for-it.sh .
+# Copy and make `wait-for-it.sh` executable
+COPY wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
 
-# Expose the port the app runs on
+# Expose Django's default port
 EXPOSE 8000
-
-# Command to run the migrations and start the application
-CMD ["./wait-for-it.sh", "mariadb:3306", "--", "sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
