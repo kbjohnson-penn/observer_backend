@@ -103,6 +103,9 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT'),
+        'TEST': {
+            'NAME': config('TEST_DB'),
+        },
     }
 }
 
