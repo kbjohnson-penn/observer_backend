@@ -45,7 +45,7 @@ class Encounter(models.Model):
     csn_number = models.CharField(
         unique=True, max_length=10, verbose_name="CSN Number", null=True, blank=True)
     case_id = models.CharField(
-        max_length=255, null=True, blank=True, verbose_name="Case ID")
+        max_length=50, null=True, blank=True, verbose_name="Case ID")
     encounter_source = models.ForeignKey(
         EncounterSource, on_delete=models.CASCADE, verbose_name="Source", null=True, blank=True)
     department = models.ForeignKey(Department, on_delete=models.CASCADE)
