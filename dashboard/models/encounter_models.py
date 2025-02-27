@@ -56,9 +56,9 @@ class Encounter(models.Model):
     encounter_date_and_time = models.DateTimeField(
         default=datetime.now, verbose_name="Encounter Date and Time")
     provider_satisfaction = models.PositiveSmallIntegerField(validators=[MaxValueValidator(
-        5)], default=0, verbose_name="Provider Satisfaction", null=True, blank=True)
+        5)], default=0, verbose_name="Provider Satisfaction")
     patient_satisfaction = models.PositiveSmallIntegerField(validators=[MaxValueValidator(
-        5)], default=0, verbose_name="Patient Satisfaction", null=True, blank=True)
+            5)], default=0, verbose_name="Patient Satisfaction")
     multi_modal_data = models.OneToOneField(
         MultiModalData, on_delete=models.CASCADE, null=True, blank=True, related_name='encounter')
     type = models.CharField(
@@ -77,12 +77,6 @@ class Encounter(models.Model):
             return f'{self.provider}_{self.patient}_{formatted_date}'
         else:
             return f'{self.case_id}'
-
-    def clean(self):
-        if self.patient_satisfaction < 0:
-            raise ValidationError("Patient satisfaction cannot be negative.")
-        if self.provider_satisfaction < 0:
-            raise ValidationError("Provider satisfaction cannot be negative.")
 
     def save(self, *args, **kwargs):
         if not self.encounter_source:
