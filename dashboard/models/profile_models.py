@@ -1,10 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
-from .validators import validate_zip_code, validate_phone_number
+from .validators import validate_zip_code, validate_phone_number, validate_name
 
 
 class Tier(models.Model):
-    tier_name = models.CharField(max_length=10)
+    tier_name = models.CharField(max_length=10, validators=[validate_name])
     level = models.PositiveIntegerField(unique=True)
     complete_deidentification = models.BooleanField(default=False)
     blur_sexually_explicit_body_parts = models.BooleanField(default=False)
@@ -18,11 +18,11 @@ class Tier(models.Model):
 
 
 class Organization(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, validators=[validate_name])
     address = models.TextField(blank=True, null=True)
-    city = models.CharField(max_length=100, blank=True, null=True)
-    state = models.CharField(max_length=100, blank=True, null=True)
-    country = models.CharField(max_length=100, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True, validators=[validate_name])
+    state = models.CharField(max_length=100, blank=True, null=True, validators=[validate_name])
+    country = models.CharField(max_length=100, blank=True, null=True, validators=[validate_name])
     zip_code = models.CharField(max_length=5, blank=True, null=True, validators=[validate_zip_code])
     phone_number = models.CharField(max_length=12, blank=True, null=True, validators=[validate_phone_number])
     website = models.URLField(blank=True, null=True)
@@ -40,9 +40,9 @@ class Profile(models.Model):
     tier = models.ForeignKey(
         Tier, on_delete=models.CASCADE, null=True, blank=True)
     address = models.TextField(blank=True, null=True)
-    city = models.CharField(max_length=100, blank=True, null=True)
-    state = models.CharField(max_length=100, blank=True, null=True)
-    country = models.CharField(max_length=100, blank=True, null=True)
+    city = models.CharField(max_length=100, blank=True, null=True, validators=[validate_name])
+    state = models.CharField(max_length=100, blank=True, null=True, validators=[validate_name])
+    country = models.CharField(max_length=100, blank=True, null=True, validators=[validate_name])
     zip_code = models.CharField(max_length=5, blank=True, null=True, validators=[validate_zip_code])
     bio = models.TextField(blank=True, null=True)
 
