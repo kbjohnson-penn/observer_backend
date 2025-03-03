@@ -19,7 +19,8 @@ class Tier(models.Model):
 
 class Organization(models.Model):
     name = models.CharField(max_length=100)
-    address = models.TextField(blank=True, null=True)
+    address_1 = models.CharField(max_length=100, blank=True, null=True)
+    address_2 = models.CharField(max_length=100, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
     state = models.CharField(max_length=100, blank=True, null=True)
     country = models.CharField(max_length=100, blank=True, null=True)
@@ -39,12 +40,13 @@ class Profile(models.Model):
         Organization, on_delete=models.CASCADE, null=True, blank=True)
     tier = models.ForeignKey(
         Tier, on_delete=models.CASCADE, null=True, blank=True)
-    address = models.TextField(blank=True, null=True)
+    address_1 = models.CharField(max_length=100, blank=True, null=True)
+    address_2 = models.CharField(max_length=100, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
     state = models.CharField(max_length=100, blank=True, null=True)
     country = models.CharField(max_length=100, blank=True, null=True)
     zip_code = models.CharField(max_length=5, blank=True, null=True, validators=[validate_zip_code])
-    bio = models.TextField(blank=True, null=True)
+    bio = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return self.user.username
