@@ -10,6 +10,7 @@ from .provider_models import Provider
 from .source_and_department_models import EncounterSource, Department
 from .profile_models import Tier
 from dashboard.choices import BOOLEAN_CHOICES, ENCOUNTER_TYPE_CHOICES, FILE_TYPE_CHOICES, FILE_TYPE_CHOICES_DICT
+from .validators import validate_numeric
 
 
 class MultiModalData(models.Model):
@@ -43,7 +44,7 @@ class MultiModalData(models.Model):
 
 class Encounter(models.Model):
     csn_number = models.CharField(
-        unique=True, max_length=10, verbose_name="CSN Number", null=True, blank=True)
+        unique=True, max_length=10, verbose_name="CSN Number", null=True, blank=True, validators=[validate_numeric])
     case_id = models.CharField(
         max_length=50, null=True, blank=True, verbose_name="Case ID")
     encounter_source = models.ForeignKey(
