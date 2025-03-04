@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from .validators import validate_numeric, validate_phone_number, validate_name
+from .validators import validate_numeric, validate_phone_number, validate_name, validate_address
 
 
 class Tier(models.Model):
@@ -19,8 +19,8 @@ class Tier(models.Model):
 
 class Organization(models.Model):
     name = models.CharField(max_length=100, validators=[validate_name])
-    address_1 = models.CharField(max_length=100, blank=True, null=True)
-    address_2 = models.CharField(max_length=100, blank=True, null=True)
+    address_1 = models.CharField(max_length=100, blank=True, null=True, validators=[validate_address])
+    address_2 = models.CharField(max_length=100, blank=True, null=True, validators=[validate_address])
     city = models.CharField(max_length=100, blank=True,
                             null=True, validators=[validate_name])
     state = models.CharField(max_length=100, blank=True,
@@ -46,8 +46,8 @@ class Profile(models.Model):
         Organization, on_delete=models.CASCADE, null=True, blank=True)
     tier = models.ForeignKey(
         Tier, on_delete=models.CASCADE, null=True, blank=True)
-    address_1 = models.CharField(max_length=100, blank=True, null=True)
-    address_2 = models.CharField(max_length=100, blank=True, null=True)
+    address_1 = models.CharField(max_length=100, blank=True, null=True, validators=[validate_address])
+    address_2 = models.CharField(max_length=100, blank=True, null=True, validators=[validate_address])
     city = models.CharField(max_length=100, blank=True,
                             null=True, validators=[validate_name])
     state = models.CharField(max_length=100, blank=True,

@@ -14,3 +14,7 @@ def validate_name(value):
     if not re.fullmatch(r"^[A-Za-zÀ-ÖØ-öø-ÿ'’\-\s\.]+$", value):
         raise ValidationError('Name can only contain letters (including accented characters), apostrophes, hyphens, spaces, and periods.')
     
+def validate_address(value):
+    if not re.fullmatch(r"^[A-Za-z0-9 .,\-#'/&@:()]*$", value):
+        raise ValidationError('Address can only contain letters, numbers, spaces, and common punctuation: . , - # / & @ : ()')
+    
