@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from .validators import validate_zip_code, validate_phone_number, validate_name
+from .validators import validate_numeric, validate_phone_number, validate_name
 
 
 class Tier(models.Model):
@@ -28,7 +28,7 @@ class Organization(models.Model):
     country = models.CharField(
         max_length=100, blank=True, null=True, validators=[validate_name])
     zip_code = models.CharField(
-        max_length=5, blank=True, null=True, validators=[validate_zip_code])
+        max_length=5, blank=True, null=True, validators=[validate_numeric])
     phone_number = models.CharField(
         max_length=12, blank=True, null=True, validators=[validate_phone_number])
     website = models.URLField(blank=True, null=True)
@@ -55,7 +55,7 @@ class Profile(models.Model):
     country = models.CharField(
         max_length=100, blank=True, null=True, validators=[validate_name])
     zip_code = models.CharField(
-        max_length=5, blank=True, null=True, validators=[validate_zip_code])
+        max_length=5, blank=True, null=True, validators=[validate_numeric])
     bio = models.CharField(max_length=200, blank=True, null=True)
 
     def __str__(self):
