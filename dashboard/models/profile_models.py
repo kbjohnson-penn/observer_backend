@@ -1,6 +1,12 @@
 from django.db import models
 from django.contrib.auth.models import User
-from .validators import validate_numeric, validate_phone_number, validate_name, validate_address
+from .validators import (
+    validate_numeric,
+    validate_phone_number,
+    validate_name,
+    validate_address,
+    validate_time,
+)
 
 
 class Tier(models.Model):
@@ -39,7 +45,7 @@ class Organization(models.Model):
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    date_of_birth = models.DateField(blank=True, null=True)
+    date_of_birth = models.DateField(blank=True, null=True, validators=[validate_time])
     phone_number = models.CharField(
         max_length=12, blank=True, null=True, validators=[validate_phone_number])
     organization = models.ForeignKey(

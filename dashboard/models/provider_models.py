@@ -1,13 +1,13 @@
 from django.db import models
 from dashboard.choices import SEX_CATEGORIES, RACIAL_CATEGORIES, ETHNIC_CATEGORIES
-from .validators import validate_name
+from .validators import validate_name, validate_time
 
 
 class Provider(models.Model):
     provider_id = models.PositiveIntegerField(unique=True)
     first_name = models.CharField(max_length=255, blank=True, validators=[validate_name])
     last_name = models.CharField(max_length=255, blank=True, validators=[validate_name])
-    date_of_birth = models.DateField(blank=True, null=True)
+    date_of_birth = models.DateField(blank=True, null=True, validators=[validate_time])
     sex = models.CharField(max_length=5, choices=SEX_CATEGORIES, blank=True)
     race = models.CharField(
         max_length=5, choices=RACIAL_CATEGORIES, blank=True)

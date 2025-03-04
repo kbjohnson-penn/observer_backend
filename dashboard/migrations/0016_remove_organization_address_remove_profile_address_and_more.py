@@ -93,7 +93,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='organization',
             name='zip_code',
-            field=models.CharField(blank=True, max_length=5, null=True, validators=[dashboard.models.validators.validate_zip_code]),
+            field=models.CharField(blank=True, max_length=5, null=True, validators=[dashboard.models.validators.validate_numeric]),
         ),
         migrations.AlterField(
             model_name='patient',
@@ -133,7 +133,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='profile',
             name='zip_code',
-            field=models.CharField(blank=True, max_length=5, null=True, validators=[dashboard.models.validators.validate_zip_code]),
+            field=models.CharField(blank=True, max_length=5, null=True, validators=[dashboard.models.validators.validate_numeric]),
         ),
         migrations.AlterField(
             model_name='provider',
