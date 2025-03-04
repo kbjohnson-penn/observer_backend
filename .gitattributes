@@ -1,0 +1,2 @@
+# Automatically convert line endings to LF in .sh files
+*.sh text eol=lf
