@@ -10,7 +10,7 @@ from .provider_models import Provider
 from .source_and_department_models import EncounterSource, Department
 from .profile_models import Tier
 from dashboard.choices import BOOLEAN_CHOICES, ENCOUNTER_TYPE_CHOICES, FILE_TYPE_CHOICES, FILE_TYPE_CHOICES_DICT
-from .validators import validate_numeric
+from .validators import validate_numeric, validate_time
 
 
 class MultiModalData(models.Model):
@@ -55,7 +55,7 @@ class Encounter(models.Model):
     patient = models.ForeignKey(
         Patient, on_delete=models.CASCADE, null=True, blank=True)
     encounter_date_and_time = models.DateTimeField(
-        default=datetime.now, verbose_name="Encounter Date and Time")
+        default=datetime.now, verbose_name="Encounter Date and Time", validators=[validate_time])
     provider_satisfaction = models.PositiveSmallIntegerField(validators=[MaxValueValidator(
         5)], default=0, verbose_name="Provider Satisfaction")
     patient_satisfaction = models.PositiveSmallIntegerField(validators=[MaxValueValidator(
