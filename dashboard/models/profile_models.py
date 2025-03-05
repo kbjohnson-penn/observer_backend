@@ -1,17 +1,19 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MaxValueValidator
 from .validators import (
     validate_numeric,
     validate_phone_number,
-    validate_name,
+    validate_field,
     validate_address,
     validate_time,
+    validate_website,
 )
 
 
 class Tier(models.Model):
-    tier_name = models.CharField(max_length=10, validators=[validate_name])
-    level = models.PositiveIntegerField(unique=True)
+    tier_name = models.CharField(max_length=10, validators=[validate_field])
+    level = models.PositiveIntegerField(unique=True, validators=[MaxValueValidator(5)])
     complete_deidentification = models.BooleanField(default=False)
     blur_sexually_explicit_body_parts = models.BooleanField(default=False)
     blur_face = models.BooleanField(default=False)
@@ -24,20 +26,20 @@ class Tier(models.Model):
 
 
 class Organization(models.Model):
-    name = models.CharField(max_length=100, validators=[validate_name])
+    name = models.CharField(max_length=100, validators=[validate_field])
     address_1 = models.CharField(max_length=100, blank=True, null=True, validators=[validate_address])
     address_2 = models.CharField(max_length=100, blank=True, null=True, validators=[validate_address])
     city = models.CharField(max_length=100, blank=True,
-                            null=True, validators=[validate_name])
+                            null=True, validators=[validate_field])
     state = models.CharField(max_length=100, blank=True,
-                             null=True, validators=[validate_name])
+                             null=True, validators=[validate_field])
     country = models.CharField(
-        max_length=100, blank=True, null=True, validators=[validate_name])
+        max_length=100, blank=True, null=True, validators=[validate_field])
     zip_code = models.CharField(
         max_length=5, blank=True, null=True, validators=[validate_numeric])
     phone_number = models.CharField(
         max_length=12, blank=True, null=True, validators=[validate_phone_number])
-    website = models.URLField(blank=True, null=True)
+    website = models.URLField(blank=True, null=True, validators=[validate_website])
 
     def __str__(self):
         return self.name
@@ -55,14 +57,14 @@ class Profile(models.Model):
     address_1 = models.CharField(max_length=100, blank=True, null=True, validators=[validate_address])
     address_2 = models.CharField(max_length=100, blank=True, null=True, validators=[validate_address])
     city = models.CharField(max_length=100, blank=True,
-                            null=True, validators=[validate_name])
+                            null=True, validators=[validate_field])
     state = models.CharField(max_length=100, blank=True,
-                             null=True, validators=[validate_name])
+                             null=True, validators=[validate_field])
     country = models.CharField(
-        max_length=100, blank=True, null=True, validators=[validate_name])
+        max_length=100, blank=True, null=True, validators=[validate_field])
     zip_code = models.CharField(
         max_length=5, blank=True, null=True, validators=[validate_numeric])
-    bio = models.CharField(max_length=200, blank=True, null=True)
+    bio = models.CharField(max_length=200, blank=True, null=True, validators=[validate_field])
 
     def __str__(self):
         return self.user.username

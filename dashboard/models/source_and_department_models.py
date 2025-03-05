@@ -1,9 +1,9 @@
 from django.db import models
-from .validators import validate_name
+from .validators import validate_field
 
 
 class EncounterSource(models.Model):
-    name = models.CharField(max_length=50, unique=True, validators=[validate_name])
+    name = models.CharField(max_length=50, unique=True, validators=[validate_field])
 
     def __str__(self):
         return self.name
@@ -14,7 +14,7 @@ class EncounterSource(models.Model):
 
 
 class Department(models.Model):
-    name = models.CharField(max_length=50, unique=True, validators=[validate_name])
+    name = models.CharField(max_length=50, unique=True, validators=[validate_field])
 
     def __str__(self):
         return self.name
