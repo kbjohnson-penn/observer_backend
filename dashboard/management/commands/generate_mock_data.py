@@ -13,7 +13,7 @@ class Command(BaseCommand):
     help = 'Generates realistic mock data'
 
     def add_arguments(self, parser):
-        parser.add_argument('--seed', type=int, default=31, help='Random seed for reproducibility')
+        parser.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
 
     def handle(self, *args, **options):
         seed = options['seed']
@@ -44,6 +44,7 @@ class Command(BaseCommand):
             ethnicity = lambda: random.choice([choice[0] for choice in ETHNIC_CATEGORIES])
         )
 
+        self.stdout.write(self.style.SUCCESS(f'Successfully created 242 test patients'))
 
         # Generate providers
         baker.make(
@@ -58,6 +59,7 @@ class Command(BaseCommand):
             ethnicity = lambda: random.choice([choice[0] for choice in ETHNIC_CATEGORIES])
         )
 
+        self.stdout.write(self.style.SUCCESS(f'Successfully created 130 test providers'))
 
         # Generate departments
         for dept in DEPARTMENTS:
@@ -67,7 +69,6 @@ class Command(BaseCommand):
             )
         
         self.stdout.write(self.style.SUCCESS(f'Successfully created 5 test departments'))
-
 
         # Generate ecounter sources
         baker.make(
@@ -88,6 +89,7 @@ class Command(BaseCommand):
         department_objects = Department.objects.all()
         clinic_source = EncounterSource.objects.get(name="clinic")
         simcenter_source = EncounterSource.objects.get(name="simcenter")
+        simcenter_dept = Department.objects.get(name="Penn Sim-Center")
 
 
         # Generate clinic encounters
@@ -97,12 +99,12 @@ class Command(BaseCommand):
                 csn_number = lambda: generate_unique_id(),
                 case_id = lambda: Faker().name(),
                 encounter_source = clinic_source,
-                department = lambda: random.choice(department_objects),
+                department = lambda: random.choice([choice for choice in department_objects if choice.name != "Penn Sim-Center"]),
                 provider = lambda: random.choice(provider_objects[:10]),
                 patient = patient_objects[enc],
                 provider_satisfaction = lambda: random.choice([0, 1, 2, 3, 4, 5]),
                 patient_satisfaction = lambda: random.choice([0, 1, 2, 3, 4, 5]),
-                type = lambda: random.choice([choice[0] for choice in ENCOUNTER_TYPE_CHOICES]),
+                type = "clinic",
                 is_deidentified = lambda: random.choice([choice[0] for choice in BOOLEAN_CHOICES]),
                 is_restricted = lambda: random.choice([choice[0] for choice in BOOLEAN_CHOICES]),
             )
@@ -114,12 +116,12 @@ class Command(BaseCommand):
                 csn_number = lambda: generate_unique_id(),
                 case_id = lambda: Faker().name(),
                 encounter_source = simcenter_source,
-                department = lambda: random.choice(department_objects),
+                department = simcenter_dept,
                 provider = provider_objects[enc+10],
                 patient = patient_objects[enc+122],
                 provider_satisfaction = lambda: random.choice([0, 1, 2, 3, 4, 5]),
                 patient_satisfaction = lambda: random.choice([0, 1, 2, 3, 4, 5]),
-                type = lambda: random.choice([choice[0] for choice in ENCOUNTER_TYPE_CHOICES]),
+                type = "simcenter",
                 is_deidentified = lambda: random.choice([choice[0] for choice in BOOLEAN_CHOICES]),
                 is_restricted = lambda: random.choice([choice[0] for choice in BOOLEAN_CHOICES]),
             )
