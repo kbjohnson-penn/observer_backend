@@ -62,17 +62,28 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f'Successfully created {num_samples} test {model.lower()}s'))
 
 
-        # Generate departments/ecounter sources
-        for model in ["Department", "EncounterSource"]:
-            model_names = [int_to_letters(generate_unique_id()) for _ in range(num_samples)]
+        # Generate departments
+        baker.make(
+            "Department",
+            _quantity = num_samples,
+            name = lambda: int_to_letters(generate_unique_id())
+        )
+        
+        self.stdout.write(self.style.SUCCESS(f'Successfully created {num_samples} test departments'))
+        
 
-            baker.make(
-                model,
-                _quantity=num_samples,
-                name=iter(model_names)
-            )
-            
-            self.stdout.write(self.style.SUCCESS(f'Successfully created {num_samples} test {model.lower()}s'))
+        # Generate ecounter sources
+        baker.make(
+            "EncounterSource",
+            name = "clinic"
+        )
+
+        baker.make(
+            "EncounterSource",
+            name = "simcenter"
+        )
+        
+        self.stdout.write(self.style.SUCCESS(f'Successfully created 2 test encounter sources'))
 
 
         # Generate organizations
