@@ -5,7 +5,7 @@ from dashboard.models import Encounter, MultiModalData, Department, EncounterSou
 class MultiModalDataSerializer(serializers.ModelSerializer):
     class Meta:
         model = MultiModalData
-        fields = ["provider_view", "patient_view", "room_view", "audio", "transcript",
+        fields = ["id", "provider_view", "patient_view", "room_view", "audio", "transcript",
                   "patient_survey", "provider_survey", "patient_annotation", "provider_annotation", "timestamp"]
 
 

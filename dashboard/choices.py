@@ -28,7 +28,6 @@ BOOLEAN_CHOICES = [
 ENCOUNTER_TYPE_CHOICES = [
     ('clinic', 'Clinic'),
     ('simcenter', 'Sim Center'),
-    ('rias', 'RIAS'),
 ]
 
 FILE_TYPE_CHOICES = [

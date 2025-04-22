@@ -2,12 +2,17 @@ from django.contrib import admin
 from django import forms
 from dashboard.models import Encounter, EncounterFile, Department, Patient, Provider, Tier
 from dashboard.forms import EncounterForm, PatientForm, ProviderForm, EncounterFileForm
+from dashboard.constants import SIMCENTER_PATIENT_ID_LOWER_LIMIT, SIMCENTER_PATIENT_ID_UPPER_LIMIT, SIMCENTER_PROVIDER_ID_LOWER_LIMIT, SIMCENTER_PROVIDER_ID_UPPER_LIMIT
 
-EXCLUDE_ID_RANGE = (100000, 999999)
+PATIENT_ID_EXCLUDE_RANGE = (
+    SIMCENTER_PATIENT_ID_LOWER_LIMIT, SIMCENTER_PATIENT_ID_UPPER_LIMIT)
+PROVIDER_ID_EXCLUDE_RANGE = (
+    SIMCENTER_PROVIDER_ID_LOWER_LIMIT, SIMCENTER_PROVIDER_ID_UPPER_LIMIT)
 
 
 class ExcludeIdRangeMixin:
-    exclude_id_range = EXCLUDE_ID_RANGE
+    exclude_id_range = None
+    exclude_field = None
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -17,11 +22,13 @@ class ExcludeIdRangeMixin:
 class PatientAdmin(ExcludeIdRangeMixin, admin.ModelAdmin):
     form = PatientForm
     exclude_field = 'patient_id'
+    exclude_id_range = PATIENT_ID_EXCLUDE_RANGE
 
 
 class ProviderAdmin(ExcludeIdRangeMixin, admin.ModelAdmin):
     form = ProviderForm
     exclude_field = 'provider_id'
+    exclude_id_range = PROVIDER_ID_EXCLUDE_RANGE
 
 
 class EncounterFileInline(admin.TabularInline):
@@ -46,10 +53,10 @@ class EncounterAdmin(admin.ModelAdmin):
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "patient":
             kwargs["queryset"] = Patient.objects.exclude(
-                patient_id__range=EXCLUDE_ID_RANGE)
+                patient_id__range=PATIENT_ID_EXCLUDE_RANGE)
         if db_field.name == "provider":
             kwargs["queryset"] = Provider.objects.exclude(
-                provider_id__range=EXCLUDE_ID_RANGE)
+                provider_id__range=PROVIDER_ID_EXCLUDE_RANGE)
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def customize_form(self, form):
