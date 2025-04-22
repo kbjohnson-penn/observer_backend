@@ -3,13 +3,13 @@ from django.core.validators import MaxValueValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import datetime
-import random
 
 from .patient_models import Patient
 from .provider_models import Provider
 from .source_and_department_models import EncounterSource, Department
 from .profile_models import Tier
 from dashboard.choices import BOOLEAN_CHOICES, ENCOUNTER_TYPE_CHOICES, FILE_TYPE_CHOICES, FILE_TYPE_CHOICES_DICT
+from dashboard.constants import SIMCENTER_PATIENT_ID_LOWER_LIMIT, SIMCENTER_PATIENT_ID_UPPER_LIMIT, SIMCENTER_PROVIDER_ID_LOWER_LIMIT, SIMCENTER_PROVIDER_ID_UPPER_LIMIT
 from .validators import validate_numeric, validate_time
 
 
@@ -59,7 +59,7 @@ class Encounter(models.Model):
     provider_satisfaction = models.PositiveSmallIntegerField(validators=[MaxValueValidator(
         5)], default=0, verbose_name="Provider Satisfaction")
     patient_satisfaction = models.PositiveSmallIntegerField(validators=[MaxValueValidator(
-            5)], default=0, verbose_name="Patient Satisfaction")
+        5)], default=0, verbose_name="Patient Satisfaction")
     multi_modal_data = models.OneToOneField(
         MultiModalData, on_delete=models.CASCADE, null=True, blank=True, related_name='encounter')
     type = models.CharField(
@@ -79,7 +79,9 @@ class Encounter(models.Model):
         else:
             return f'{self.case_id}'
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
+        # Creates an new encounter source if it doesn't exist from the type
         if not self.encounter_source:
             self.encounter_source, _ = EncounterSource.objects.get_or_create(
                 name=self.type.capitalize()
@@ -90,31 +92,50 @@ class Encounter(models.Model):
                 self.encounter_date_and_time
             )
 
-        with transaction.atomic():
-            if not self.patient:
-                self.patient = Patient.objects.create(
-                    patient_id=random.randint(100000, 999999)
-                )
-            if not self.provider:
-                self.provider = Provider.objects.create(
-                    provider_id=random.randint(100000, 999999)
-                )
+        if self.type == 'simcenter':
+            # First try to fetch existing objects if this is an update
+            if self.pk is not None:
+                try:
+                    existing = Encounter.objects.get(pk=self.pk)
+                    if existing.patient and not self.patient:
+                        self.patient = existing.patient
+                    if existing.provider and not self.provider:
+                        self.provider = existing.provider
+                except Encounter.DoesNotExist:
+                    pass
 
-        if self.type != 'clinic':
-            self.provider_satisfaction = 0
-            self.patient_satisfaction = 0
-            self.is_deidentified = False
-            self.is_restricted = True
+            # Create new objects if still missing
+            if not self.patient:
+                highest_patient = Patient.objects.filter(
+                    patient_id__gte=SIMCENTER_PATIENT_ID_LOWER_LIMIT,
+                    patient_id__lt=SIMCENTER_PATIENT_ID_UPPER_LIMIT
+                ).order_by('-patient_id').first()
+
+                new_id = SIMCENTER_PATIENT_ID_LOWER_LIMIT if not highest_patient else highest_patient.patient_id + 1
+                self.patient = Patient.objects.create(patient_id=new_id)
+
+            if not self.provider:
+                highest_provider = Provider.objects.filter(
+                    provider_id__gte=SIMCENTER_PROVIDER_ID_LOWER_LIMIT,
+                    provider_id__lt=SIMCENTER_PROVIDER_ID_UPPER_LIMIT
+                ).order_by('-provider_id').first()
+
+                new_id = SIMCENTER_PROVIDER_ID_LOWER_LIMIT if not highest_provider else highest_provider.provider_id + 1
+                self.provider = Provider.objects.create(provider_id=new_id)
 
         self.clean()
         super(Encounter, self).save(*args, **kwargs)
 
+    @transaction.atomic
     def delete(self, *args, **kwargs):
-        MultiModalData.objects.filter(encounter=self).delete()
-        if self.patient:
-            self.patient.delete()
-        if self.provider:
-            self.provider.delete()
+        if hasattr(self, 'multi_modal_data') and self.multi_modal_data:
+            self.multi_modal_data.delete()
+
+        if self.type == 'simcenter':
+            if self.patient:
+                self.patient.delete(using=kwargs.get('using'))
+            if self.provider:
+                self.provider.delete(using=kwargs.get('using'))
         super(Encounter, self).delete(*args, **kwargs)
 
     class Meta:
