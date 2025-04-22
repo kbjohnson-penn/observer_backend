@@ -9,7 +9,7 @@ class PublicProviderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Provider
-        fields = ['id', 'provider_id', 'year_of_birth',
+        fields = ['id', 'year_of_birth',
                   'sex', 'race', 'ethnicity']
 
     def get_year_of_birth(self, instance):

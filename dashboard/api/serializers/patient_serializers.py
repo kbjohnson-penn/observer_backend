@@ -9,7 +9,7 @@ class PublicPatientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Patient
-        fields = ['id', 'patient_id', 'year_of_birth',
+        fields = ['id', 'year_of_birth',
                   'sex', 'race', 'ethnicity']
 
     def get_year_of_birth(self, instance):
