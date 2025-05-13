@@ -1,52 +1,106 @@
-# Contributing
+# Contributing to Observer Backend
 
-When contributing to this repository, please first discuss the change you wish to make via issue with the owners of this repository before making a change.
+Thank you for your interest in contributing to the Observer Backend project! This document provides guidelines and instructions for contributing to the project.
 
-Please note we have a Code of Conduct, please follow it in all your interactions with the project.
+## Code of Conduct
 
-## Reporting Issues/Features
+Please read and follow our Code of Conduct in all your interactions with the project.
 
-This section guides you through submitting a issue for the project. Following these guidelines helps maintainers and the community understand your issue, reproduce the issue and find related issues.
+## Getting Started
 
-### Issue Description
+1. Fork the repository
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/observer_backend.git`
+3. Create a feature branch from `dev`: `git checkout -b feature/your-feature-name`
+4. Set up your development environment following the instructions in the README
 
-1. Steps to Reproduce:
-2. Expected behavior:
-3. Actual behavior:
-4. Frequency of Occurrence:
-5. Environment configuration:
-6. Additional Information:
+## Development Workflow
 
-Before submitting an issue or feature request, please check the existing issues as your issue might have already been noted.
+1. Make your changes, following our coding standards
+2. Write or update tests as needed
+3. Ensure all tests pass
+4. Update documentation if necessary
+5. Commit your changes with descriptive messages
+6. Push your branch to your fork
+7. Submit a Pull Request to the `dev` branch
 
-## Pull Requests
+## Reporting Issues
 
-The process described here has several goals:
+Before submitting an issue, please check if it already exists. When reporting an issue, include:
 
-- Maintain the project's quality
-- Fix problems that are important to users
-- Engage the community in working in harmony
-- Enable a sustainable system for the maintainers to review contributions
+1. **Steps to Reproduce**: Clear steps to reproduce the issue
+2. **Expected behavior**: What you expected to happen
+3. **Actual behavior**: What actually happened
+4. **Frequency of Occurrence**: How often the issue occurs
+5. **Environment configuration**: Details about your environment (OS, Python version, etc.)
+6. **Additional Information**: Any other relevant information (screenshots, logs, etc.)
 
-Please follow these steps to make your contribution considered:
+## Feature Requests
 
-1. Create a feature branch from `dev`, make changes and raise a PR against it
-2. Please make sure that the feature branch is even with the develop branch while raising a PR.
-3. Please ensure that all the testcases are passing to make sure that your changes didn't impact any other existing features
+Feature requests are welcome. Please provide:
 
-While the prerequisites above must be satisfied prior to having your pull request reviewed, the reviewer(s) may ask you to complete additional design work, tests, or other changes before your pull request can be ultimately accepted.
+1. A clear description of the feature
+2. The motivation behind the feature
+3. How it should work
+4. Examples of how it would be used
 
-## Styleguides
+## Pull Request Process
 
-### Git Commit Messages
+1. Create your PR against the `dev` branch
+2. Ensure your branch is up to date with the current `dev` branch
+3. Make sure all tests pass and code quality checks are successful
+4. Request a review from project maintainers
+5. Address any feedback or changes requested during review
+6. Once approved, a maintainer will merge your PR
 
-- Limit the commit message to 72 characters or less
-- Reference issues and pull requests liberally in the commit description
-- Consider starting the commit message with an applicable keyword:
-  - fix: when fixing a bug
-  - feat: when new feature is added
-  - test: when updating testcases
-  - docs: when docs are updated
-  - lint: when lint errors are fixed
-  - dep: when any of the dependencies are upgraded
-  - chore: for any normal task, which is done as a part of above tasks like updating build scripts, gulp tasks, etc.
+## Code Style Guidelines
+
+- Follow PEP 8 for Python code
+- Use meaningful variable and function names
+- Write docstrings for classes and functions
+- Keep functions focused (single responsibility principle)
+- Comment complex code sections
+
+## Git Commit Guidelines
+
+- Use the present tense ("Add feature" not "Added feature")
+- Limit the first line to 72 characters
+- Start commits with a type prefix:
+  - `fix:` Bug fixes
+  - `feat:` New features
+  - `docs:` Documentation updates
+  - `test:` Test updates
+  - `refactor:` Code refactoring
+  - `style:` Code style/formatting changes
+  - `perf:` Performance improvements
+  - `chore:` Build process or tooling changes
+
+Examples:
+
+```
+feat: Add Penn Personalized Care encounter source
+fix: Correct patient satisfaction score calculation
+docs: Update API documentation for the v1 routes
+```
+
+## Testing
+
+- Write tests for all new features and bug fixes
+- Maintain or improve code coverage
+- Run the full test suite before submitting a PR
+
+## Documentation
+
+- Update relevant documentation for new features
+- Document API changes
+- Include code examples where appropriate
+
+## Review Process
+
+- PRs require approval from at least one maintainer
+- Reviewers will check for:
+  - Code quality and style
+  - Test coverage
+  - Documentation
+  - Potential issues or bugs
+
+Thank you for contributing to Observer Backend! Your efforts help make this project better for everyone.
