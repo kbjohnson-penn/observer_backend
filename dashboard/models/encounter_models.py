@@ -73,7 +73,7 @@ class Encounter(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        if self.type == 'clinic':
+        if self.type == 'clinic' or self.type == 'pennpersonalizedcare':
             formatted_date = self.encounter_date_and_time.date().strftime('%m.%d.%Y')
             return f'{self.provider}_{self.patient}_{formatted_date}'
         else:
