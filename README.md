@@ -26,17 +26,27 @@ pip install -r requirements.txt
 
 4. Install [MySQL](https://www.mysql.com/) or [MariaDB](https://mariadb.com/) database.
 
-5. Install [Neo4j](https://neo4j.com/download/) database.
-
 ## Configuration
 
 Before running the project, configure your environment variables:
 
-Copy `.env.example` to `.env` and fill in the necessary settings.
+Copy `.env.example` to `.env` and fill in the necessary settings:
 
-### Setting up the Databases
+```bash
+cp .env.example .env
+```
 
-#### MySQL
+Then edit the `.env` file with your specific configuration values, including:
+
+- Database credentials
+- Secret key
+- Debug mode
+- Allowed hosts
+- Azure storage settings
+
+### Setting up the Database
+
+#### MySQL / MariaDB
 
 1. **Open MySQL command line tool or MySQL Shell**: You can do this by typing `mysql -u root -p` in your terminal and then entering your MySQL root password when prompted.
 
@@ -58,34 +68,22 @@ GRANT ALL PRIVILEGES ON observer_dashboard_database.* TO 'observer'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-#### Neo4j
-
-1. Open the Neo4j Desktop application.
-
-2. Click on **New** to create a new project, then rename it.
-
-3. Click **Add**, select **Local DBMS**, provide a database name and password, then click **Create**.
-
-4. Now, click **Start** to initiate the database.
-
-**Note**: If there are any configuration issues, a pop-up will appear. Click on **Fix Configuration**. If the issue persists, open the database settings from the dropdown menu. An **Edit Settings** pop-up will appear. Resolve the issue, apply the settings, and restart the database.
-
 ## Running the Project
 
-Test if SQL and Neo4j connections work.
+Test if database connections work:
 
 ```bash
 python manage.py test_connections
 ```
 
-Apply the database migrations to create the database schema
+Apply the database migrations to create the database schema:
 
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-Create a Django admin user
+Create a Django admin user:
 
 ```bash
 python manage.py createsuperuser
@@ -100,7 +98,57 @@ python manage.py runserver
 - Open [http://127.0.0.1:8000/api](http://127.0.0.1:8000/api) to view all the API routes.
 - Open [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin) to login and add new records to the database.
 
+### Generating Test Data
+
+You can generate test data using the management command:
+
+```bash
+python manage.py generate_test_data
+```
+
+Or generate more comprehensive mock data:
+
+```bash
+python manage.py generate_mock_data
+```
+
 **Note**: Always migrate database after any changes are applied to the models.
+
+## API Features
+
+The project provides the following API endpoints:
+
+### Public API (v1)
+
+- `/api/v1/public/patients/` - Patient data
+- `/api/v1/public/providers/` - Provider data
+- `/api/v1/public/encounters/` - Patient encounter data
+- `/api/v1/public/departments/` - Department information
+- `/api/v1/public/encountersources/` - Encounter sources
+- `/api/v1/public/mmdata/` - Multimodal data
+
+### Private API (v1)
+
+- `/api/v1/private/patients/` - Patient data management
+- `/api/v1/private/providers/` - Provider data management
+- `/api/v1/private/encounters/` - Encounter data management
+- `/api/v1/private/departments/` - Department management
+- `/api/v1/private/encountersources/` - Encounter sources management
+- `/api/v1/private/mmdata/` - Multimodal data management
+- `/api/v1/private/encounterfiles/` - Encounter files management
+
+### Authentication API (v1)
+
+- `/api/v1/auth/token/` - Get authentication token
+- `/api/v1/auth/token/refresh/` - Refresh authentication token
+- `/api/v1/auth/token/verify/` - Verify authentication token
+- `/api/v1/auth/logout/` - User logout
+
+### Profile API (v1)
+
+- `/api/v1/profile/` - User profile operations
+
+Note: The API includes support for Penn Personalized Care (PPC) encounter sources.
 
 ## Contributing
 
