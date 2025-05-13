@@ -1,5 +1,20 @@
 # Observer Backend
 
+## Project Overview
+
+Observer Backend is a Django-based application designed to store and manage patient-provider encounter data for healthcare systems. It provides a comprehensive API for tracking and analyzing patient encounters, provider information, and related healthcare data.
+
+Key features include:
+
+- RESTful API for patient and provider data management
+- Encounter tracking system with multiple source types
+- Secure authentication and authorization
+- Azure Storage integration for file management
+- Docker support for containerized deployment
+- Comprehensive admin interface for data management
+
+The system supports various healthcare encounter types including Penn Personalized Care (PPC) and is designed for scalability and performance.
+
 ## Installation
 
 Follow these steps to get your development environment set up:
@@ -50,11 +65,11 @@ Then edit the `.env` file with your specific configuration values, including:
 
 1. **Open MySQL command line tool or MySQL Shell**: You can do this by typing `mysql -u root -p` in your terminal and then entering your MySQL root password when prompted.
 
-2. **Create a new database**: Once you're in the MySQL shell, you can create a new database by running the `CREATE DATABASE` command. For example, if you want to create a database named `observer_dashboard_database`, you would run `CREATE DATABASE observer_dashboard_database;`.
+2. **Create a new database**: Once you're in the MySQL shell, you can create a new database by running the `CREATE DATABASE` command. For example, if you want to create a database named `observerdb`, you would run `CREATE DATABASE observerdb;`.
 
 3. **Create a new user**: You can create a new user by running the `CREATE USER` command. For example, if you want to create a user named `observer`, you would run `CREATE USER 'observer'@'localhost' IDENTIFIED BY 'observer123';`.
 
-4. **Grant permissions**: After creating the user, you can grant them permissions to a database using the `GRANT` command. For example, to grant all permissions to the `observer_dashboard_database` database to the `observer` user, you would run `GRANT ALL PRIVILEGES ON observer_dashboard_database.* TO 'observer'@'localhost';`.
+4. **Grant permissions**: After creating the user, you can grant them permissions to a database using the `GRANT` command. For example, to grant all permissions to the `observerdb` database to the `observer` user, you would run `GRANT ALL PRIVILEGES ON observerdb.* TO 'observer'@'localhost';`.
 
 5. **Flush privileges**: Finally, you need to run the `FLUSH PRIVILEGES;` command to reload the grant tables and put your new changes into effect.
 
@@ -62,9 +77,9 @@ Here's what the commands look like:
 
 ```bash
 mysql -u root -p
-CREATE DATABASE observer_dashboard_database;
+CREATE DATABASE observerdb;
 CREATE USER 'observer'@'localhost' IDENTIFIED BY 'observer123';
-GRANT ALL PRIVILEGES ON observer_dashboard_database.* TO 'observer'@'localhost';
+GRANT ALL PRIVILEGES ON observerdb.* TO 'observer'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
@@ -149,6 +164,17 @@ The project provides the following API endpoints:
 - `/api/v1/profile/` - User profile operations
 
 Note: The API includes support for Penn Personalized Care (PPC) encounter sources.
+
+## Docker Support
+
+The application can be run in a Docker container for easier deployment and development. The included Dockerfile provides all necessary configuration for containerization.
+
+To build and run with Docker:
+
+```bash
+docker build -t observer-backend .
+docker run -p 8000:8000 observer-backend
+```
 
 ## Contributing
 
