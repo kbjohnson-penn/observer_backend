@@ -99,7 +99,6 @@ python manage.py runserver
 
 - Open [http://127.0.0.1:8000/api](http://127.0.0.1:8000/api) to view all the API routes.
 - Open [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin) to login and add new records to the database.
-- Open Neo4j browser to view the Knowledge Graph
 
 **Note**: Always migrate database after any changes are applied to the models.
 

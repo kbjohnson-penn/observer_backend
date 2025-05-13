@@ -13,9 +13,10 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 from decouple import config
 import os
-
-# Added to fix mysqlclient
+from dashboard.utils import SanitizingHandler
 import pymysql
+from datetime import timedelta
+
 pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -39,9 +40,6 @@ CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS').split(',')
 
 CORS_ALLOW_ALL_ORIGINS = True  # If you want to allow all origins
 
-# Neo4j database connection settings
-NEO4J_BOLT_URL = f"bolt://{config('GRAPH_DB_USER')}:{config('GRAPH_DB_PASSWORD')}@{config('GRAPH_DB_HOST')}:{config('GRAPH_DB_PORT')}"
-
 # Documentation URL
 DOCUMENTATION_URL = config('DOCUMENTATION_URL')
 
@@ -56,6 +54,7 @@ INSTALLED_APPS = [
     'dashboard',
     'rest_framework',
     'corsheaders',
+    'rest_framework_simplejwt.token_blacklist',
 ]
 
 MIDDLEWARE = [
@@ -78,6 +77,7 @@ TEMPLATES = [
         'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
+            'debug': True,
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
@@ -103,6 +103,9 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST'),
         'PORT': config('DB_PORT'),
+        'TEST': {
+            'NAME': config('TEST_DB'),
+        },
     }
 }
 
@@ -150,3 +153,61 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Azure Data Lake Storage settings
+AZURE_STORAGE_ACCOUNT_NAME = config('AZURE_STORAGE_ACCOUNT_NAME')
+AZURE_STORAGE_FILE_SYSTEM_NAME = config('AZURE_STORAGE_FILE_SYSTEM_NAME')
+AZURE_SAS_TOKEN = config('AZURE_SAS_TOKEN')
+
+# Logging settings
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, config('LOG_FILE')),
+            'formatter': 'verbose',
+        },
+        'sanitizing': {
+            'class': 'dashboard.utils.SanitizingHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console', 'file', 'sanitizing'],
+            'level': 'INFO',
+        },
+    },
+}
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
