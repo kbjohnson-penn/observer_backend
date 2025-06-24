@@ -27,6 +27,8 @@ class ProfileSerializer(serializers.ModelSerializer):
         source='user.last_login', read_only=True)
     organization = OrganizationSerializer(read_only=True)
     tier = TierSerializer(read_only=True)
+    # Combine address_1 and address_2 into a single address field for frontend compatibility
+    address = serializers.CharField(required=False, allow_blank=True)
 
     class Meta:
         model = Profile
@@ -35,6 +37,29 @@ class ProfileSerializer(serializers.ModelSerializer):
             'address', 'city', 'state', 'country', 'zip_code', 'bio', 'organization',
             'tier', 'date_joined', 'last_login'
         ]
+
+    def to_representation(self, instance):
+        """Customize the serialized representation."""
+        data = super().to_representation(instance)
+        # Combine address_1 and address_2 into a single address field
+        parts = [part for part in [instance.address_1, instance.address_2] if part]
+        data['address'] = ', '.join(parts) if parts else ''
+        return data
+
+    def update(self, instance, validated_data):
+        """Handle address field update by splitting into address_1 and address_2."""
+        if 'address' in validated_data:
+            address = validated_data.pop('address')
+            # Split address into two parts if it contains a comma, otherwise put it all in address_1
+            if ',' in address:
+                parts = address.split(',', 1)
+                instance.address_1 = parts[0].strip()
+                instance.address_2 = parts[1].strip() if len(parts) > 1 else ''
+            else:
+                instance.address_1 = address
+                instance.address_2 = ''
+        
+        return super().update(instance, validated_data)
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
