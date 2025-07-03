@@ -7,6 +7,7 @@ from dashboard.api.viewsets.public import (
     PublicEncounterViewSet,
     PublicMultiModalDataViewSet,
 )
+from dashboard.api.views.sample_data_views import SampleDataViewSet
 
 router = DefaultRouter()
 
@@ -23,5 +24,7 @@ router.register(r'mmdata', PublicMultiModalDataViewSet,
                 basename='v1-public-mmdata')
 router.register(r'encounters', PublicEncounterViewSet,
                 basename='v1-public-encounter')
+router.register(r'sample-data', SampleDataViewSet,
+                basename='v1-public-sample-data')
 
 urlpatterns = router.urls
