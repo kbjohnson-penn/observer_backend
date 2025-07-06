@@ -1,10 +1,13 @@
 import os
 import csv
+import mimetypes
 from django.conf import settings
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
+from django.http import HttpResponse, FileResponse, Http404
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework import status
 from decouple import config
 from dashboard.api.viewsets.public.base import IsReadOnly
@@ -142,3 +145,142 @@ class SampleDataViewSet(ViewSet):
                 {'error': 'Internal server error occurred'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class PublicVideoStreamView(APIView):
+    """
+    API view to stream media files (videos, documents, etc.) from local filesystem.
+    Supports both HEAD requests (for file size checking) and GET requests (for streaming).
+    """
+    permission_classes = [IsReadOnly]
+    
+    def get_media_file_path(self, file_path):
+        """
+        Get the absolute path to the media file with security validation.
+        """
+        # Get media files directory from environment
+        default_media_path = os.path.join(settings.BASE_DIR, 'media')
+        media_dir = config('VIDEO_FILES_PATH', default=default_media_path)
+        media_dir = os.path.abspath(media_dir)
+        
+        # Security: Prevent path traversal attacks
+        base_path = os.path.abspath(settings.BASE_DIR)
+        if not media_dir.startswith(base_path):
+            raise Http404("Invalid media directory configuration")
+        
+        # Clean the file path (remove leading slashes, normalize)
+        clean_file_path = file_path.strip('/')
+        
+        # Security: Check for dangerous path components
+        path_parts = clean_file_path.split('/')
+        for part in path_parts:
+            if part in ('..', '.', '') or any(char in part for char in ['\\', ':', '*', '?', '"', '<', '>', '|']):
+                raise Http404("Invalid file path")
+        
+        # Construct full file path
+        full_path = os.path.join(media_dir, clean_file_path)
+        full_path = os.path.abspath(full_path)
+        
+        # Security: Ensure the resolved path is still within media directory
+        if not full_path.startswith(media_dir):
+            raise Http404("Invalid file path")
+        
+        # Check if file exists
+        if not os.path.exists(full_path):
+            raise Http404("Media file not found")
+        
+        # Check if it's actually a file (not directory)
+        if not os.path.isfile(full_path):
+            raise Http404("Path is not a file")
+        
+        return full_path
+    
+    def _get_file_info(self, file_path):
+        """Get file info including size and content type."""
+        full_path = self.get_media_file_path(file_path)
+        file_size = os.path.getsize(full_path)
+        content_type, _ = mimetypes.guess_type(full_path)
+        
+        # Default based on file extension if cannot determine
+        if not content_type:
+            file_ext = os.path.splitext(full_path)[1].lower()
+            if file_ext in ['.mp4', '.avi', '.mov', '.wmv', '.mkv', '.webm']:
+                content_type = 'video/mp4'
+            elif file_ext in ['.xlsx', '.xls']:
+                content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            elif file_ext == '.json':
+                content_type = 'application/json'
+            else:
+                content_type = 'application/octet-stream'
+        
+        return full_path, file_size, content_type
+    
+    def _add_common_headers(self, response):
+        """Add common headers to response."""
+        response['Accept-Ranges'] = 'bytes'
+        response['Cache-Control'] = 'public, max-age=3600'
+        return response
+
+    def head(self, request, file_path):
+        """Handle HEAD requests for file size checking."""
+        try:
+            full_path, file_size, content_type = self._get_file_info(file_path)
+            
+            response = HttpResponse(status=200, content='')
+            response['Content-Type'] = content_type
+            response['Content-Length'] = str(file_size)
+            
+            return self._add_common_headers(response)
+            
+        except Http404:
+            raise
+        except Exception:
+            raise Http404("Error accessing media file")
+    
+    def get(self, request, file_path):
+        """Handle GET requests for media file streaming with range support."""
+        try:
+            full_path, file_size, content_type = self._get_file_info(file_path)
+            
+            # Handle range requests
+            range_header = request.META.get('HTTP_RANGE')
+            if range_header:
+                try:
+                    range_match = range_header.replace('bytes=', '').split('-')
+                    start = int(range_match[0]) if range_match[0] else 0
+                    end = int(range_match[1]) if range_match[1] else file_size - 1
+                    
+                    # Ensure valid range
+                    start = max(0, start)
+                    end = min(file_size - 1, end)
+                    
+                    if start > end:
+                        response = HttpResponse(status=416)
+                        response['Content-Range'] = f'bytes */{file_size}'
+                        return response
+                    
+                    # Create partial content response
+                    with open(full_path, 'rb') as media_file:
+                        media_file.seek(start)
+                        chunk_size = end - start + 1
+                        media_data = media_file.read(chunk_size)
+                    
+                    response = HttpResponse(media_data, status=206, content_type=content_type)
+                    response['Content-Range'] = f'bytes {start}-{end}/{file_size}'
+                    response['Content-Length'] = str(chunk_size)
+                    
+                    return self._add_common_headers(response)
+                    
+                except (ValueError, IndexError):
+                    pass  # Fall back to full file
+            
+            # Return full file
+            response = FileResponse(open(full_path, 'rb'), content_type=content_type, as_attachment=False)
+            response['Content-Length'] = str(file_size)
+            
+            return self._add_common_headers(response)
+            
+        except Http404:
+            raise
+        except Exception:
+            raise Http404("Error streaming media file")
