@@ -15,21 +15,19 @@ class ProfileView(RetrieveUpdateAPIView):
 
     def get_object(self):
         """
-        Fetch the profile for the logged-in user.
+        Fetch the profile for the logged-in user, create if it doesn't exist.
         """
         try:
             return self.request.user.profile
         except Profile.DoesNotExist:
-            return None
+            # Create a profile if it doesn't exist
+            return Profile.objects.create(user=self.request.user)
 
     def retrieve(self, request, *args, **kwargs):
         """
         Retrieve the logged-in user's profile.
         """
         profile = self.get_object()
-        if profile is None:
-            return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
-
         serializer = self.get_serializer(profile)
         return Response(serializer.data)
 
@@ -38,9 +36,6 @@ class ProfileView(RetrieveUpdateAPIView):
         Update the logged-in user's profile.
         """
         profile = self.get_object()
-        if profile is None:
-            return Response({'error': 'Profile not found'}, status=status.HTTP_404_NOT_FOUND)
-
         serializer = self.get_serializer(profile, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
