@@ -32,3 +32,4 @@ typing_extensions==4.9.0
 urllib3==2.2.2
 model-bakery==1.20.4
 faker==36.2.2
+django-ratelimit==4.0.0
