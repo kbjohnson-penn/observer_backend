@@ -97,7 +97,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         """
         Create a new user and their associated profile.
         """
-        user = User.objects.using('accounts').create_user(
+        user = User.objects.db_manager('accounts').create_user(
             username=validated_data['username'],
             password=validated_data['password'],
             email=validated_data['email']
@@ -107,16 +107,32 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         address = validated_data.get('address', '')
         address_1, address_2 = split_address(address)
         
-        Profile.objects.using('accounts').create(
-            user=user,
-            phone_number=validated_data.get('phone_number', ''),
-            address_1=address_1,
-            address_2=address_2,
-            city=validated_data.get('city', ''),
-            state=validated_data.get('state', ''),
-            country=validated_data.get('country', ''),
-            zip_code=validated_data.get('zip_code', ''),
-            date_of_birth=validated_data['date_of_birth'],
-            bio=validated_data.get('bio', '')
-        )
+        # Check if profile already exists (from signals) or create new one
+        try:
+            profile = user.profile
+            # Update existing profile
+            profile.phone_number = validated_data.get('phone_number', '')
+            profile.address_1 = address_1  
+            profile.address_2 = address_2
+            profile.city = validated_data.get('city', '')
+            profile.state = validated_data.get('state', '')
+            profile.country = validated_data.get('country', '')
+            profile.zip_code = validated_data.get('zip_code', '')
+            profile.date_of_birth = validated_data['date_of_birth']
+            profile.bio = validated_data.get('bio', '')
+            profile.save(using='accounts')
+        except Profile.DoesNotExist:
+            # Create new profile if signal didn't create one
+            Profile.objects.using('accounts').create(
+                user=user,
+                phone_number=validated_data.get('phone_number', ''),
+                address_1=address_1,
+                address_2=address_2,
+                city=validated_data.get('city', ''),
+                state=validated_data.get('state', ''),
+                country=validated_data.get('country', ''),
+                zip_code=validated_data.get('zip_code', ''),
+                date_of_birth=validated_data['date_of_birth'],
+                bio=validated_data.get('bio', '')
+            )
         return user

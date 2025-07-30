@@ -108,13 +108,13 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DB_NAME', default='observer_accounts'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
+        'NAME': config('ACCOUNTS_DB_NAME', default='observer_accounts'),
+        'USER': config('ACCOUNTS_DB_USER', default=config('DB_USER')),
+        'PASSWORD': config('ACCOUNTS_DB_PASSWORD', default=config('DB_PASSWORD')),
+        'HOST': config('ACCOUNTS_DB_HOST', default=config('DB_HOST')),
+        'PORT': config('ACCOUNTS_DB_PORT', default=config('DB_PORT')),
         'TEST': {
-            'NAME': config('TEST_DB', default='test_observer_accounts'),
+            'NAME': config('TEST_DEFAULT_DB', default='test_observer_default'),
         },
     },
     'accounts': {
