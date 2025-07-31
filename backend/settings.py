@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 from decouple import config
 import os
-from dashboard.utils import SanitizingHandler
+# from dashboard.utils import SanitizingHandler  # TODO: Move to shared app
 import pymysql
 from datetime import timedelta
 
@@ -57,11 +57,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'dashboard',
+    'accounts',
+    'clinical',
+    'research',
+    'shared',
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt.token_blacklist',
 ]
+
+# Custom User Model
+AUTH_USER_MODEL = 'accounts.User'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -82,13 +88,12 @@ TEMPLATES = [
         'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
-            'debug': True,
+            'debug': DEBUG,
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'dashboard.context_processors.documentation_url',
             ],
         },
     },
@@ -103,16 +108,56 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
-        'PORT': config('DB_PORT'),
+        'NAME': config('ACCOUNTS_DB_NAME', default='observer_accounts'),
+        'USER': config('ACCOUNTS_DB_USER', default=config('DB_USER')),
+        'PASSWORD': config('ACCOUNTS_DB_PASSWORD', default=config('DB_PASSWORD')),
+        'HOST': config('ACCOUNTS_DB_HOST', default=config('DB_HOST')),
+        'PORT': config('ACCOUNTS_DB_PORT', default=config('DB_PORT')),
         'TEST': {
-            'NAME': config('TEST_DB'),
+            'NAME': config('TEST_DEFAULT_DB', default='test_observer_default'),
+            'DEPENDENCIES': [],
+        },
+    },
+    'accounts': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': config('ACCOUNTS_DB_NAME', default='observer_accounts'),
+        'USER': config('ACCOUNTS_DB_USER', default=config('DB_USER')),
+        'PASSWORD': config('ACCOUNTS_DB_PASSWORD', default=config('DB_PASSWORD')),
+        'HOST': config('ACCOUNTS_DB_HOST', default=config('DB_HOST')),
+        'PORT': config('ACCOUNTS_DB_PORT', default=config('DB_PORT')),
+        'TEST': {
+            'NAME': config('TEST_ACCOUNTS_DB', default='test_observer_accounts'),
+            'DEPENDENCIES': [],
+        },
+    },
+    'clinical': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': config('CLINICAL_DB_NAME', default='observer_clinical'),
+        'USER': config('CLINICAL_DB_USER', default=config('DB_USER')),
+        'PASSWORD': config('CLINICAL_DB_PASSWORD', default=config('DB_PASSWORD')),
+        'HOST': config('CLINICAL_DB_HOST', default=config('DB_HOST')),
+        'PORT': config('CLINICAL_DB_PORT', default=config('DB_PORT')),
+        'TEST': {
+            'NAME': config('TEST_CLINICAL_DB', default='test_observer_clinical'),
+            'DEPENDENCIES': ['accounts'],
+        },
+    },
+    'research': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': config('RESEARCH_DB_NAME', default='observer_research'),
+        'USER': config('RESEARCH_DB_USER', default=config('DB_USER')),
+        'PASSWORD': config('RESEARCH_DB_PASSWORD', default=config('DB_PASSWORD')),
+        'HOST': config('RESEARCH_DB_HOST', default=config('DB_HOST')),
+        'PORT': config('RESEARCH_DB_PORT', default=config('DB_PORT')),
+        'TEST': {
+            'NAME': config('TEST_RESEARCH_DB', default='test_observer_research'),
+            'DEPENDENCIES': [],
         },
     }
 }
+
+# Database routing
+DATABASE_ROUTERS = ['shared.db_router.DatabaseRouter']
 
 
 # Password validation
@@ -192,14 +237,14 @@ LOGGING = {
             'filename': os.path.join(BASE_DIR, config('LOG_FILE')),
             'formatter': 'verbose',
         },
-        'sanitizing': {
-            'class': 'dashboard.utils.SanitizingHandler',
-            'formatter': 'verbose',
-        },
+        # 'sanitizing': {
+        #     'class': 'dashboard.utils.SanitizingHandler',
+        #     'formatter': 'verbose',
+        # },
     },
     'loggers': {
         '': {
-            'handlers': ['console', 'file', 'sanitizing'],
+            'handlers': ['console', 'file'],
             'level': 'INFO',
         },
     },
@@ -217,8 +262,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=10),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # Increased from 10 minutes to 1 hour
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Increased from 1 day to 7 days
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'ALGORITHM': 'HS256',

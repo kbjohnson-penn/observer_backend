@@ -1,0 +1,40 @@
+[run]
+source = .
+omit = 
+    */venv/*
+    */env/*
+    */migrations/*
+    */static/*
+    */templates/*
+    */tests.py
+    */test_*.py
+    */*_tests.py
+    manage.py
+    */settings.py
+    */wsgi.py
+    */asgi.py
+    */urls.py
+    */admin.py
+    */apps.py
+    run_tests.py
+    wait-for-it.sh
+
+[report]
+precision = 2
+show_missing = True
+skip_covered = False
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self.debug:
+    if settings.DEBUG
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+    class .*\bProtocol\):
+    @(abc\.)?abstractmethod
+
+[html]
+directory = htmlcov
+title = Observer Backend Coverage Report

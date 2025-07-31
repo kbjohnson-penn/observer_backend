@@ -121,3 +121,53 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 ## Changelog
 
 Check [CHANGELOG.md](CHANGELOG.md) to get the version details.
+
+# Updated Database setup
+
+mysql -u root -p
+DROP DATABASE IF EXISTS observer_accounts;
+DROP DATABASE IF EXISTS observer_clinical;
+DROP DATABASE IF EXISTS observer_research;
+
+CREATE DATABASE observer_accounts;
+CREATE DATABASE observer_clinical;
+CREATE DATABASE observer_research;
+
+GRANT ALL PRIVILEGES ON observer_accounts.* TO 'observer'@'localhost';
+GRANT ALL PRIVILEGES ON observer_accounts.* TO 'observer'@'%';
+GRANT ALL PRIVILEGES ON observer_clinical.* TO 'observer'@'localhost';
+GRANT ALL PRIVILEGES ON observer_clinical.* TO 'observer'@'%';
+GRANT ALL PRIVILEGES ON observer_research.* TO 'observer'@'localhost';
+GRANT ALL PRIVILEGES ON observer_research.* TO 'observer'@'%';
+
+FLUSH PRIVILEGES;
+  
+
+2. Delete all migration files:
+
+# Delete all migration files except __init__.py
+find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
+find . -path "*/migrations/*.pyc" -delete
+
+3. Create fresh migrations:
+
+/Users/mopidevi/miniconda3/envs/observer/bin/python manage.py makemigrations accounts
+/Users/mopidevi/miniconda3/envs/observer/bin/python manage.py makemigrations clinical
+/Users/mopidevi/miniconda3/envs/observer/bin/python manage.py makemigrations research
+
+4. Apply migrations to correct databases:
+
+# First, migrate Django's built-in apps
+/Users/mopidevi/miniconda3/envs/observer/bin/python manage.py migrate
+
+# Then migrate each app to its specific database
+/Users/mopidevi/miniconda3/envs/observer/bin/python manage.py migrate --database=accounts
+/Users/mopidevi/miniconda3/envs/observer/bin/python manage.py migrate --database=clinical
+/Users/mopidevi/miniconda3/envs/observer/bin/python manage.py migrate --database=research
+
+5. Verify everything worked:
+
+# Check all tables were created
+mysql -u observer -pobserver_password -e "USE observer_accounts; SHOW TABLES;"
+mysql -u observer -pobserver_password -e "USE observer_clinical; SHOW TABLES;"
+mysql -u observer -pobserver_password -e "USE observer_research; SHOW TABLES;"
