@@ -53,6 +53,12 @@ class HasAccessToEncounter(BasePermission):
     Custom permission to check access to objects based on encounters.
     """
 
+    def has_permission(self, request, view):
+        """
+        View-level permission check - require authentication.
+        """
+        return request.user and request.user.is_authenticated
+
     def has_object_permission(self, request, view, obj):
         # Directly check the tier for Encounter objects
         if isinstance(obj, Encounter):

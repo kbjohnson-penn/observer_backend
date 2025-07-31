@@ -22,15 +22,14 @@ class EncounterViewSet(BaseAuthenticatedViewSet, ErrorHandlerMixin):
 
     def get_object(self):
         try:
-            encounter = safe_get_object_or_404(
-                Encounter.objects.using('clinical'), 
-                error_message=f"Encounter with ID {self.kwargs['pk']} not found.",
-                pk=self.kwargs['pk']
-            )
+            # Use the filtered queryset to ensure tier-based access control
+            queryset = self.get_queryset()
+            encounter = queryset.get(pk=self.kwargs['pk'])
             self.check_object_permissions(self.request, encounter)
             return encounter
-        except ObserverNotFound:
-            raise
+        except Encounter.DoesNotExist:
+            from shared.api.error_handlers import ObserverNotFound
+            raise ObserverNotFound(detail=f"Encounter with ID {self.kwargs['pk']} not found.")
 
     def retrieve(self, request, *args, **kwargs):
         try:
