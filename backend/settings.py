@@ -115,6 +115,7 @@ DATABASES = {
         'PORT': config('ACCOUNTS_DB_PORT', default=config('DB_PORT')),
         'TEST': {
             'NAME': config('TEST_DEFAULT_DB', default='test_observer_default'),
+            'DEPENDENCIES': [],
         },
     },
     'accounts': {
@@ -126,6 +127,7 @@ DATABASES = {
         'PORT': config('ACCOUNTS_DB_PORT', default=config('DB_PORT')),
         'TEST': {
             'NAME': config('TEST_ACCOUNTS_DB', default='test_observer_accounts'),
+            'DEPENDENCIES': [],
         },
     },
     'clinical': {
@@ -137,6 +139,7 @@ DATABASES = {
         'PORT': config('CLINICAL_DB_PORT', default=config('DB_PORT')),
         'TEST': {
             'NAME': config('TEST_CLINICAL_DB', default='test_observer_clinical'),
+            'DEPENDENCIES': ['accounts'],
         },
     },
     'research': {
@@ -148,6 +151,7 @@ DATABASES = {
         'PORT': config('RESEARCH_DB_PORT', default=config('DB_PORT')),
         'TEST': {
             'NAME': config('TEST_RESEARCH_DB', default='test_observer_research'),
+            'DEPENDENCIES': [],
         },
     }
 }
