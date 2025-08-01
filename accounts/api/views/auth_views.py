@@ -10,6 +10,8 @@ from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
 from django.core.mail import send_mail
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.middleware.csrf import get_token
 from shared.api.error_handlers import handle_validation_error
 
 User = get_user_model()
@@ -22,6 +24,7 @@ from accounts.api.serializers.auth_serializers import (
 from accounts.models.user_models import EmailVerificationToken
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True), name='post')
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
@@ -93,6 +96,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         return response
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class LogoutView(APIView):
     """
     Logout view to blacklist the refresh token and clear httpOnly cookies.
@@ -126,6 +130,7 @@ class LogoutView(APIView):
         return response
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class CustomTokenRefreshView(TokenRefreshView):
     """
     Custom JWT refresh view that works with httpOnly cookies.
@@ -179,6 +184,7 @@ class CustomTokenRefreshView(TokenRefreshView):
         return response
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 @method_decorator(ratelimit(key='ip', rate='3/m', method='POST', block=True), name='post')
 class UserRegistrationView(APIView):
     """
@@ -255,6 +261,7 @@ The Observer Team
             logger.error(f"Failed to send verification email to {user.email}: {str(e)}")
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class EmailVerificationView(APIView):
     """
     Email verification view. Verifies token and allows password setup.
@@ -309,3 +316,20 @@ class EmailVerificationView(APIView):
             detail="Email verification failed due to invalid data.",
             errors=serializer.errors
         )
+
+
+class CSRFTokenView(APIView):
+    """
+    Endpoint to get CSRF token for frontend forms.
+    This ensures the frontend can get a CSRF token for state-changing operations.
+    """
+    permission_classes = []  # Allow unauthenticated access
+    
+    @method_decorator(ensure_csrf_cookie)
+    def get(self, request):
+        """Return CSRF token"""
+        token = get_token(request)
+        return Response({
+            'csrfToken': token,
+            'detail': 'CSRF token generated successfully'
+        })
