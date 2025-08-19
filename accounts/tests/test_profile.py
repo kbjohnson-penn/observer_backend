@@ -39,19 +39,88 @@ class ProfileAPITest(BaseTestCase):
         self.authenticate_user()
         url = '/api/v1/profile/'
         data = {
-            'first_name': 'Updated',
-            'last_name': 'Name'
+            'bio': 'Updated bio',
+            'phone_number': '555-123-4567',
+            'city': 'Cambridge'
         }
         response = self.client.patch(url, data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Verify the response contains updated data
+        self.assertEqual(response.data['bio'], 'Updated bio')
+        self.assertEqual(response.data['phone_number'], '555-123-4567')
+        self.assertEqual(response.data['city'], 'Cambridge')
+    
+    def test_update_profile_address(self):
+        """Test updating profile address field."""
+        self.authenticate_user()
+        url = '/api/v1/profile/'
+        data = {
+            'address': '789 New Street, Suite 101',
+            'city': 'San Francisco',
+            'state': 'CA',
+            'zip_code': '94102'
+        }
+        response = self.client.patch(url, data, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['address'], '789 New Street, Suite 101')
+        self.assertEqual(response.data['city'], 'San Francisco')
+        self.assertEqual(response.data['state'], 'CA')
+        self.assertEqual(response.data['zip_code'], '94102')
+    
+    def test_update_username(self):
+        """Test updating username through profile API."""
+        self.authenticate_user()
+        url = '/api/v1/profile/'
+        data = {'username': 'newtestuser'}
+        response = self.client.patch(url, data, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['username'], 'newtestuser')
+        
+        # Verify user was updated in database
         self.user.refresh_from_db(using='accounts')
-        # Check if the API response indicates success
-        if response.status_code == status.HTTP_200_OK:
-            # If the update was successful but fields aren't updating,
-            # the API might be updating profile instead of user
-            # This is acceptable for now - the important part is the API works
-            self.assertTrue(True)  # Test passes if API call succeeds
+        self.assertEqual(self.user.username, 'newtestuser')
+    
+    def test_profile_fields_included(self):
+        """Test that all expected fields are included in profile response."""
+        self.authenticate_user()
+        url = '/api/v1/profile/'
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        expected_fields = [
+            'first_name', 'last_name', 'username', 'email', 'date_of_birth',
+            'phone_number', 'address', 'city', 'state', 'country', 'zip_code',
+            'bio', 'organization', 'tier', 'date_joined', 'last_login'
+        ]
+        
+        for field in expected_fields:
+            self.assertIn(field, response.data, f"Field '{field}' missing from profile response")
+    
+    def test_readonly_fields_not_updatable(self):
+        """Test that read-only fields like first_name, last_name, email cannot be updated."""
+        self.authenticate_user()
+        url = '/api/v1/profile/'
+        
+        # Try to update read-only fields
+        data = {
+            'first_name': 'NewFirst',
+            'last_name': 'NewLast', 
+            'email': 'newemail@example.com'
+        }
+        response = self.client.patch(url, data, format='json')
+        
+        # Request should succeed but read-only fields shouldn't change
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Original values should be preserved
+        self.user.refresh_from_db(using='accounts')
+        self.assertNotEqual(self.user.first_name, 'NewFirst')
+        self.assertNotEqual(self.user.last_name, 'NewLast')
+        self.assertNotEqual(self.user.email, 'newemail@example.com')
 
 
 class ProfileSerializerTest(TestCase):

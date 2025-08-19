@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.utils import timezone
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
 from django.core.mail import send_mail
@@ -13,6 +13,7 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.middleware.csrf import get_token
 from shared.api.error_handlers import handle_validation_error
+from rest_framework import serializers
 
 User = get_user_model()
 
@@ -290,6 +291,7 @@ class EmailVerificationView(APIView):
                 # Activate user and set password
                 user = verification_token.user
                 user.is_active = True
+                user.email_verified = True
                 user.set_password(password)
                 user.save(using='accounts')
                 
@@ -333,3 +335,59 @@ class CSRFTokenView(APIView):
             'csrfToken': token,
             'detail': 'CSRF token generated successfully'
         })
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    """Serializer for password change"""
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True, min_length=8)
+    new_password_confirm = serializers.CharField(required=True, min_length=8)
+    
+    def validate_new_password(self, value):
+        """Validate new password strength"""
+        if len(value) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long.")
+        return value
+    
+    def validate(self, data):
+        """Validate that new passwords match"""
+        if data['new_password'] != data['new_password_confirm']:
+            raise serializers.ValidationError({
+                'new_password_confirm': ['New passwords do not match.']
+            })
+        return data
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(ratelimit(key='user', rate='5/m', method='POST', block=True), name='post')
+class PasswordChangeView(APIView):
+    """
+    Change user password. Requires old password for verification.
+    Rate limited to 5 attempts per minute per user.
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, *args, **kwargs):
+        serializer = PasswordChangeSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            old_password = serializer.validated_data['old_password']
+            new_password = serializer.validated_data['new_password']
+            
+            user = request.user
+            
+            # Verify old password
+            if not user.check_password(old_password):
+                return Response({
+                    'old_password': ['Current password is incorrect.']
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Set new password
+            user.set_password(new_password)
+            user.save(using='accounts')
+            
+            return Response({
+                'detail': 'Password updated successfully.'
+            }, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

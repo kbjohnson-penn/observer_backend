@@ -38,6 +38,15 @@ DOCUMENTATION_URL = config('DOCUMENTATION_URL', default='http://localhost:8000/d
 # Template debug setting
 TEMPLATES[0]['OPTIONS']['debug'] = DEBUG
 
+# Email backend for development - use SMTP if configured, otherwise console
+if DEBUG:
+    if config('EMAIL_HOST_USER', default=''):
+        # Use SMTP if email user is configured
+        EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    else:
+        # Use console backend for testing without real email
+        EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 # Development database test configuration
 DATABASES['default']['TEST'] = {
     'NAME': config('TEST_DEFAULT_DB', default='test_observer_default'),

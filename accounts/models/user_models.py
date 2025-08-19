@@ -12,6 +12,10 @@ class User(AbstractUser):
     """
     # Override email to make it unique
     email = models.EmailField(unique=True)
+    email_verified = models.BooleanField(
+        default=False,
+        help_text="Indicates whether the user has verified their email address"
+    )
     
     # Additional fields can be added here as needed
     # For example:

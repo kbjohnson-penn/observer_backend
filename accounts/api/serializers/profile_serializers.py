@@ -19,7 +19,7 @@ class TierSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(source='user.username', read_only=True)
+    username = serializers.CharField(source='user.username', required=False)
     first_name = serializers.CharField(
         source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
@@ -48,11 +48,30 @@ class ProfileSerializer(serializers.ModelSerializer):
         data['address'] = combine_address(instance.address_1, instance.address_2)
         return data
 
+    def validate_username(self, value):
+        """Validate username uniqueness"""
+        if value and User.objects.using('accounts').filter(username=value).exclude(id=self.instance.user.id).exists():
+            raise serializers.ValidationError("A user with this username already exists.")
+        return value
+
     def update(self, instance, validated_data):
-        """Handle address field update by splitting into address_1 and address_2."""
+        """Handle address field update by splitting into address_1 and address_2, and username update."""
+        # Handle username update
+        user_data = {}
+        if 'user' in validated_data:
+            user_data = validated_data.pop('user')
+        
+        # Handle address field
         if 'address' in validated_data:
             address = validated_data.pop('address')
             instance.address_1, instance.address_2 = split_address(address)
+        
+        # Update user fields if provided
+        if user_data:
+            user = instance.user
+            for key, value in user_data.items():
+                setattr(user, key, value)
+            user.save(using='accounts')
         
         return super().update(instance, validated_data)
 
