@@ -1,6 +1,0 @@
-from .patient_viewset import PatientViewSet
-from .provider_viewset import ProviderViewSet
-from .encounter_viewset import EncounterViewSet
-from .multimodaldata_viewset import MultiModalDataViewSet
-from .encounter_file_viewset import EncounterFileViewSet
-from .source_and_department_viewset import EncounterSourceViewSet, DepartmentViewSet
