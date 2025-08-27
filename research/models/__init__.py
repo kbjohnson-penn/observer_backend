@@ -4,7 +4,7 @@ from .person_provider_models import Person, Provider
 # Clinical data models
 from .clinical_models import (
     VisitOccurrence, Note, ConditionOccurrence, DrugExposure,
-    ProcedureOccurrence, Measurement, Observation
+    ProcedureOccurrence, Measurement, Observation, Labs
 )
 
 # Survey models
@@ -34,4 +34,5 @@ __all__ = [
     # Concepts and Audit
     'Concept',
     'AuditLogs',
+    'Labs'
 ]
