@@ -111,3 +111,30 @@ class Observation(models.Model):
     class Meta:
         app_label = 'research'
         db_table = 'observation'
+
+
+class Labs(models.Model):
+    """
+    This table records details about a patient's lab orders.
+    """
+    person_id = models.ForeignKey(Person, on_delete=models.CASCADE, db_column='person_id')
+    ordering_date_shifted = models.DateTimeField()
+    procedure_id = models.IntegerField()
+    procedure_name = models.TextField()
+    procedure_code = models.TextField()
+    order_type = models.TextField()
+    order_status = models.TextField()
+    order_proc_deid = models.TextField()
+    description = models.TextField()
+    comp_result_name = models.TextField()
+    ord_value = models.TextField(null=True, blank=True)
+    ord_num_value = models.FloatField(null=True, blank=True)
+    reference_low = models.TextField(null=True, blank=True)
+    reference_high = models.TextField(null=True, blank=True)
+    reference_unit = models.TextField(null=True, blank=True)
+    result_flag = models.TextField(null=True, blank=True)
+    lab_status = models.TextField(null=True, blank=True)
+
+    class Meta:
+        app_label = 'research'
+        db_table = 'labs'

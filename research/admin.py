@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Person, Provider, VisitOccurrence, Note, ConditionOccurrence,
     DrugExposure, ProcedureOccurrence, Measurement, Observation,
-    PatientSurvey, ProviderSurvey, Concept, AuditLogs
+    PatientSurvey, ProviderSurvey, Concept, AuditLogs, Labs
 )
 
 
@@ -139,3 +139,11 @@ class AuditLogsAdmin(ResearchModelAdmin):
     readonly_fields = ['id', 'access_time', 'user_id', 'workstation_id', 'access_action',
                       'metric_id', 'metric_name', 'metric_desc', 'metric_type', 'metric_group',
                       'event_action_type', 'event_action_subtype']
+
+@admin.register(Labs)
+class LabsAdmin(ResearchModelAdmin):
+    list_display = ['id', 'person_id', 'ordering_date_shifted', 'description']
+    list_filter = ['order_type', 'order_status']
+    search_fields = ['procedure_name', 'description', 'lab_status']
+    raw_id_fields = ['person_id']
+    ordering = ['-id']
