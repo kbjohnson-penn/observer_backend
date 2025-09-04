@@ -9,13 +9,15 @@ class Concept(models.Model):
     through the use of codes and associated descriptions.
     """
     concept_id = models.IntegerField(primary_key=True)
-    concept_name = models.TextField()
-    domain_name = models.TextField()
-    vocabulary_name = models.CharField(max_length=255)  # Used in unique constraint
-    concept_class_name = models.TextField()
-    standard_concept = models.TextField(null=True, blank=True)
-    concept_code = models.CharField(max_length=255)  # Used in unique constraint
+    concept_name = models.CharField(max_length=255)
+    domain_name = models.CharField(max_length=255)
+    vocabulary_name = models.CharField(max_length=255)
+    concept_class_name = models.CharField(max_length=255)
+    standard_concept = models.CharField(max_length=255, null=True, blank=True)
+    concept_code = models.CharField(max_length=255)
 
+    def __str__(self):
+        return f"Concept ID ({self.id})"
     class Meta:
         app_label = 'research'
         db_table = 'concept'
