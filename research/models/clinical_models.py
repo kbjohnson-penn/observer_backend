@@ -6,6 +6,7 @@ class VisitOccurrence(models.Model):
     """
     This table records details about each healthcare encounter or visit a person has.
     """
+    id = models.AutoField(primary_key=True, verbose_name="Visit Occurrence ID")
     person_id = models.ForeignKey('Person', on_delete=models.CASCADE, db_column='person_id')
     provider_id = models.ForeignKey('Provider', on_delete=models.CASCADE, db_column='provider_id')
     visit_start_date = models.DateField(null=True, blank=True)
@@ -15,7 +16,7 @@ class VisitOccurrence(models.Model):
     tier_id = models.IntegerField(help_text="Tier level for data access control")
 
     def __str__(self):
-        return f"Visit Occurrence ID ({self.id})"
+        return f"Visit Occurrence {self.id}"
 
     class Meta:
         app_label = 'research'
@@ -25,6 +26,7 @@ class Note(models.Model):
     """
     This table stores clinical notes and their associated metadata.
     """
+    id = models.AutoField(primary_key=True, verbose_name="Note ID")
     person_id = models.ForeignKey(Person, on_delete=models.CASCADE, db_column='person_id')
     provider_id = models.ForeignKey(Provider, on_delete=models.CASCADE, db_column='provider_id')
     visit_occurrence_id = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, db_column='visit_occurrence_id')
@@ -34,7 +36,8 @@ class Note(models.Model):
     note_status = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"Note ID ({self.id})"
+        return f"Note {self.id}"
+    
     class Meta:
         app_label = 'research'
         db_table = 'note'
@@ -44,6 +47,7 @@ class ConditionOccurrence(models.Model):
     """
     This table captures information about conditions or diagnoses recorded for a patient.
     """
+    id = models.AutoField(primary_key=True, verbose_name="Condition Occurrence ID")
     visit_occurrence_id = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, db_column='visit_occurrence_id')
     is_primary_dx = models.CharField(max_length=255)
     condition_source_value = models.CharField(max_length=255)
@@ -51,7 +55,8 @@ class ConditionOccurrence(models.Model):
     concept_code = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"Condition Occurrence ID ({self.id})"
+        return f"Condition Occurrence {self.id}"
+    
     class Meta:
         app_label = 'research'
         db_table = 'condition_occurrence'
@@ -61,6 +66,7 @@ class DrugExposure(models.Model):
     """
     This table records details about a patient's exposure to specific drugs.
     """
+    id = models.AutoField(primary_key=True, verbose_name="Drug Exposure ID")
     visit_occurrence_id = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, db_column='visit_occurrence_id')
     drug_ordering_date = models.DateField(null=True, blank=True)
     drug_exposure_start_datetime = models.DateTimeField(null=True, blank=True)
@@ -69,7 +75,8 @@ class DrugExposure(models.Model):
     quantity = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return f"Drug Exposure ID ({self.id})"
+        return f"Drug Exposure {self.id}"
+    
     class Meta:
         app_label = 'research'
         db_table = 'drug_exposure'
@@ -79,6 +86,7 @@ class ProcedureOccurrence(models.Model):
     """
     This table documents procedures performed on patients.
     """
+    id = models.AutoField(primary_key=True, verbose_name="Procedure Occurrence ID")
     visit_occurrence_id = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, db_column='visit_occurrence_id')
     procedure_ordering_date = models.DateField()
     name = models.CharField(max_length=255)
@@ -86,7 +94,8 @@ class ProcedureOccurrence(models.Model):
     future_or_stand = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return f"Procedure Occurrence ID ({self.id})"
+        return f"Procedure Occurrence {self.id}"
+    
     class Meta:
         app_label = 'research'
         db_table = 'procedure_occurrence'
@@ -96,6 +105,7 @@ class Measurement(models.Model):
     """
     This table stores quantitative measurements and observations taken during a visit.
     """
+    id = models.AutoField(primary_key=True, verbose_name="Measurement ID")
     visit_occurrence_id = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, db_column='visit_occurrence_id')
     bp_systolic = models.IntegerField(null=True, blank=True)
     bp_diastolic = models.IntegerField(null=True, blank=True)
@@ -106,7 +116,8 @@ class Measurement(models.Model):
     phys_spo2 = models.IntegerField(null=True, blank=True)
 
     def __str__(self):
-        return f"Measurement ID ({self.id})"
+        return f"Measurement {self.id}"
+    
     class Meta:
         app_label = 'research'
         db_table = 'measurement'
@@ -116,13 +127,15 @@ class Observation(models.Model):
     """
     This table stores paths to multimodal data files.
     """
+    id = models.AutoField(primary_key=True, verbose_name="Observation ID")
     visit_occurrence_id = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, db_column='visit_occurrence_id')
     file_type = models.CharField(max_length=255)
     file_path = models.CharField(max_length=255)
     observation_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
-        return f"Observation ID ({self.id})"
+        return f"Observation {self.id}"
+    
     class Meta:
         app_label = 'research'
         db_table = 'observation'
@@ -132,6 +145,7 @@ class Labs(models.Model):
     """
     This table records details about a patient's lab orders.
     """
+    id = models.AutoField(primary_key=True, verbose_name="Labs ID")
     person_id = models.ForeignKey(Person, on_delete=models.CASCADE, db_column='person_id')
     ordering_date_shifted = models.DateTimeField(null=True, blank=True)
     procedure_id = models.IntegerField()
@@ -151,7 +165,8 @@ class Labs(models.Model):
     lab_status = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return f"Labs ID ({self.id})"
+        return f"Labs {self.id}"
+    
     class Meta:
         app_label = 'research'
         db_table = 'labs'
