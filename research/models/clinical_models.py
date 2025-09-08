@@ -7,8 +7,8 @@ class VisitOccurrence(models.Model):
     This table records details about each healthcare encounter or visit a person has.
     """
     id = models.AutoField(primary_key=True, verbose_name="Visit Occurrence ID")
-    person_id = models.ForeignKey('Person', on_delete=models.CASCADE, db_column='person_id')
-    provider_id = models.ForeignKey('Provider', on_delete=models.CASCADE, db_column='provider_id')
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    provider = models.ForeignKey(Provider, on_delete=models.CASCADE)
     visit_start_date = models.DateField(null=True, blank=True)
     visit_start_time = models.TimeField(null=True, blank=True)
     visit_source_value = models.CharField(max_length=255)
@@ -27,9 +27,9 @@ class Note(models.Model):
     This table stores clinical notes and their associated metadata.
     """
     id = models.AutoField(primary_key=True, verbose_name="Note ID")
-    person_id = models.ForeignKey(Person, on_delete=models.CASCADE, db_column='person_id')
-    provider_id = models.ForeignKey(Provider, on_delete=models.CASCADE, db_column='provider_id')
-    visit_occurrence_id = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, db_column='visit_occurrence_id')
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    provider = models.ForeignKey(Provider, on_delete=models.CASCADE)
+    visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)
     note_date = models.DateField()
     note_text = models.TextField()
     note_type = models.CharField(max_length=255)
@@ -48,7 +48,7 @@ class ConditionOccurrence(models.Model):
     This table captures information about conditions or diagnoses recorded for a patient.
     """
     id = models.AutoField(primary_key=True, verbose_name="Condition Occurrence ID")
-    visit_occurrence_id = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, db_column='visit_occurrence_id')
+    visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)
     is_primary_dx = models.CharField(max_length=255)
     condition_source_value = models.CharField(max_length=255)
     condition_concept_id = models.IntegerField()
@@ -67,7 +67,7 @@ class DrugExposure(models.Model):
     This table records details about a patient's exposure to specific drugs.
     """
     id = models.AutoField(primary_key=True, verbose_name="Drug Exposure ID")
-    visit_occurrence_id = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, db_column='visit_occurrence_id')
+    visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)
     drug_ordering_date = models.DateField(null=True, blank=True)
     drug_exposure_start_datetime = models.DateTimeField(null=True, blank=True)
     drug_exposure_end_datetime = models.DateTimeField(null=True, blank=True)
@@ -87,7 +87,7 @@ class ProcedureOccurrence(models.Model):
     This table documents procedures performed on patients.
     """
     id = models.AutoField(primary_key=True, verbose_name="Procedure Occurrence ID")
-    visit_occurrence_id = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, db_column='visit_occurrence_id')
+    visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)
     procedure_ordering_date = models.DateField()
     name = models.CharField(max_length=255)
     description = models.CharField(max_length=255)
@@ -106,7 +106,7 @@ class Measurement(models.Model):
     This table stores quantitative measurements and observations taken during a visit.
     """
     id = models.AutoField(primary_key=True, verbose_name="Measurement ID")
-    visit_occurrence_id = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, db_column='visit_occurrence_id')
+    visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)
     bp_systolic = models.IntegerField(null=True, blank=True)
     bp_diastolic = models.IntegerField(null=True, blank=True)
     phys_bp = models.CharField(max_length=255, null=True, blank=True)
@@ -128,7 +128,7 @@ class Observation(models.Model):
     This table stores paths to multimodal data files.
     """
     id = models.AutoField(primary_key=True, verbose_name="Observation ID")
-    visit_occurrence_id = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, db_column='visit_occurrence_id')
+    visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)
     file_type = models.CharField(max_length=255)
     file_path = models.CharField(max_length=255)
     observation_date = models.DateField(null=True, blank=True)
@@ -146,7 +146,7 @@ class Labs(models.Model):
     This table records details about a patient's lab orders.
     """
     id = models.AutoField(primary_key=True, verbose_name="Labs ID")
-    person_id = models.ForeignKey(Person, on_delete=models.CASCADE, db_column='person_id')
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
     ordering_date_shifted = models.DateTimeField(null=True, blank=True)
     procedure_id = models.IntegerField()
     procedure_name = models.CharField(max_length=255)

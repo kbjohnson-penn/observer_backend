@@ -7,7 +7,7 @@ class PatientSurvey(models.Model):
     This table stores patient survey responses related to their healthcare visit experiences.
     """
     id = models.AutoField(primary_key=True, verbose_name="Patient Survey ID")
-    visit_occurrence_id = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, db_column='visit_occurrence_id')
+    visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)
     form_1_timestamp = models.DateTimeField(null=True)
     visit_date = models.DateField(null=True)
     patient_overall_health = models.FloatField(null=True, blank=True)
@@ -48,7 +48,7 @@ class ProviderSurvey(models.Model):
     and satisfaction with patient visits, including communication preferences and technology use.
     """
     id = models.AutoField(primary_key=True, verbose_name="Provider Survey ID")
-    visit_occurrence_id = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, db_column='visit_occurrence_id')
+    visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)
     form_1_timestamp = models.DateTimeField(null=True)
     visit_date = models.DateField(null=True)
     years_hcp_experience = models.IntegerField(null=True, blank=True)

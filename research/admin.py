@@ -47,11 +47,11 @@ class ProviderAdmin(ResearchModelAdmin):
 
 @admin.register(VisitOccurrence)
 class VisitOccurrenceAdmin(ResearchModelAdmin):
-    list_display = ['id', 'person_id', 'provider_id', 'visit_start_date', 'visit_start_time']
+    list_display = ['id', 'person', 'provider', 'visit_start_date', 'visit_start_time']
     list_filter = ['visit_start_date']
     search_fields = ['visit_source_value']
     date_hierarchy = 'visit_start_date'
-    raw_id_fields = ['person_id', 'provider_id']
+    raw_id_fields = ['person', 'provider']
     ordering = ['-visit_start_date']
 
 @admin.register(Concept)
@@ -63,70 +63,70 @@ class ConceptAdmin(ResearchModelAdmin):
 
 @admin.register(Note)
 class NoteAdmin(ResearchModelAdmin):
-    list_display = ['id', 'person_id', 'note_date', 'note_type']
+    list_display = ['id', 'person', 'note_date', 'note_type']
     list_filter = ['note_date', 'note_type', 'note_status']
     search_fields = ['note_text', 'note_type']
     date_hierarchy = 'note_date'
-    raw_id_fields = ['person_id', 'provider_id', 'visit_occurrence_id']
+    raw_id_fields = ['person', 'provider', 'visit_occurrence']
     ordering = ['-note_date']
 
 @admin.register(ConditionOccurrence)
 class ConditionOccurrenceAdmin(ResearchModelAdmin):
-    list_display = ['id', 'visit_occurrence_id', 'condition_concept_id', 'is_primary_dx']
+    list_display = ['id', 'visit_occurrence', 'condition_concept_id', 'is_primary_dx']
     list_filter = ['is_primary_dx']
     search_fields = ['condition_source_value', 'concept_code']
-    raw_id_fields = ['visit_occurrence_id']
+    raw_id_fields = ['visit_occurrence']
     ordering = ['-id']
 
 @admin.register(DrugExposure)
 class DrugExposureAdmin(ResearchModelAdmin):
-    list_display = ['id', 'visit_occurrence_id', 'drug_ordering_date', 'description']
+    list_display = ['id', 'visit_occurrence', 'drug_ordering_date', 'description']
     list_filter = ['drug_ordering_date', 'drug_exposure_start_datetime']
     search_fields = ['description', 'quantity']
     date_hierarchy = 'drug_ordering_date'
-    raw_id_fields = ['visit_occurrence_id']
+    raw_id_fields = ['visit_occurrence']
     ordering = ['-drug_ordering_date']
 
 @admin.register(ProcedureOccurrence)
 class ProcedureOccurrenceAdmin(ResearchModelAdmin):
-    list_display = ['id', 'visit_occurrence_id', 'procedure_ordering_date', 'name']
+    list_display = ['id', 'visit_occurrence', 'procedure_ordering_date', 'name']
     list_filter = ['procedure_ordering_date', 'future_or_stand']
     search_fields = ['name', 'description']
     date_hierarchy = 'procedure_ordering_date'
-    raw_id_fields = ['visit_occurrence_id']
+    raw_id_fields = ['visit_occurrence']
     ordering = ['-procedure_ordering_date']
 
 @admin.register(Measurement)
 class MeasurementAdmin(ResearchModelAdmin):
-    list_display = ['id', 'visit_occurrence_id', 'bp_systolic', 'bp_diastolic', 'weight_lb', 'pulse']
+    list_display = ['id', 'visit_occurrence', 'bp_systolic', 'bp_diastolic', 'weight_lb', 'pulse']
     list_filter = ['phys_bp']
     search_fields = ['height']
-    raw_id_fields = ['visit_occurrence_id']
+    raw_id_fields = ['visit_occurrence']
     ordering = ['-id']
 
 @admin.register(Observation)
 class ObservationAdmin(ResearchModelAdmin):
-    list_display = ['id', 'visit_occurrence_id', 'file_type', 'observation_date']
+    list_display = ['id', 'visit_occurrence', 'file_type', 'observation_date']
     list_filter = ['file_type', 'observation_date']
     search_fields = ['file_path']
     date_hierarchy = 'observation_date'
-    raw_id_fields = ['visit_occurrence_id']
+    raw_id_fields = ['visit_occurrence']
     ordering = ['-observation_date']
 
 @admin.register(PatientSurvey)
 class PatientSurveyAdmin(ResearchModelAdmin):
-    list_display = ['id', 'visit_occurrence_id', 'visit_date', 'patient_overall_health']
+    list_display = ['id', 'visit_occurrence', 'visit_date', 'patient_overall_health']
     list_filter = ['patient_overall_health', 'patient_mental_emotional_health']
     search_fields = ['visit_date', 'open_ended_interaction', 'open_ended_change']
-    raw_id_fields = ['visit_occurrence_id']
+    raw_id_fields = ['visit_occurrence']
     ordering = ['-id']
 
 @admin.register(ProviderSurvey)
 class ProviderSurveyAdmin(ResearchModelAdmin):
-    list_display = ['id', 'visit_occurrence_id', 'visit_date', 'years_hcp_experience']
+    list_display = ['id', 'visit_occurrence', 'visit_date', 'years_hcp_experience']
     list_filter = ['years_hcp_experience', 'tech_experience']
     search_fields = ['visit_date', 'open_ended_1', 'open_ended_2']
-    raw_id_fields = ['visit_occurrence_id']
+    raw_id_fields = ['visit_occurrence']
     ordering = ['-id']
 
 @admin.register(AuditLogs)
@@ -134,7 +134,7 @@ class AuditLogsAdmin(ResearchModelAdmin):
     list_display = ['id', 'access_time', 'user_id', 'access_action', 'metric_name']
     list_filter = ['access_action', 'metric_type', 'event_action_type']
     search_fields = ['user_id', 'workstation_id', 'metric_name']
-    raw_id_fields = ['visit_occurrence_id']
+    raw_id_fields = ['visit_occurrence']
     ordering = ['-id']
     readonly_fields = ['id', 'access_time', 'user_id', 'workstation_id', 'access_action',
                       'metric_id', 'metric_name', 'metric_desc', 'metric_type', 'metric_group',
@@ -142,8 +142,8 @@ class AuditLogsAdmin(ResearchModelAdmin):
 
 @admin.register(Labs)
 class LabsAdmin(ResearchModelAdmin):
-    list_display = ['id', 'person_id', 'ordering_date_shifted', 'description']
+    list_display = ['id', 'person', 'ordering_date_shifted', 'description']
     list_filter = ['order_type', 'order_status']
     search_fields = ['procedure_name', 'description', 'lab_status']
-    raw_id_fields = ['person_id']
+    raw_id_fields = ['person']
     ordering = ['-id']

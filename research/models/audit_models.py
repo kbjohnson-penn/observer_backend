@@ -7,7 +7,7 @@ class AuditLogs(models.Model):
     This table tracks access and actions performed within the audit logs of the visit.
     """
     id = models.AutoField(primary_key=True, verbose_name="Audit Log ID")
-    visit_occurrence_id = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, db_column='visit_occurrence_id', null=True, blank=True)
+    visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, null=True, blank=True)
     access_time = models.DateTimeField()
     user_id = models.CharField(max_length=255)
     workstation_id = models.CharField(max_length=255)
