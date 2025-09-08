@@ -17,7 +17,8 @@ class Concept(models.Model):
     concept_code = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"Concept ID ({self.id})"
+        return f"Concept {self.concept_id}"
+    
     class Meta:
         app_label = 'research'
         db_table = 'concept'
