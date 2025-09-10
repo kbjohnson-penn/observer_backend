@@ -14,11 +14,9 @@ Django 5.0.1 REST API backend for healthcare encounter data management.
 - **Admin Interface**: Comprehensive Django admin for data management
 - **Mock Data**: Automated test data generation
 
-**Note**: This is a Git submodule. For Docker setup, see the main repository README.
+**Note**: This is a Git submodule. For Docker deployment, see the main repository README.
 
 ## Development Setup
-
-**Prerequisites**: This submodule is designed to run via Docker from the main repository.
 
 ### Environment Configuration
 
@@ -32,18 +30,21 @@ Django 5.0.1 REST API backend for healthcare encounter data management.
    - Configure database credentials
    - Update `SECRET_KEY` for production
 
-### Local Development (without Docker)
+### Local Development
 
-If you need to run locally:
+For local development without Docker:
 
 ```bash
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up MariaDB databases (see Database Setup below)
+# Set up MariaDB databases
+./helpers/clean_db.sh  # From main project directory
 
 # Run migrations
-python manage.py migrate
+python manage.py migrate --database=accounts
+python manage.py migrate --database=clinical
+python manage.py migrate --database=research
 
 # Create admin user
 python manage.py createsuperuser
@@ -57,8 +58,6 @@ python manage.py runserver
 The application supports three environments:
 
 - **Development** (`ENVIRONMENT=development`): Relaxed security, console email, debug mode
-- **Testing** (`ENVIRONMENT=testing`): SQLite in-memory databases, fast password hashing
-- **Production** (`ENVIRONMENT=production`): Hardened security, HTTPS required, SMTP email
 
 ### Mock Data Generation
 
@@ -69,41 +68,6 @@ python manage.py generate_mock_data
 # Custom generation
 python manage.py generate_mock_data --clinic-patients 100 --seed 42
 ```
-
-## API Features
-
-The project provides the following API endpoints:
-
-### Public API (v1)
-
-- `/api/v1/public/patients/` - Patient data
-- `/api/v1/public/providers/` - Provider data
-- `/api/v1/public/encounters/` - Patient encounter data
-- `/api/v1/public/departments/` - Department information
-- `/api/v1/public/encountersources/` - Encounter sources
-- `/api/v1/public/mmdata/` - Multimodal data
-
-### Private API (v1)
-
-- `/api/v1/private/patients/` - Patient data management
-- `/api/v1/private/providers/` - Provider data management
-- `/api/v1/private/encounters/` - Encounter data management
-- `/api/v1/private/departments/` - Department management
-- `/api/v1/private/encountersources/` - Encounter sources management
-- `/api/v1/private/mmdata/` - Multimodal data management
-- `/api/v1/private/encounterfiles/` - Encounter files management
-
-### Authentication API (v1)
-
-- `POST /api/v1/auth/token/` - Login (get authentication token) - **Rate Limited**
-- `POST /api/v1/auth/token/refresh/` - Refresh authentication token - **Rate Limited**
-- `POST /api/v1/auth/token/verify/` - Verify authentication token
-- `POST /api/v1/auth/logout/` - User logout - **Rate Limited**
-- `GET /api/v1/auth/csrf-token/` - Get CSRF token for state-changing operations
-
-### Profile API (v1)
-
-- `GET/PUT /api/v1/profile/` - User profile operations
 
 ### API Features
 
