@@ -1,0 +1,40 @@
+from shared.api.permissions import BaseAuthenticatedViewSet, filter_queryset_by_user_tier
+from research.models import ConditionOccurrence, VisitOccurrence
+from research.api.serializers import ConditionOccurrenceSerializer
+from rest_framework.response import Response
+from rest_framework import status
+from django.http import Http404
+
+
+class ConditionOccurrenceViewSet(BaseAuthenticatedViewSet):
+    serializer_class = ConditionOccurrenceSerializer
+
+    def get_queryset(self):
+        accessible_visits = filter_queryset_by_user_tier(
+            VisitOccurrence.objects.using('research').all(), 
+            self.request.user, 
+            related_field='tier_id'
+        )
+        return ConditionOccurrence.objects.using('research').filter(
+            visit_occurrence__in=accessible_visits
+        ).distinct()
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        try:
+            condition_occurrence = queryset.get(pk=self.kwargs['pk'])
+            self.check_object_permissions(self.request, condition_occurrence)
+            return condition_occurrence
+        except ConditionOccurrence.DoesNotExist:
+            raise Http404
+        
+    def retrieve(self, request, *args, **kwargs):
+        try:
+            condition_occurrence = self.get_object()
+            serializer = self.get_serializer(condition_occurrence)
+            return Response(serializer.data)
+        except Http404:
+            return Response(
+                {"detail": f"ConditionOcurrence with ID {kwargs['pk']} not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )

@@ -1,9 +1,17 @@
 from rest_framework.routers import DefaultRouter
-from research.api.viewsets.private import (
-    PersonViewSet,
-    ProviderViewSet,
-    VisitOccurrenceViewSet,
-)
+from research.api.viewsets.private.person_viewset import PersonViewSet
+from research.api.viewsets.private.provider_viewset import ProviderViewSet
+from research.api.viewsets.private.visit_occurrence_viewset import VisitOccurrenceViewSet
+from research.api.viewsets.private.note_viewset import NoteViewSet
+from research.api.viewsets.private.condition_occurrence_viewset import ConditionOccurrenceViewSet
+from research.api.viewsets.private.drug_exposure_viewset import DrugExposureViewSet
+from research.api.viewsets.private.procedure_occurrence_viewset import ProcedureOccurrenceViewSet
+from research.api.viewsets.private.observation_viewset import ObservationViewSet
+from research.api.viewsets.private.measurement_viewset import MeasurementViewSet
+from research.api.viewsets.private.audit_logs_viewset import AuditLogsViewSet
+from research.api.viewsets.private.patient_survey_viewset import PatientSurveyViewSet
+from research.api.viewsets.private.provider_survey_viewset import ProviderSurveyViewSet
+from research.api.viewsets.private.labs_viewset import LabViewSet
 
 router = DefaultRouter()
 
@@ -11,5 +19,15 @@ router = DefaultRouter()
 router.register(r'persons', PersonViewSet, basename='v1-research-person')
 router.register(r'research-providers', ProviderViewSet, basename='v1-research-provider')
 router.register(r'visits', VisitOccurrenceViewSet, basename='v1-research-visit')
+router.register(r'notes', NoteViewSet, basename='v1-research-note')
+router.register(r'condition-occurrences', ConditionOccurrenceViewSet, basename='v1-research-condition-occurrence')
+router.register(r'drug-exposures', DrugExposureViewSet, basename='v1-research-drug-exposure')
+router.register(r'procedure-occurrences', ProcedureOccurrenceViewSet, basename='v1-research-procedure-occurrence')
+router.register(r'observations', ObservationViewSet, basename='v1-research-observation')
+router.register(r'measurements', MeasurementViewSet, basename='v1-research-measurement')
+router.register(r'audit-logs', AuditLogsViewSet, basename='v1-research-audit-log')
+router.register(r'patient-surveys', PatientSurveyViewSet, basename='v1-research-patient-survey')
+router.register(r'provider-surveys', ProviderSurveyViewSet, basename='v1-research-provider-survey')
+router.register(r'labs', LabViewSet, basename='v1-research-lab')
 
 urlpatterns = router.urls
