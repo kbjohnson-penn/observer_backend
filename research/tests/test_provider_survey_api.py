@@ -52,7 +52,7 @@ class ProviderSurveyAPITest(BaseResearchAPITestCase):
         """Test retrieving provider surveys for authenticated user."""
         self.authenticate_user()
         
-        response = self.client.get('/api/v1/private/provider-surveys/')
+        response = self.client.get('/api/v1/research/private/provider-surveys/')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertGreater(len(response.data), 0)
@@ -61,23 +61,23 @@ class ProviderSurveyAPITest(BaseResearchAPITestCase):
         """Test retrieving provider survey detail for authenticated user."""
         self.authenticate_user()
         
-        response = self.client.get(f'/api/v1/private/provider-surveys/{self.provider_survey.id}/')
+        response = self.client.get(f'/api/v1/research/private/provider-surveys/{self.provider_survey.id}/')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.provider_survey.id)
 
     def test_get_provider_surveys_unauthorized(self):
         """Test that unauthenticated requests return 401."""
-        response = self.client.get('/api/v1/private/provider-surveys/')
+        response = self.client.get('/api/v1/research/private/provider-surveys/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_provider_survey_detail_unauthorized(self):
         """Test that unauthenticated detail requests return 401."""
-        response = self.client.get(f'/api/v1/private/provider-surveys/{self.provider_survey.id}/')
+        response = self.client.get(f'/api/v1/research/private/provider-surveys/{self.provider_survey.id}/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_provider_survey_detail_not_found(self):
         """Test 404 for non-existent provider survey ID."""
         self.authenticate_user()
-        response = self.client.get('/api/v1/private/provider-surveys/99999/')
+        response = self.client.get('/api/v1/research/private/provider-surveys/99999/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

@@ -17,7 +17,7 @@ router = DefaultRouter()
 
 # Register all research model viewsets
 router.register(r'persons', PersonViewSet, basename='v1-research-person')
-router.register(r'research-providers', ProviderViewSet, basename='v1-research-provider')
+router.register(r'providers', ProviderViewSet, basename='v1-research-provider')
 router.register(r'visits', VisitOccurrenceViewSet, basename='v1-research-visit')
 router.register(r'notes', NoteViewSet, basename='v1-research-note')
 router.register(r'condition-occurrences', ConditionOccurrenceViewSet, basename='v1-research-condition-occurrence')
