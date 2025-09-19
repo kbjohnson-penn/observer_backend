@@ -16,7 +16,7 @@ class ProfileAPITest(BaseTestCase):
     def test_get_profile_authenticated(self):
         """Test retrieving profile for authenticated user."""
         self.authenticate_user()
-        url = '/api/v1/profile/'
+        url = '/api/v1/accounts/profile/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -29,7 +29,7 @@ class ProfileAPITest(BaseTestCase):
     
     def test_get_profile_unauthenticated(self):
         """Test retrieving profile without authentication."""
-        url = '/api/v1/profile/'
+        url = '/api/v1/accounts/profile/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -37,7 +37,7 @@ class ProfileAPITest(BaseTestCase):
     def test_update_profile(self):
         """Test updating user profile."""
         self.authenticate_user()
-        url = '/api/v1/profile/'
+        url = '/api/v1/accounts/profile/'
         data = {
             'bio': 'Updated bio',
             'phone_number': '555-123-4567',
@@ -54,7 +54,7 @@ class ProfileAPITest(BaseTestCase):
     def test_update_profile_address(self):
         """Test updating profile address field."""
         self.authenticate_user()
-        url = '/api/v1/profile/'
+        url = '/api/v1/accounts/profile/'
         data = {
             'address': '789 New Street, Suite 101',
             'city': 'San Francisco',
@@ -72,7 +72,7 @@ class ProfileAPITest(BaseTestCase):
     def test_update_username(self):
         """Test updating username through profile API."""
         self.authenticate_user()
-        url = '/api/v1/profile/'
+        url = '/api/v1/accounts/profile/'
         data = {'username': 'newtestuser'}
         response = self.client.patch(url, data, format='json')
         
@@ -86,7 +86,7 @@ class ProfileAPITest(BaseTestCase):
     def test_profile_fields_included(self):
         """Test that all expected fields are included in profile response."""
         self.authenticate_user()
-        url = '/api/v1/profile/'
+        url = '/api/v1/accounts/profile/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -103,7 +103,7 @@ class ProfileAPITest(BaseTestCase):
     def test_readonly_fields_not_updatable(self):
         """Test that read-only fields like first_name, last_name, email cannot be updated."""
         self.authenticate_user()
-        url = '/api/v1/profile/'
+        url = '/api/v1/accounts/profile/'
         
         # Try to update read-only fields
         data = {

@@ -16,7 +16,7 @@ class UserRegistrationAPITest(BaseTestCase):
     
     def test_user_registration_success(self):
         """Test successful user registration without password."""
-        url = '/api/v1/auth/register/'
+        url = '/api/v1/accounts/auth/register/'
         data = {
             'email': 'newuser@example.com',
             'first_name': 'New',
@@ -39,7 +39,7 @@ class UserRegistrationAPITest(BaseTestCase):
     
     def test_user_registration_with_duplicate_email(self):
         """Test registration fails with duplicate email."""
-        url = '/api/v1/auth/register/'
+        url = '/api/v1/accounts/auth/register/'
         data = {
             'email': 'test@example.com',  # Already exists in setUp
             'first_name': 'Duplicate',
@@ -55,7 +55,7 @@ class UserRegistrationAPITest(BaseTestCase):
     
     def test_user_registration_missing_required_fields(self):
         """Test registration fails with missing required fields."""
-        url = '/api/v1/auth/register/'
+        url = '/api/v1/accounts/auth/register/'
         data = {
             'email': 'incomplete@example.com'
             # Missing first_name and last_name
@@ -69,7 +69,7 @@ class UserRegistrationAPITest(BaseTestCase):
     
     def test_user_registration_creates_organization(self):
         """Test that registration creates new organization if provided."""
-        url = '/api/v1/auth/register/'
+        url = '/api/v1/accounts/auth/register/'
         data = {
             'email': 'orguser@example.com',
             'first_name': 'Org',
@@ -110,7 +110,7 @@ class EmailVerificationAPITest(BaseTestCase):
     
     def test_email_verification_success(self):
         """Test successful email verification and password setup."""
-        url = '/api/v1/auth/verify-email/'
+        url = '/api/v1/accounts/auth/verify-email/'
         data = {
             'token': self.verification_token.token,
             'password': 'NewSecurePassword123!',
@@ -133,7 +133,7 @@ class EmailVerificationAPITest(BaseTestCase):
     
     def test_email_verification_invalid_token(self):
         """Test email verification with invalid token."""
-        url = '/api/v1/auth/verify-email/'
+        url = '/api/v1/accounts/auth/verify-email/'
         data = {
             'token': 'invalid_token_12345',
             'password': 'NewSecurePassword123!',
@@ -151,7 +151,7 @@ class EmailVerificationAPITest(BaseTestCase):
         self.verification_token.expires_at = timezone.now() - timedelta(hours=1)
         self.verification_token.save(using='accounts')
         
-        url = '/api/v1/auth/verify-email/'
+        url = '/api/v1/accounts/auth/verify-email/'
         data = {
             'token': self.verification_token.token,
             'password': 'NewSecurePassword123!',
@@ -169,7 +169,7 @@ class EmailVerificationAPITest(BaseTestCase):
         self.verification_token.is_used = True
         self.verification_token.save(using='accounts')
         
-        url = '/api/v1/auth/verify-email/'
+        url = '/api/v1/accounts/auth/verify-email/'
         data = {
             'token': self.verification_token.token,
             'password': 'NewSecurePassword123!',
@@ -183,7 +183,7 @@ class EmailVerificationAPITest(BaseTestCase):
     
     def test_email_verification_password_mismatch(self):
         """Test email verification with password mismatch."""
-        url = '/api/v1/auth/verify-email/'
+        url = '/api/v1/accounts/auth/verify-email/'
         data = {
             'token': self.verification_token.token,
             'password': 'NewSecurePassword123!',
@@ -197,7 +197,7 @@ class EmailVerificationAPITest(BaseTestCase):
     
     def test_email_verification_weak_password(self):
         """Test email verification with weak password."""
-        url = '/api/v1/auth/verify-email/'
+        url = '/api/v1/accounts/auth/verify-email/'
         data = {
             'token': self.verification_token.token,
             'password': 'weak',  # Too short
