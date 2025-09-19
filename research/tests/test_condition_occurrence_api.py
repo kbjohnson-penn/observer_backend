@@ -30,7 +30,7 @@ class ConditionOccurrenceAPITest(BaseResearchAPITestCase):
         """Test retrieving condition occurrences for authenticated user."""
         self.authenticate_user()
         
-        response = self.client.get('/api/v1/private/condition-occurrences/')
+        response = self.client.get('/api/v1/research/private/condition-occurrences/')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertGreater(len(response.data), 0)
@@ -39,23 +39,23 @@ class ConditionOccurrenceAPITest(BaseResearchAPITestCase):
         """Test retrieving condition detail for authenticated user."""
         self.authenticate_user()
         
-        response = self.client.get(f'/api/v1/private/condition-occurrences/{self.condition_occurrence.id}/')
+        response = self.client.get(f'/api/v1/research/private/condition-occurrences/{self.condition_occurrence.id}/')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.condition_occurrence.id)
 
     def test_get_conditions_unauthorized(self):
         """Test that unauthenticated requests return 401."""
-        response = self.client.get('/api/v1/private/condition-occurrences/')
+        response = self.client.get('/api/v1/research/private/condition-occurrences/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_condition_detail_unauthorized(self):
         """Test that unauthenticated detail requests return 401."""
-        response = self.client.get(f'/api/v1/private/condition-occurrences/{self.condition_occurrence.id}/')
+        response = self.client.get(f'/api/v1/research/private/condition-occurrences/{self.condition_occurrence.id}/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_condition_detail_not_found(self):
         """Test 404 for non-existent condition occurrence ID."""
         self.authenticate_user()
-        response = self.client.get('/api/v1/private/condition-occurrences/99999/')
+        response = self.client.get('/api/v1/research/private/condition-occurrences/99999/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

@@ -84,7 +84,7 @@ class AgreementAPITest(BaseTestCase):
     def test_get_user_agreements_authenticated(self):
         """Test retrieving user's signed agreements."""
         self.authenticate_user()
-        url = '/api/v1/agreements/user-agreements/'
+        url = '/api/v1/accounts/agreements/user-agreements/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -104,7 +104,7 @@ class AgreementAPITest(BaseTestCase):
     
     def test_get_user_agreements_unauthenticated(self):
         """Test retrieving agreements without authentication."""
-        url = '/api/v1/agreements/user-agreements/'
+        url = '/api/v1/accounts/agreements/user-agreements/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -112,7 +112,7 @@ class AgreementAPITest(BaseTestCase):
     def test_get_specific_user_agreement(self):
         """Test retrieving a specific user agreement."""
         self.authenticate_user()
-        url = f'/api/v1/agreements/user-agreements/{self.user_agreement1.id}/'
+        url = f'/api/v1/accounts/agreements/user-agreements/{self.user_agreement1.id}/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -122,7 +122,7 @@ class AgreementAPITest(BaseTestCase):
     def test_get_user_agreements_grouped(self):
         """Test retrieving user agreements grouped by type."""
         self.authenticate_user()
-        url = '/api/v1/agreements/user-agreements/grouped/'
+        url = '/api/v1/accounts/agreements/user-agreements/grouped/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -142,7 +142,7 @@ class AgreementAPITest(BaseTestCase):
     def test_get_all_agreements(self):
         """Test retrieving all available agreements."""
         self.authenticate_user()
-        url = '/api/v1/agreements/agreements/'
+        url = '/api/v1/accounts/agreements/agreements/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -160,7 +160,7 @@ class AgreementAPITest(BaseTestCase):
     def test_get_specific_agreement(self):
         """Test retrieving a specific agreement."""
         self.authenticate_user()
-        url = f'/api/v1/agreements/agreements/{self.agreement1.id}/'
+        url = f'/api/v1/accounts/agreements/agreements/{self.agreement1.id}/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -185,7 +185,7 @@ class AgreementAPITest(BaseTestCase):
         )
         
         self.authenticate_user()
-        url = '/api/v1/agreements/user-agreements/'
+        url = '/api/v1/accounts/agreements/user-agreements/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -208,7 +208,7 @@ class AgreementAPITest(BaseTestCase):
         )
         
         self.authenticate_user()
-        url = '/api/v1/agreements/user-agreements/'
+        url = '/api/v1/accounts/agreements/user-agreements/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -237,7 +237,7 @@ class AgreementAPITest(BaseTestCase):
         )
         
         self.authenticate_user()
-        url = '/api/v1/agreements/user-agreements/'
+        url = '/api/v1/accounts/agreements/user-agreements/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)

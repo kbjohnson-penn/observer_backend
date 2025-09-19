@@ -33,7 +33,7 @@ class MeasurementAPITest(BaseResearchAPITestCase):
         """Test retrieving measurement records for authenticated user."""
         self.authenticate_user()
         
-        response = self.client.get('/api/v1/private/measurements/')
+        response = self.client.get('/api/v1/research/private/measurements/')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertGreater(len(response.data), 0)
@@ -42,23 +42,23 @@ class MeasurementAPITest(BaseResearchAPITestCase):
         """Test retrieving measurement detail for authenticated user."""
         self.authenticate_user()
         
-        response = self.client.get(f'/api/v1/private/measurements/{self.measurement.id}/')
+        response = self.client.get(f'/api/v1/research/private/measurements/{self.measurement.id}/')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.measurement.id)
 
     def test_get_measurements_unauthorized(self):
         """Test that unauthenticated requests return 401."""
-        response = self.client.get('/api/v1/private/measurements/')
+        response = self.client.get('/api/v1/research/private/measurements/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_measurement_detail_unauthorized(self):
         """Test that unauthenticated detail requests return 401."""
-        response = self.client.get(f'/api/v1/private/measurements/{self.measurement.id}/')
+        response = self.client.get(f'/api/v1/research/private/measurements/{self.measurement.id}/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_measurement_detail_not_found(self):
         """Test 404 for non-existent measurement ID."""
         self.authenticate_user()
-        response = self.client.get('/api/v1/private/measurements/99999/')
+        response = self.client.get('/api/v1/research/private/measurements/99999/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

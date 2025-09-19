@@ -16,7 +16,7 @@ class PasswordChangeAPITest(BaseTestCase):
     def test_password_change_success(self):
         """Test successful password change with valid old password."""
         self.authenticate_user()
-        url = '/api/v1/auth/change-password/'
+        url = '/api/v1/accounts/auth/change-password/'
         data = {
             'old_password': 'testpass123',
             'new_password': 'NewSecurePassword123!',
@@ -36,7 +36,7 @@ class PasswordChangeAPITest(BaseTestCase):
     def test_password_change_wrong_old_password(self):
         """Test password change with incorrect old password."""
         self.authenticate_user()
-        url = '/api/v1/auth/change-password/'
+        url = '/api/v1/accounts/auth/change-password/'
         data = {
             'old_password': 'wrongpassword',
             'new_password': 'NewSecurePassword123!',
@@ -51,7 +51,7 @@ class PasswordChangeAPITest(BaseTestCase):
     def test_password_change_password_mismatch(self):
         """Test password change with mismatched new passwords."""
         self.authenticate_user()
-        url = '/api/v1/auth/change-password/'
+        url = '/api/v1/accounts/auth/change-password/'
         data = {
             'old_password': 'testpass123',
             'new_password': 'NewSecurePassword123!',
@@ -66,7 +66,7 @@ class PasswordChangeAPITest(BaseTestCase):
     def test_password_change_weak_password(self):
         """Test password change with weak new password."""
         self.authenticate_user()
-        url = '/api/v1/auth/change-password/'
+        url = '/api/v1/accounts/auth/change-password/'
         data = {
             'old_password': 'testpass123',
             'new_password': 'weak',  # Too short
@@ -81,7 +81,7 @@ class PasswordChangeAPITest(BaseTestCase):
     
     def test_password_change_unauthenticated(self):
         """Test password change without authentication."""
-        url = '/api/v1/auth/change-password/'
+        url = '/api/v1/accounts/auth/change-password/'
         data = {
             'old_password': 'testpass123',
             'new_password': 'NewSecurePassword123!',
@@ -94,7 +94,7 @@ class PasswordChangeAPITest(BaseTestCase):
     def test_password_change_missing_fields(self):
         """Test password change with missing required fields."""
         self.authenticate_user()
-        url = '/api/v1/auth/change-password/'
+        url = '/api/v1/accounts/auth/change-password/'
         data = {
             'old_password': 'testpass123'
             # Missing new passwords
@@ -155,7 +155,7 @@ class PasswordChangeRateLimitTest(TestCase):
     def test_password_change_rate_limit_exceeded(self):
         """Test rate limiting on password change endpoint."""
         self.authenticate_user()
-        url = '/api/v1/auth/change-password/'
+        url = '/api/v1/accounts/auth/change-password/'
         
         # Make multiple requests to trigger rate limit (5 per minute)
         for i in range(6):

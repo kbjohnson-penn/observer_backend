@@ -28,7 +28,7 @@ class AuthenticationAPITest(BaseTestCase):
     
     def test_user_login(self):
         """Test user login endpoint."""
-        url = '/api/v1/auth/token/'
+        url = '/api/v1/accounts/auth/token/'
         data = {
             'username': 'testuser',
             'password': 'testpass123'
@@ -45,7 +45,7 @@ class AuthenticationAPITest(BaseTestCase):
     
     def test_invalid_login(self):
         """Test login with invalid credentials."""
-        url = '/api/v1/auth/token/'
+        url = '/api/v1/accounts/auth/token/'
         data = {
             'username': 'testuser',
             'password': 'wrongpassword'
@@ -57,7 +57,7 @@ class AuthenticationAPITest(BaseTestCase):
     def test_token_refresh(self):
         """Test token refresh endpoint."""
         # First login to get cookies
-        login_url = '/api/v1/auth/token/'
+        login_url = '/api/v1/accounts/auth/token/'
         login_data = {
             'username': 'testuser',
             'password': 'testpass123'
@@ -70,7 +70,7 @@ class AuthenticationAPITest(BaseTestCase):
             self.client.cookies['refresh_token'] = refresh_token
             
             # Test refresh endpoint
-            refresh_url = '/api/v1/auth/token/refresh/'
+            refresh_url = '/api/v1/accounts/auth/token/refresh/'
             response = self.client.post(refresh_url, format='json')
             
             self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -87,7 +87,7 @@ class TokenVerificationTest(BaseTestCase):
         """Test token verification with valid access token."""
         access_token, _ = self.authenticate_user()
         
-        verify_url = '/api/v1/auth/token/verify/'
+        verify_url = '/api/v1/accounts/auth/token/verify/'
         verify_data = {'token': str(access_token)}
         response = self.client.post(verify_url, verify_data, format='json')
         
@@ -95,7 +95,7 @@ class TokenVerificationTest(BaseTestCase):
     
     def test_token_verification_with_invalid_token(self):
         """Test token verification with invalid token."""
-        verify_url = '/api/v1/auth/token/verify/'
+        verify_url = '/api/v1/accounts/auth/token/verify/'
         verify_data = {'token': 'invalid_token'}
         response = self.client.post(verify_url, verify_data, format='json')
         
@@ -119,7 +119,7 @@ class LogoutAPITest(TestCase):
     def test_logout_with_valid_token(self):
         """Test logout with valid refresh token."""
         # Login first to get cookies
-        login_url = '/api/v1/auth/token/'
+        login_url = '/api/v1/accounts/auth/token/'
         login_data = {
             'username': 'logoutuser',
             'password': 'testpass123'
@@ -136,7 +136,7 @@ class LogoutAPITest(TestCase):
             self.client.cookies['refresh_token'] = refresh_token
             
             # Logout
-            logout_url = '/api/v1/auth/logout/'
+            logout_url = '/api/v1/accounts/auth/logout/'
             response = self.client.post(logout_url, format='json')
             
             self.assertEqual(response.status_code, status.HTTP_205_RESET_CONTENT)
@@ -153,7 +153,7 @@ class LogoutAPITest(TestCase):
         access_token = str(refresh.access_token)
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
         
-        logout_url = '/api/v1/auth/logout/'
+        logout_url = '/api/v1/accounts/auth/logout/'
         response = self.client.post(logout_url, {}, format='json')
         
         # With httpOnly cookie implementation, logout now clears cookies even without refresh token
@@ -169,7 +169,7 @@ class LogoutAPITest(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {access_token}')
         self.client.cookies['refresh_token'] = 'invalid_token'
         
-        logout_url = '/api/v1/auth/logout/'
+        logout_url = '/api/v1/accounts/auth/logout/'
         response = self.client.post(logout_url, format='json')
         
         # With httpOnly cookie implementation, logout still succeeds and clears cookies
@@ -200,7 +200,7 @@ class EmailLoginTest(TestCase):
     
     def test_login_with_email(self):
         """Test user can login with email instead of username."""
-        url = '/api/v1/auth/token/'
+        url = '/api/v1/accounts/auth/token/'
         data = {
             'username': 'emailtest@example.com',  # Using email in username field
             'password': 'testpass123'
@@ -220,7 +220,7 @@ class EmailLoginTest(TestCase):
     
     def test_login_with_username_still_works(self):
         """Test traditional username login still works."""
-        url = '/api/v1/auth/token/'
+        url = '/api/v1/accounts/auth/token/'
         data = {
             'username': 'emailtestuser2',
             'password': 'testpass123'
@@ -240,7 +240,7 @@ class EmailLoginTest(TestCase):
     
     def test_login_with_nonexistent_email(self):
         """Test login fails with non-existent email."""
-        url = '/api/v1/auth/token/'
+        url = '/api/v1/accounts/auth/token/'
         data = {
             'username': 'nonexistent@example.com',
             'password': 'testpass123'
@@ -252,7 +252,7 @@ class EmailLoginTest(TestCase):
     
     def test_login_with_email_wrong_password(self):
         """Test login with email but wrong password."""
-        url = '/api/v1/auth/token/'
+        url = '/api/v1/accounts/auth/token/'
         data = {
             'username': 'emailtest@example.com',
             'password': 'wrongpassword'
@@ -268,7 +268,7 @@ class CookieAuthenticationTest(BaseTestCase):
     
     def test_login_sets_httponly_cookies(self):
         """Test that login endpoint sets httpOnly cookies."""
-        url = '/api/v1/auth/token/'
+        url = '/api/v1/accounts/auth/token/'
         data = {
             'username': 'testuser',
             'password': 'testpass123'
@@ -293,7 +293,7 @@ class CookieAuthenticationTest(BaseTestCase):
     def test_logout_clears_cookies(self):
         """Test that logout endpoint clears httpOnly cookies."""
         # First login to get cookies
-        login_url = '/api/v1/auth/token/'
+        login_url = '/api/v1/accounts/auth/token/'
         login_data = {
             'username': 'testuser',
             'password': 'testpass123'
@@ -309,7 +309,7 @@ class CookieAuthenticationTest(BaseTestCase):
             self.client.cookies['refresh_token'] = refresh_token
             
             # Logout
-            logout_url = '/api/v1/auth/logout/'
+            logout_url = '/api/v1/accounts/auth/logout/'
             response = self.client.post(logout_url, format='json')
             
             self.assertEqual(response.status_code, status.HTTP_205_RESET_CONTENT)
@@ -331,7 +331,7 @@ class CookieAuthenticationTest(BaseTestCase):
     def test_token_refresh_with_cookies(self):
         """Test token refresh using httpOnly cookies."""
         # First login to get cookies
-        login_url = '/api/v1/auth/token/'
+        login_url = '/api/v1/accounts/auth/token/'
         login_data = {
             'username': 'testuser',
             'password': 'testpass123'
@@ -344,7 +344,7 @@ class CookieAuthenticationTest(BaseTestCase):
             self.client.cookies['refresh_token'] = refresh_token
             
             # Test refresh endpoint
-            refresh_url = '/api/v1/auth/token/refresh/'
+            refresh_url = '/api/v1/accounts/auth/token/refresh/'
             response = self.client.post(refresh_url, format='json')
             
             self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -362,7 +362,7 @@ class CSRFTokenTest(BaseTestCase):
     
     def test_csrf_token_endpoint(self):
         """Test that CSRF token endpoint returns a valid token."""
-        url = '/api/v1/auth/csrf-token/'
+        url = '/api/v1/accounts/auth/csrf-token/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -378,7 +378,7 @@ class CSRFTokenTest(BaseTestCase):
         self.authenticate_user()
         
         # Try to update profile without CSRF token
-        url = '/api/v1/profile/'
+        url = '/api/v1/accounts/profile/'
         data = {'bio': 'Updated bio'}
         
         # This should work because profile view uses DRF which handles CSRF differently

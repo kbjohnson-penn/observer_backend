@@ -36,7 +36,7 @@ class EncounterAPITest(BaseClinicalTestCase):
             _using='clinical'
         )
         
-        url = '/api/v1/private/encounters/'
+        url = '/api/v1/clinical/private/encounters/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -47,7 +47,7 @@ class EncounterAPITest(BaseClinicalTestCase):
         # Make sure no credentials are set
         self.client.credentials()
         
-        url = '/api/v1/private/encounters/'
+        url = '/api/v1/clinical/private/encounters/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -63,7 +63,7 @@ class EncounterAPITest(BaseClinicalTestCase):
             _using='clinical'
         )
         
-        url = f'/api/v1/private/encounters/{encounter.id}/'
+        url = f'/api/v1/clinical/private/encounters/{encounter.id}/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -78,7 +78,7 @@ class EncounterAPITest(BaseClinicalTestCase):
         encounter_tier2 = baker.make(Encounter, department=self.department, tier_id=self.tier_2.id, _using='clinical')
         encounter_tier3 = baker.make(Encounter, department=self.department, tier_id=self.tier_3.id, _using='clinical')
         
-        url = '/api/v1/private/encounters/'
+        url = '/api/v1/clinical/private/encounters/'
         response = self.client.get(url)
         
         # User with tier 2 should see tier 1 and 2, but not tier 3
@@ -91,7 +91,7 @@ class EncounterAPITest(BaseClinicalTestCase):
         """Test that creating encounters via API is not allowed."""
         self.authenticate_user()
         
-        url = '/api/v1/private/encounters/'
+        url = '/api/v1/clinical/private/encounters/'
         data = {
             'department': self.department.id,
             'patient': self.patient.id,
@@ -109,7 +109,7 @@ class EncounterAPITest(BaseClinicalTestCase):
         """Test accessing non-existent encounter returns 404."""
         self.authenticate_user()
         
-        url = '/api/v1/private/encounters/99999/'
+        url = '/api/v1/clinical/private/encounters/99999/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -142,7 +142,7 @@ class EncounterAPITest(BaseClinicalTestCase):
         # Authenticate as tier 1 user
         self.authenticate_user(user_tier1)
         
-        url = f'/api/v1/private/encounters/{encounter_tier3.id}/'
+        url = f'/api/v1/clinical/private/encounters/{encounter_tier3.id}/'
         response = self.client.get(url)
         
         # Should get 404 (not 403) since the object is filtered out by tier
@@ -159,7 +159,7 @@ class EncounterAPITest(BaseClinicalTestCase):
             _using='clinical'
         )
         
-        url = f'/api/v1/private/encounters/{encounter.id}/'
+        url = f'/api/v1/clinical/private/encounters/{encounter.id}/'
         data = {'type': 'emergency'}
         response = self.client.patch(url, data, format='json')
         
@@ -177,7 +177,7 @@ class EncounterAPITest(BaseClinicalTestCase):
             _using='clinical'
         )
         
-        url = f'/api/v1/private/encounters/{encounter.id}/'
+        url = f'/api/v1/clinical/private/encounters/{encounter.id}/'
         response = self.client.delete(url)
         
         # Should return 405 Method Not Allowed since this is a read-only API
@@ -202,7 +202,7 @@ class PatientAPITest(BaseClinicalTestCase):
         """Test retrieving patients for authenticated user."""
         self.authenticate_user()
         
-        url = '/api/v1/private/patients/'
+        url = '/api/v1/clinical/private/patients/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -212,7 +212,7 @@ class PatientAPITest(BaseClinicalTestCase):
         """Test retrieving patients without authentication."""
         self.client.credentials()
         
-        url = '/api/v1/private/patients/'
+        url = '/api/v1/clinical/private/patients/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -221,7 +221,7 @@ class PatientAPITest(BaseClinicalTestCase):
         """Test retrieving specific patient details."""
         self.authenticate_user()
         
-        url = f'/api/v1/private/patients/{self.patient.id}/'
+        url = f'/api/v1/clinical/private/patients/{self.patient.id}/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -232,13 +232,13 @@ class PatientAPITest(BaseClinicalTestCase):
         self.authenticate_user()
         
         # Test POST (create)
-        url = '/api/v1/private/patients/'
+        url = '/api/v1/clinical/private/patients/'
         data = {'patient_id': 99999}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         
         # Test PATCH (update)
-        url = f'/api/v1/private/patients/{self.patient.id}/'
+        url = f'/api/v1/clinical/private/patients/{self.patient.id}/'
         data = {'patient_id': 88888}
         response = self.client.patch(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -266,7 +266,7 @@ class ProviderAPITest(BaseClinicalTestCase):
         """Test retrieving providers for authenticated user."""
         self.authenticate_user()
         
-        url = '/api/v1/private/providers/'
+        url = '/api/v1/clinical/private/providers/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -276,7 +276,7 @@ class ProviderAPITest(BaseClinicalTestCase):
         """Test retrieving providers without authentication."""
         self.client.credentials()
         
-        url = '/api/v1/private/providers/'
+        url = '/api/v1/clinical/private/providers/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -285,7 +285,7 @@ class ProviderAPITest(BaseClinicalTestCase):
         """Test retrieving specific provider details."""
         self.authenticate_user()
         
-        url = f'/api/v1/private/providers/{self.provider.id}/'
+        url = f'/api/v1/clinical/private/providers/{self.provider.id}/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -296,13 +296,13 @@ class ProviderAPITest(BaseClinicalTestCase):
         self.authenticate_user()
         
         # Test POST (create)
-        url = '/api/v1/private/providers/'
+        url = '/api/v1/clinical/private/providers/'
         data = {'provider_id': 99999}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         
         # Test PATCH (update)
-        url = f'/api/v1/private/providers/{self.provider.id}/'
+        url = f'/api/v1/clinical/private/providers/{self.provider.id}/'
         data = {'provider_id': 88888}
         response = self.client.patch(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -319,7 +319,7 @@ class DepartmentAPITest(BaseClinicalTestCase):
         """Test retrieving departments for authenticated user."""
         self.authenticate_user()
         
-        url = '/api/v1/private/departments/'
+        url = '/api/v1/clinical/private/departments/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -330,7 +330,7 @@ class DepartmentAPITest(BaseClinicalTestCase):
         """Test retrieving departments without authentication."""
         self.client.credentials()
         
-        url = '/api/v1/private/departments/'
+        url = '/api/v1/clinical/private/departments/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -339,7 +339,7 @@ class DepartmentAPITest(BaseClinicalTestCase):
         """Test retrieving specific department details."""
         self.authenticate_user()
         
-        url = f'/api/v1/private/departments/{self.department.id}/'
+        url = f'/api/v1/clinical/private/departments/{self.department.id}/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -351,13 +351,13 @@ class DepartmentAPITest(BaseClinicalTestCase):
         self.authenticate_user()
         
         # Test POST (create)
-        url = '/api/v1/private/departments/'
+        url = '/api/v1/clinical/private/departments/'
         data = {'name': 'New Department'}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         
         # Test PATCH (update)
-        url = f'/api/v1/private/departments/{self.department.id}/'
+        url = f'/api/v1/clinical/private/departments/{self.department.id}/'
         data = {'name': 'Updated Department'}
         response = self.client.patch(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -374,7 +374,7 @@ class EncounterSourceAPITest(BaseClinicalTestCase):
         """Test retrieving encounter sources for authenticated user."""
         self.authenticate_user()
         
-        url = '/api/v1/private/encountersources/'
+        url = '/api/v1/clinical/private/encountersources/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -385,7 +385,7 @@ class EncounterSourceAPITest(BaseClinicalTestCase):
         """Test retrieving encounter sources without authentication."""
         self.client.credentials()
         
-        url = '/api/v1/private/encountersources/'
+        url = '/api/v1/clinical/private/encountersources/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -394,7 +394,7 @@ class EncounterSourceAPITest(BaseClinicalTestCase):
         """Test retrieving specific encounter source details."""
         self.authenticate_user()
         
-        url = f'/api/v1/private/encountersources/{self.encounter_source.id}/'
+        url = f'/api/v1/clinical/private/encountersources/{self.encounter_source.id}/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -406,13 +406,13 @@ class EncounterSourceAPITest(BaseClinicalTestCase):
         self.authenticate_user()
         
         # Test POST (create)
-        url = '/api/v1/private/encountersources/'
+        url = '/api/v1/clinical/private/encountersources/'
         data = {'name': 'New Source'}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         
         # Test PATCH (update)
-        url = f'/api/v1/private/encountersources/{self.encounter_source.id}/'
+        url = f'/api/v1/clinical/private/encountersources/{self.encounter_source.id}/'
         data = {'name': 'Updated Source'}
         response = self.client.patch(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -441,7 +441,7 @@ class MultiModalDataAPITest(BaseClinicalTestCase):
         """Test retrieving multimodal data for authenticated user."""
         self.authenticate_user()
         
-        url = '/api/v1/private/mmdata/'
+        url = '/api/v1/clinical/private/mmdata/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -452,7 +452,7 @@ class MultiModalDataAPITest(BaseClinicalTestCase):
         """Test retrieving multimodal data without authentication."""
         self.client.credentials()
         
-        url = '/api/v1/private/mmdata/'
+        url = '/api/v1/clinical/private/mmdata/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -461,7 +461,7 @@ class MultiModalDataAPITest(BaseClinicalTestCase):
         """Test retrieving specific multimodal data details."""
         self.authenticate_user()
         
-        url = f'/api/v1/private/mmdata/{self.mmdata.id}/'
+        url = f'/api/v1/clinical/private/mmdata/{self.mmdata.id}/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -472,13 +472,13 @@ class MultiModalDataAPITest(BaseClinicalTestCase):
         self.authenticate_user()
         
         # Test POST (create)
-        url = '/api/v1/private/mmdata/'
+        url = '/api/v1/clinical/private/mmdata/'
         data = {'provider_view': True}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
         
         # Test PATCH (update)
-        url = f'/api/v1/private/mmdata/{self.mmdata.id}/'
+        url = f'/api/v1/clinical/private/mmdata/{self.mmdata.id}/'
         data = {'provider_view': True}
         response = self.client.patch(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -511,7 +511,7 @@ class EncounterFileAPITest(BaseClinicalTestCase):
         """Test retrieving encounter files."""
         self.authenticate_user()
         
-        url = '/api/v1/private/encounterfiles/'
+        url = '/api/v1/clinical/private/encounterfiles/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -535,7 +535,7 @@ class EncounterFileAPITest(BaseClinicalTestCase):
     #     mock_storage_instance._get_content_type.return_value = 'video/mp4'
     #     mock_storage.return_value = mock_storage_instance
     #     
-    #     url = f'/api/v1/private/encounterfiles/{self.encounter_file.id}/stream/'
+    #     url = f'/api/v1/clinical/private/encounterfiles/{self.encounter_file.id}/stream/'
     #     response = self.client.get(url)
     #     
     #     self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -558,7 +558,7 @@ class EncounterFileAPITest(BaseClinicalTestCase):
     #     mock_storage_instance._get_content_type.return_value = 'video/mp4'
     #     mock_storage.return_value = mock_storage_instance
     #     
-    #     url = f'/api/v1/private/encounterfiles/{self.encounter_file.id}/download/'
+    #     url = f'/api/v1/clinical/private/encounterfiles/{self.encounter_file.id}/download/'
     #     response = self.client.get(url)
     #     
     #     self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -578,7 +578,7 @@ class EncounterFileAPITest(BaseClinicalTestCase):
             _using='clinical'
         )
         
-        url = '/api/v1/private/encounterfiles/by-ids/'
+        url = '/api/v1/clinical/private/encounterfiles/by-ids/'
         data = {'ids': [self.encounter_file.id, file2.id]}
         response = self.client.post(url, data, format='json')
         
@@ -609,7 +609,7 @@ class EncounterFileAPITest(BaseClinicalTestCase):
         # Authenticate as tier 1 user
         self.authenticate_user(user_tier1)
         
-        url = f'/api/v1/private/encounterfiles/{file_tier3.id}/'
+        url = f'/api/v1/clinical/private/encounterfiles/{file_tier3.id}/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -618,7 +618,7 @@ class EncounterFileAPITest(BaseClinicalTestCase):
         """Test retrieving encounter files without authentication."""
         self.client.credentials()
         
-        url = '/api/v1/private/encounterfiles/'
+        url = '/api/v1/clinical/private/encounterfiles/'
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

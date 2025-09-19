@@ -39,7 +39,7 @@ class AuditLogsAPITest(BaseResearchAPITestCase):
         """Test retrieving audit logs for authenticated user."""
         self.authenticate_user()
         
-        response = self.client.get('/api/v1/private/audit-logs/')
+        response = self.client.get('/api/v1/research/private/audit-logs/')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertGreater(len(response.data), 0)
@@ -48,23 +48,23 @@ class AuditLogsAPITest(BaseResearchAPITestCase):
         """Test retrieving audit log detail for authenticated user."""
         self.authenticate_user()
         
-        response = self.client.get(f'/api/v1/private/audit-logs/{self.audit_log.id}/')
+        response = self.client.get(f'/api/v1/research/private/audit-logs/{self.audit_log.id}/')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.audit_log.id)
 
     def test_get_audit_logs_unauthorized(self):
         """Test that unauthenticated requests return 401."""
-        response = self.client.get('/api/v1/private/audit-logs/')
+        response = self.client.get('/api/v1/research/private/audit-logs/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_audit_log_detail_unauthorized(self):
         """Test that unauthenticated detail requests return 401."""
-        response = self.client.get(f'/api/v1/private/audit-logs/{self.audit_log.id}/')
+        response = self.client.get(f'/api/v1/research/private/audit-logs/{self.audit_log.id}/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_audit_log_detail_not_found(self):
         """Test 404 for non-existent audit log ID."""
         self.authenticate_user()
-        response = self.client.get('/api/v1/private/audit-logs/99999/')
+        response = self.client.get('/api/v1/research/private/audit-logs/99999/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

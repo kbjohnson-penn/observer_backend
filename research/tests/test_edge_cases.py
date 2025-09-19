@@ -54,7 +54,7 @@ class EmptyResultsTest(APITestCase):
         """Test empty results when user has no accessible visits."""
         self.authenticate_user()
         
-        response = self.client.get('/api/v1/private/visits/')
+        response = self.client.get('/api/v1/research/private/visits/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
 
@@ -62,7 +62,7 @@ class EmptyResultsTest(APITestCase):
         """Test empty results when user has no accessible persons."""
         self.authenticate_user()
         
-        response = self.client.get('/api/v1/private/persons/')
+        response = self.client.get('/api/v1/research/private/persons/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
 
@@ -70,7 +70,7 @@ class EmptyResultsTest(APITestCase):
         """Test empty results when user has no accessible providers."""
         self.authenticate_user()
         
-        response = self.client.get('/api/v1/private/research-providers/')
+        response = self.client.get('/api/v1/research/private/providers/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
 
@@ -114,7 +114,7 @@ class SuperuserAccessTest(APITestCase):
         """Test superuser can access all visits regardless of tier."""
         self.authenticate_superuser()
         
-        response = self.client.get('/api/v1/private/visits/')
+        response = self.client.get('/api/v1/research/private/visits/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
@@ -122,7 +122,7 @@ class SuperuserAccessTest(APITestCase):
         """Test superuser can access all persons regardless of tier."""
         self.authenticate_superuser()
         
-        response = self.client.get('/api/v1/private/persons/')
+        response = self.client.get('/api/v1/research/private/persons/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
@@ -130,6 +130,6 @@ class SuperuserAccessTest(APITestCase):
         """Test superuser can access all providers regardless of tier."""
         self.authenticate_superuser()
         
-        response = self.client.get('/api/v1/private/research-providers/')
+        response = self.client.get('/api/v1/research/private/providers/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)

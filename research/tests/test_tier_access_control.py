@@ -93,19 +93,19 @@ class TierBasedAccessControlTest(APITestCase):
         self.authenticate_user(self.tier1_user)
         
         # Should see only tier 1 visits
-        response = self.client.get('/api/v1/private/visits/')
+        response = self.client.get('/api/v1/research/private/visits/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['id'], self.visit1.id)
         
         # Should see only tier 1 persons
-        response = self.client.get('/api/v1/private/persons/')
+        response = self.client.get('/api/v1/research/private/persons/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['id'], self.person1.id)
         
         # Should see only tier 1 providers
-        response = self.client.get('/api/v1/private/research-providers/')
+        response = self.client.get('/api/v1/research/private/providers/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['id'], self.provider1.id)
@@ -115,21 +115,21 @@ class TierBasedAccessControlTest(APITestCase):
         self.authenticate_user(self.tier2_user)
         
         # Should see tier 1 and tier 2 visits
-        response = self.client.get('/api/v1/private/visits/')
+        response = self.client.get('/api/v1/research/private/visits/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
         visit_ids = {visit['id'] for visit in response.data}
         self.assertEqual(visit_ids, {self.visit1.id, self.visit2.id})
         
         # Should see tier 1 and tier 2 persons  
-        response = self.client.get('/api/v1/private/persons/')
+        response = self.client.get('/api/v1/research/private/persons/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
         person_ids = {person['id'] for person in response.data}
         self.assertEqual(person_ids, {self.person1.id, self.person2.id})
         
         # Should see tier 1 and tier 2 providers
-        response = self.client.get('/api/v1/private/research-providers/')
+        response = self.client.get('/api/v1/research/private/providers/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
         provider_ids = {provider['id'] for provider in response.data}
@@ -140,17 +140,17 @@ class TierBasedAccessControlTest(APITestCase):
         self.authenticate_user(self.tier3_user)
         
         # Should see all visits
-        response = self.client.get('/api/v1/private/visits/')
+        response = self.client.get('/api/v1/research/private/visits/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
         
         # Should see all persons
-        response = self.client.get('/api/v1/private/persons/')
+        response = self.client.get('/api/v1/research/private/persons/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
         
         # Should see all providers
-        response = self.client.get('/api/v1/private/research-providers/')
+        response = self.client.get('/api/v1/research/private/providers/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
 
@@ -159,15 +159,15 @@ class TierBasedAccessControlTest(APITestCase):
         self.authenticate_user(self.tier1_user)
         
         # Should get 404 for tier 2 visit
-        response = self.client.get(f'/api/v1/private/visits/{self.visit2.id}/')
+        response = self.client.get(f'/api/v1/research/private/visits/{self.visit2.id}/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         
         # Should get 404 for tier 3 person
-        response = self.client.get(f'/api/v1/private/persons/{self.person3.id}/')
+        response = self.client.get(f'/api/v1/research/private/persons/{self.person3.id}/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         
         # Should get 404 for tier 2 provider
-        response = self.client.get(f'/api/v1/private/research-providers/{self.provider2.id}/')
+        response = self.client.get(f'/api/v1/research/private/providers/{self.provider2.id}/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_tier2_user_can_access_lower_tier_detail(self):
@@ -175,16 +175,16 @@ class TierBasedAccessControlTest(APITestCase):
         self.authenticate_user(self.tier2_user)
         
         # Should access tier 1 visit
-        response = self.client.get(f'/api/v1/private/visits/{self.visit1.id}/')
+        response = self.client.get(f'/api/v1/research/private/visits/{self.visit1.id}/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.visit1.id)
         
         # Should access tier 1 person
-        response = self.client.get(f'/api/v1/private/persons/{self.person1.id}/')
+        response = self.client.get(f'/api/v1/research/private/persons/{self.person1.id}/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.person1.id)
         
         # Should access tier 1 provider  
-        response = self.client.get(f'/api/v1/private/research-providers/{self.provider1.id}/')
+        response = self.client.get(f'/api/v1/research/private/providers/{self.provider1.id}/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.provider1.id)

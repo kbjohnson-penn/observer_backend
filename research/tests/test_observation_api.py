@@ -30,7 +30,7 @@ class ObservationAPITest(BaseResearchAPITestCase):
         """Test retrieving observations for authenticated user."""
         self.authenticate_user()
         
-        response = self.client.get('/api/v1/private/observations/')
+        response = self.client.get('/api/v1/research/private/observations/')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertGreater(len(response.data), 0)
@@ -39,23 +39,23 @@ class ObservationAPITest(BaseResearchAPITestCase):
         """Test retrieving observation detail for authenticated user."""
         self.authenticate_user()
         
-        response = self.client.get(f'/api/v1/private/observations/{self.observation.id}/')
+        response = self.client.get(f'/api/v1/research/private/observations/{self.observation.id}/')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.observation.id)
 
     def test_get_observations_unauthorized(self):
         """Test that unauthenticated requests return 401."""
-        response = self.client.get('/api/v1/private/observations/')
+        response = self.client.get('/api/v1/research/private/observations/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_observation_detail_unauthorized(self):
         """Test that unauthenticated detail requests return 401."""
-        response = self.client.get(f'/api/v1/private/observations/{self.observation.id}/')
+        response = self.client.get(f'/api/v1/research/private/observations/{self.observation.id}/')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_get_observation_detail_not_found(self):
         """Test 404 for non-existent observation ID."""
         self.authenticate_user()
-        response = self.client.get('/api/v1/private/observations/99999/')
+        response = self.client.get('/api/v1/research/private/observations/99999/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
