@@ -14,3 +14,8 @@ from .private_serializers import (
     ProviderSurveySerializer,
     LabsSerializer
 )
+
+# Search serializers
+from .search_serializers import (
+    VisitSearchResultSerializer
+)

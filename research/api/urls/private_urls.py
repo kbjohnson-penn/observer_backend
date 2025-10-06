@@ -11,6 +11,8 @@ from research.api.viewsets.private.measurement_viewset import MeasurementViewSet
 from research.api.viewsets.private.audit_logs_viewset import AuditLogsViewSet
 from research.api.viewsets.private.patient_survey_viewset import PatientSurveyViewSet
 from research.api.viewsets.private.provider_survey_viewset import ProviderSurveyViewSet
+from research.api.viewsets.private.filter_options_viewset import FilterOptionsViewSet
+from research.api.viewsets.private.visit_search_viewset import VisitSearchViewSet
 # from research.api.viewsets.private.labs_viewset import LabViewSet
 
 router = DefaultRouter()
@@ -28,6 +30,8 @@ router.register(r'measurements', MeasurementViewSet, basename='v1-research-measu
 router.register(r'audit-logs', AuditLogsViewSet, basename='v1-research-audit-log')
 router.register(r'patient-surveys', PatientSurveyViewSet, basename='v1-research-patient-survey')
 router.register(r'provider-surveys', ProviderSurveyViewSet, basename='v1-research-provider-survey')
+router.register(r'filter-options', FilterOptionsViewSet, basename='v1-research-filter-options')
+router.register(r'visits-search', VisitSearchViewSet, basename='v1-research-visit-search')
 # router.register(r'labs', LabViewSet, basename='v1-research-lab')
 
 urlpatterns = router.urls
