@@ -27,8 +27,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 user = User.objects.using('accounts').get(email=username_or_email)
                 attrs[self.username_field] = user.username
             except User.DoesNotExist:
+                # Use generic error message to prevent user enumeration
                 raise serializers.ValidationError(
-                    'No user found with this email address.'
+                    'Invalid email or password.'
                 )
         
         return super().validate(attrs)
