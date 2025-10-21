@@ -14,6 +14,7 @@ django-ratelimit==4.1.0
 django_neomodel==0.2.0
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
+drf-spectacular==0.28.0
 Faker==37.6.0
 gunicorn==23.0.0
 idna==3.10

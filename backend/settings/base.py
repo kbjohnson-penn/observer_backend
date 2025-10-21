@@ -24,6 +24,28 @@ AUTH_USER_MODEL = 'accounts.User'
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
+# Health Check Configuration
+# Whitelist IPs that can access detailed health check endpoint
+# Add your load balancer, monitoring services, and internal network IPs here
+HEALTH_CHECK_ALLOWED_IPS = config(
+    'HEALTH_CHECK_ALLOWED_IPS',
+    default='127.0.0.1,::1',
+    cast=lambda v: [ip.strip() for ip in v.split(',')]
+)
+
+# API Version
+API_VERSION = '1.0.0'
+
+# Rate Limiting Configuration
+# Format: 'number/period' where period can be s (second), m (minute), h (hour), d (day)
+RATE_LIMITS = {
+    'LOGIN': config('RATE_LIMIT_LOGIN', default='5/m'),
+    'REGISTRATION': config('RATE_LIMIT_REGISTRATION', default='3/m'),
+    'PASSWORD_CHANGE': config('RATE_LIMIT_PASSWORD_CHANGE', default='10/m'),
+    'EMAIL_VERIFICATION': config('RATE_LIMIT_EMAIL_VERIFICATION', default='10/m'),
+    'LOGOUT': config('RATE_LIMIT_LOGOUT', default='5/m'),
+}
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -39,6 +61,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt.token_blacklist',
+    'drf_spectacular',  # API documentation
 ]
 
 MIDDLEWARE = [
@@ -179,6 +202,18 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
     'MAX_PAGE_SIZE': 100,  # Prevent DoS via large page sizes
+    # API Documentation
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# API Documentation Configuration (drf-spectacular)
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Observer API',
+    'DESCRIPTION': 'Healthcare platform for medical encounter data collection, analysis, and visualization',
+    'VERSION': API_VERSION,
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': '/api/v[0-9]',
 }
 
 # JWT Configuration
