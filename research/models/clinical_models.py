@@ -4,7 +4,26 @@ from .person_provider_models import Person, Provider
 
 class VisitOccurrence(models.Model):
     """
-    This table records details about each healthcare encounter or visit a person has.
+    Records healthcare encounter visits with tier-based access control.
+
+    This model stores comprehensive information about each healthcare encounter,
+    including patient and provider associations, visit timing, and access tier.
+
+    Access Control:
+        Users can only access visits where their profile.tier.level >= visit.tier_id.
+        This implements a hierarchical access control system where higher tiers
+        can access data from lower tiers, but not vice versa.
+
+    Relationships:
+        - person: The patient for this visit (ForeignKey to Person)
+        - provider: The healthcare provider (ForeignKey to Provider)
+        - Clinical data models link via visit_occurrence_id:
+          * ConditionOccurrence, ProcedureOccurrence, DrugExposure
+          * Measurement, Observation, Note
+
+    Database:
+        Routed to 'research' database via DatabaseRouter.
+        Table: visit_occurrence
     """
     id = models.AutoField(primary_key=True, verbose_name="Visit Occurrence ID")
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
@@ -45,7 +64,18 @@ class Note(models.Model):
 
 class ConditionOccurrence(models.Model):
     """
-    This table captures information about conditions or diagnoses recorded for a patient.
+    Captures patient conditions and diagnoses linked to healthcare visits.
+
+    Stores diagnostic information including condition codes, primary diagnosis flags,
+    and concept mappings for standardized medical terminology.
+
+    Relationships:
+        - visit_occurrence: The healthcare visit where this condition was recorded (ForeignKey)
+        - Inherits tier-based access control from parent VisitOccurrence
+
+    Database:
+        Routed to 'research' database via DatabaseRouter.
+        Table: condition_occurrence
     """
     id = models.AutoField(primary_key=True, verbose_name="Condition Occurrence ID")
     visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)
@@ -84,7 +114,18 @@ class DrugExposure(models.Model):
 
 class ProcedureOccurrence(models.Model):
     """
-    This table documents procedures performed on patients.
+    Documents medical procedures performed during healthcare visits.
+
+    Records procedure details including ordering dates, names, descriptions,
+    and status indicators for procedures ordered or performed.
+
+    Relationships:
+        - visit_occurrence: The healthcare visit where procedure was performed (ForeignKey)
+        - Inherits tier-based access control from parent VisitOccurrence
+
+    Database:
+        Routed to 'research' database via DatabaseRouter.
+        Table: procedure_occurrence
     """
     id = models.AutoField(primary_key=True, verbose_name="Procedure Occurrence ID")
     visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)

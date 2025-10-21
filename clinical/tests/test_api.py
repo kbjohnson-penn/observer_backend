@@ -38,9 +38,9 @@ class EncounterAPITest(BaseClinicalTestCase):
         
         url = '/api/v1/clinical/private/encounters/'
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data['results']), 1)
     
     def test_get_encounters_unauthenticated(self):
         """Test retrieving encounters without authentication."""
@@ -80,9 +80,9 @@ class EncounterAPITest(BaseClinicalTestCase):
         
         url = '/api/v1/clinical/private/encounters/'
         response = self.client.get(url)
-        
+
         # User with tier 2 should see tier 1 and 2, but not tier 3
-        accessible_ids = [item['id'] for item in response.data]
+        accessible_ids = [item['id'] for item in response.data['results']]
         self.assertIn(encounter_tier1.id, accessible_ids)
         self.assertIn(encounter_tier2.id, accessible_ids)
         self.assertNotIn(encounter_tier3.id, accessible_ids)
@@ -201,12 +201,14 @@ class PatientAPITest(BaseClinicalTestCase):
     def test_get_patients_authenticated(self):
         """Test retrieving patients for authenticated user."""
         self.authenticate_user()
-        
+
         url = '/api/v1/clinical/private/patients/'
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsInstance(response.data, list)
+        # Check paginated response structure
+        self.assertIn('results', response.data)
+        self.assertIsInstance(response.data['results'], list)
     
     def test_get_patients_unauthenticated(self):
         """Test retrieving patients without authentication."""
@@ -265,12 +267,14 @@ class ProviderAPITest(BaseClinicalTestCase):
     def test_get_providers_authenticated(self):
         """Test retrieving providers for authenticated user."""
         self.authenticate_user()
-        
+
         url = '/api/v1/clinical/private/providers/'
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsInstance(response.data, list)
+        # Check paginated response structure
+        self.assertIn('results', response.data)
+        self.assertIsInstance(response.data['results'], list)
     
     def test_get_providers_unauthenticated(self):
         """Test retrieving providers without authentication."""
@@ -318,13 +322,15 @@ class DepartmentAPITest(BaseClinicalTestCase):
     def test_get_departments_authenticated(self):
         """Test retrieving departments for authenticated user."""
         self.authenticate_user()
-        
+
         url = '/api/v1/clinical/private/departments/'
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsInstance(response.data, list)
-        self.assertGreaterEqual(len(response.data), 1)  # Should have at least our test department
+        # Check paginated response structure
+        self.assertIn('results', response.data)
+        self.assertIsInstance(response.data['results'], list)
+        self.assertGreaterEqual(len(response.data['results']), 1)  # Should have at least our test department
     
     def test_get_departments_unauthenticated(self):
         """Test retrieving departments without authentication."""
@@ -373,13 +379,15 @@ class EncounterSourceAPITest(BaseClinicalTestCase):
     def test_get_encounter_sources_authenticated(self):
         """Test retrieving encounter sources for authenticated user."""
         self.authenticate_user()
-        
+
         url = '/api/v1/clinical/private/encountersources/'
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsInstance(response.data, list)
-        self.assertGreaterEqual(len(response.data), 1)  # Should have at least our test source
+        # Check paginated response structure
+        self.assertIn('results', response.data)
+        self.assertIsInstance(response.data['results'], list)
+        self.assertGreaterEqual(len(response.data['results']), 1)  # Should have at least our test source
     
     def test_get_encounter_sources_unauthenticated(self):
         """Test retrieving encounter sources without authentication."""
@@ -440,13 +448,15 @@ class MultiModalDataAPITest(BaseClinicalTestCase):
     def test_get_mmdata_authenticated(self):
         """Test retrieving multimodal data for authenticated user."""
         self.authenticate_user()
-        
+
         url = '/api/v1/clinical/private/mmdata/'
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsInstance(response.data, list)
-        self.assertGreaterEqual(len(response.data), 1)  # Should have at least our test mmdata
+        # Check paginated response structure
+        self.assertIn('results', response.data)
+        self.assertIsInstance(response.data['results'], list)
+        self.assertGreaterEqual(len(response.data['results']), 1)  # Should have at least our test mmdata
     
     def test_get_mmdata_unauthenticated(self):
         """Test retrieving multimodal data without authentication."""
@@ -513,9 +523,9 @@ class EncounterFileAPITest(BaseClinicalTestCase):
         
         url = '/api/v1/clinical/private/encounterfiles/'
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data['results']), 1)
     
     # TODO: Fix failing stream and download endpoint tests - returning 404 instead of 200
     # @patch('clinical.storage_backend.AzureDataLakeStorage')

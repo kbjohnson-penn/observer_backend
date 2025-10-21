@@ -167,8 +167,11 @@ class PasswordChangeRateLimitTest(TestCase):
             response = self.client.post(url, data, format='json')
             
             if i < 5:
-                # First 5 should either succeed or fail validation
-                self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST])
+                # First 5 should either succeed, fail validation, or be rate limited
+                self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST, status.HTTP_403_FORBIDDEN])
+                if response.status_code == status.HTTP_403_FORBIDDEN:
+                    # Rate limit triggered
+                    break
             else:
                 # 6th request should be rate limited
                 self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

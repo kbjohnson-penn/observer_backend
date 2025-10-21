@@ -56,7 +56,7 @@ class EmptyResultsTest(APITestCase):
         
         response = self.client.get('/api/v1/research/private/visits/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(len(response.data['results']), 0)
 
     def test_empty_persons_list(self):
         """Test empty results when user has no accessible persons."""
@@ -64,7 +64,7 @@ class EmptyResultsTest(APITestCase):
         
         response = self.client.get('/api/v1/research/private/persons/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(len(response.data['results']), 0)
 
     def test_empty_providers_list(self):
         """Test empty results when user has no accessible providers."""
@@ -72,7 +72,7 @@ class EmptyResultsTest(APITestCase):
         
         response = self.client.get('/api/v1/research/private/providers/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(len(response.data['results']), 0)
 
 
 class SuperuserAccessTest(APITestCase):
@@ -116,7 +116,7 @@ class SuperuserAccessTest(APITestCase):
         
         response = self.client.get('/api/v1/research/private/visits/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data['results']), 2)
 
     def test_superuser_sees_all_persons(self):
         """Test superuser can access all persons regardless of tier."""
@@ -124,7 +124,7 @@ class SuperuserAccessTest(APITestCase):
         
         response = self.client.get('/api/v1/research/private/persons/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data['results']), 2)
 
     def test_superuser_sees_all_providers(self):
         """Test superuser can access all providers regardless of tier."""
@@ -132,4 +132,4 @@ class SuperuserAccessTest(APITestCase):
         
         response = self.client.get('/api/v1/research/private/providers/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data['results']), 2)

@@ -165,9 +165,20 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    # API Versioning Strategy
+    # - Uses namespace-based versioning (e.g., /api/v1/, /api/v2/)
+    # - Current version: v1
+    # - Deprecation policy: Maintain N-1 versions for 6 months minimum
+    # - Breaking changes require new version number
+    # - Version should be included in response headers
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
+    'DEFAULT_VERSION': 'v1',
+    'ALLOWED_VERSIONS': ['v1'],  # Add 'v2' when ready for new version
+    'VERSION_PARAM': 'version',
+    # Pagination
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
+    'MAX_PAGE_SIZE': 100,  # Prevent DoS via large page sizes
 }
 
 # JWT Configuration

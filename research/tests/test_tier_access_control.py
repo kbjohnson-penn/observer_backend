@@ -95,20 +95,20 @@ class TierBasedAccessControlTest(APITestCase):
         # Should see only tier 1 visits
         response = self.client.get('/api/v1/research/private/visits/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['id'], self.visit1.id)
-        
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['id'], self.visit1.id)
+
         # Should see only tier 1 persons
         response = self.client.get('/api/v1/research/private/persons/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['id'], self.person1.id)
-        
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['id'], self.person1.id)
+
         # Should see only tier 1 providers
         response = self.client.get('/api/v1/research/private/providers/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['id'], self.provider1.id)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]['id'], self.provider1.id)
 
     def test_tier2_user_access(self):
         """Test Tier 2 user can access Tier 1 and Tier 2 data."""
@@ -117,22 +117,22 @@ class TierBasedAccessControlTest(APITestCase):
         # Should see tier 1 and tier 2 visits
         response = self.client.get('/api/v1/research/private/visits/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-        visit_ids = {visit['id'] for visit in response.data}
+        self.assertEqual(len(response.data['results']), 2)
+        visit_ids = {visit['id'] for visit in response.data['results']}
         self.assertEqual(visit_ids, {self.visit1.id, self.visit2.id})
-        
-        # Should see tier 1 and tier 2 persons  
+
+        # Should see tier 1 and tier 2 persons
         response = self.client.get('/api/v1/research/private/persons/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-        person_ids = {person['id'] for person in response.data}
+        self.assertEqual(len(response.data['results']), 2)
+        person_ids = {person['id'] for person in response.data['results']}
         self.assertEqual(person_ids, {self.person1.id, self.person2.id})
         
         # Should see tier 1 and tier 2 providers
         response = self.client.get('/api/v1/research/private/providers/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-        provider_ids = {provider['id'] for provider in response.data}
+        self.assertEqual(len(response.data['results']), 2)
+        provider_ids = {provider['id'] for provider in response.data['results']}
         self.assertEqual(provider_ids, {self.provider1.id, self.provider2.id})
 
     def test_tier3_user_access(self):
@@ -142,17 +142,17 @@ class TierBasedAccessControlTest(APITestCase):
         # Should see all visits
         response = self.client.get('/api/v1/research/private/visits/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 3)
+        self.assertEqual(len(response.data['results']), 3)
         
         # Should see all persons
         response = self.client.get('/api/v1/research/private/persons/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 3)
+        self.assertEqual(len(response.data['results']), 3)
         
         # Should see all providers
         response = self.client.get('/api/v1/research/private/providers/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 3)
+        self.assertEqual(len(response.data['results']), 3)
 
     def test_tier1_user_cannot_access_higher_tier_detail(self):
         """Test Tier 1 user gets 404 when accessing higher tier data directly."""

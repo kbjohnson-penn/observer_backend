@@ -4,10 +4,10 @@ from clinical.api.serializers.department_serializers import EncounterSourceSeria
 
 
 class EncounterSourceViewSet(BaseAuthenticatedViewSet):
-    queryset = EncounterSource.objects.using('clinical').all()
+    queryset = EncounterSource.objects.using('clinical').all().order_by('id')
     serializer_class = EncounterSourceSerializer
 
 
 class DepartmentViewSet(BaseAuthenticatedViewSet):
-    queryset = Department.objects.using('clinical').all()
+    queryset = Department.objects.using('clinical').all().order_by('id')
     serializer_class = DepartmentSerializer

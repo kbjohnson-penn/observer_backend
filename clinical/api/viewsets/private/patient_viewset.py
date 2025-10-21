@@ -13,7 +13,7 @@ class PatientViewSet(BaseAuthenticatedViewSet):
     def get_queryset(self):
         accessible_encounters = filter_queryset_by_user_tier(
             Encounter.objects.using('clinical').all(), self.request.user, related_field='tier_id')
-        return Patient.objects.using('clinical').filter(encounter__in=accessible_encounters).distinct()
+        return Patient.objects.using('clinical').filter(encounter__in=accessible_encounters).distinct().order_by('id')
 
     def get_object(self):
         try:

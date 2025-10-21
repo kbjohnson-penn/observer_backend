@@ -1,5 +1,5 @@
 from shared.api.permissions import BaseAuthenticatedViewSet, filter_queryset_by_user_tier
-from research.models import Labs, Person
+from research.models import Labs, VisitOccurrence
 from research.api.serializers import LabsSerializer
 from rest_framework.response import Response
 from rest_framework import status
@@ -10,14 +10,19 @@ class LabViewSet(BaseAuthenticatedViewSet):
     serializer_class = LabsSerializer
 
     def get_queryset(self):
+        # First get accessible visits based on user tier
         accessible_visits = filter_queryset_by_user_tier(
-            Person.objects.using('research').all(),
+            VisitOccurrence.objects.using('research')
+                .select_related('person', 'provider')
+                .all(),
             self.request.user,
             related_field='tier_id'
         )
+        # Then get labs for those persons who have accessible visits
+        accessible_person_ids = accessible_visits.values_list('person_id', flat=True)
         return Labs.objects.using('research').filter(
-            person_id__in=accessible_visits
-        ).distinct()
+            person_id__in=accessible_person_ids
+        ).select_related('person').distinct().order_by("-id")
 
     def get_object(self):
         queryset = self.get_queryset()

@@ -20,10 +20,14 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 
+v1_patterns = ([
+    path('accounts/', include('accounts.api.urls')),
+    path('clinical/', include('clinical.api.urls')),
+    path('research/', include('research.api.urls')),
+], 'v1')
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/accounts/', include('accounts.api.urls')),
-    path('api/v1/clinical/', include('clinical.api.urls')),
-    path('api/v1/research/', include('research.api.urls')),
+    path('api/v1/', include(v1_patterns)),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 

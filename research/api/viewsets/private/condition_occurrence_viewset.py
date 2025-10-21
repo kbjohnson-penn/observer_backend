@@ -11,13 +11,15 @@ class ConditionOccurrenceViewSet(BaseAuthenticatedViewSet):
 
     def get_queryset(self):
         accessible_visits = filter_queryset_by_user_tier(
-            VisitOccurrence.objects.using('research').all(), 
-            self.request.user, 
+            VisitOccurrence.objects.using('research')
+                .select_related('person', 'provider')
+                .all(),
+            self.request.user,
             related_field='tier_id'
         )
         return ConditionOccurrence.objects.using('research').filter(
             visit_occurrence__in=accessible_visits
-        ).distinct()
+        ).select_related('visit_occurrence').distinct().order_by("-id")
 
     def get_object(self):
         queryset = self.get_queryset()

@@ -131,9 +131,11 @@ class LogoutView(APIView):
         return response
 
 
+@method_decorator(ratelimit(key='user_or_ip', rate='10/m', method='POST', block=True), name='post')
 class CustomTokenRefreshView(TokenRefreshView):
     """
     Custom JWT refresh view that works with httpOnly cookies.
+    Rate limited to 10 attempts per minute per user/IP.
     CSRF protection enabled.
     """
     def post(self, request, *args, **kwargs):
@@ -262,13 +264,15 @@ The Observer Team
             logger.error(f"Failed to send verification email to {user.email}: {str(e)}")
 
 
+@method_decorator(ratelimit(key='ip', rate='10/m', method='POST', block=True), name='post')
 class EmailVerificationView(APIView):
     """
     Email verification view. Verifies token and allows password setup.
+    Rate limited to 10 attempts per minute per IP.
     CSRF protection enabled.
     """
     permission_classes = []  # Allow anonymous access
-    
+
     def post(self, request, *args, **kwargs):
         serializer = EmailVerificationSerializer(data=request.data)
         

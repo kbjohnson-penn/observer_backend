@@ -3,9 +3,11 @@ Visit search viewset with JSON body-based filtering.
 Handles complex filtering across visit, demographic, and clinical data.
 """
 from rest_framework.response import Response
+from rest_framework import status as http_status
 from django.db.models import Count, Q
 from research.models import VisitOccurrence
 from research.api.serializers import VisitSearchResultSerializer
+from research.api.serializers.filter_serializer import FilterSerializer
 from research.api.pagination import ResearchPagination
 from shared.api.permissions import BaseAuthenticatedViewSet, filter_queryset_by_user_tier
 
@@ -35,7 +37,15 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
             "sort": {"field": "visit_start_date", "direction": "desc"}
         }
         """
-        # Extract request data
+        # Validate input
+        validator = FilterSerializer(data=request.data)
+        if not validator.is_valid():
+            return Response(
+                {"detail": "Invalid filter parameters", "errors": validator.errors},
+                status=http_status.HTTP_400_BAD_REQUEST
+            )
+
+        # Extract validated request data
         filters = request.data.get('filters', {})
         sort_params = request.data.get('sort', {})
 

@@ -287,8 +287,9 @@ class CookieAuthenticationTest(BaseTestCase):
         
         self.assertTrue(access_cookie['httponly'])
         self.assertTrue(refresh_cookie['httponly'])
-        self.assertEqual(access_cookie['samesite'], 'Lax')
-        self.assertEqual(refresh_cookie['samesite'], 'Lax')
+        # In test environment DEBUG=False, so samesite should be 'Strict'
+        self.assertEqual(access_cookie['samesite'], 'Strict')
+        self.assertEqual(refresh_cookie['samesite'], 'Strict')
     
     def test_logout_clears_cookies(self):
         """Test that logout endpoint clears httpOnly cookies."""
