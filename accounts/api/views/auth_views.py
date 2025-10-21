@@ -25,12 +25,12 @@ from accounts.api.serializers.auth_serializers import (
 from accounts.models.user_models import EmailVerificationToken
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-@method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True), name='post')
+@method_decorator(ratelimit(key='ip', rate=settings.RATE_LIMITS['LOGIN'], method='POST', block=True), name='post')
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
     Custom JWT login view to update last login timestamp and set httpOnly cookies.
-    Rate limited to 5 attempts per minute per IP.
+    Rate limiting configured via settings.RATE_LIMITS['LOGIN'].
+    CSRF protection enabled - frontend must include CSRF token.
     """
     serializer_class = CustomTokenObtainPairSerializer
 
@@ -62,9 +62,9 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                             max_age=settings.SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME').total_seconds(),
                             httponly=True,
                             secure=not settings.DEBUG,  # Secure in production
-                            samesite='Lax'
+                            samesite='Strict' if not settings.DEBUG else 'Lax'  # Strict in production
                         )
-                    
+
                     if refresh_token:
                         response.set_cookie(
                             'refresh_token',
@@ -72,7 +72,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                             max_age=settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME').total_seconds(),
                             httponly=True,
                             secure=not settings.DEBUG,  # Secure in production
-                            samesite='Lax'
+                            samesite='Strict' if not settings.DEBUG else 'Lax'  # Strict in production
                         )
                     
                     # Remove tokens from response body for security
@@ -97,10 +97,10 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         return response
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class LogoutView(APIView):
     """
     Logout view to blacklist the refresh token and clear httpOnly cookies.
+    CSRF protection enabled.
     """
     permission_classes = [IsAuthenticated]
 
@@ -131,10 +131,12 @@ class LogoutView(APIView):
         return response
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(ratelimit(key='user_or_ip', rate=settings.RATE_LIMITS['PASSWORD_CHANGE'], method='POST', block=True), name='post')
 class CustomTokenRefreshView(TokenRefreshView):
     """
     Custom JWT refresh view that works with httpOnly cookies.
+    Rate limiting configured via settings.RATE_LIMITS['PASSWORD_CHANGE'].
+    CSRF protection enabled.
     """
     def post(self, request, *args, **kwargs):
         # Get refresh token from cookie
@@ -164,9 +166,9 @@ class CustomTokenRefreshView(TokenRefreshView):
                     max_age=settings.SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME').total_seconds(),
                     httponly=True,
                     secure=not settings.DEBUG,
-                    samesite='Lax'
+                    samesite='Strict' if not settings.DEBUG else 'Lax'  # Strict in production
                 )
-            
+
             if new_refresh_token:
                 response.set_cookie(
                     'refresh_token',
@@ -174,7 +176,7 @@ class CustomTokenRefreshView(TokenRefreshView):
                     max_age=settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME').total_seconds(),
                     httponly=True,
                     secure=not settings.DEBUG,
-                    samesite='Lax'
+                    samesite='Strict' if not settings.DEBUG else 'Lax'  # Strict in production
                 )
             
             # Remove tokens from response body
@@ -185,12 +187,12 @@ class CustomTokenRefreshView(TokenRefreshView):
         return response
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-@method_decorator(ratelimit(key='ip', rate='3/m', method='POST', block=True), name='post')
+@method_decorator(ratelimit(key='ip', rate=settings.RATE_LIMITS['REGISTRATION'], method='POST', block=True), name='post')
 class UserRegistrationView(APIView):
     """
     User registration view. Creates inactive user and sends verification email.
-    Rate limited to 3 attempts per minute per IP.
+    Rate limiting configured via settings.RATE_LIMITS['REGISTRATION'].
+    CSRF protection enabled.
     """
     permission_classes = []  # Allow anonymous access
     
@@ -262,13 +264,15 @@ The Observer Team
             logger.error(f"Failed to send verification email to {user.email}: {str(e)}")
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(ratelimit(key='ip', rate=settings.RATE_LIMITS['EMAIL_VERIFICATION'], method='POST', block=True), name='post')
 class EmailVerificationView(APIView):
     """
     Email verification view. Verifies token and allows password setup.
+    Rate limiting configured via settings.RATE_LIMITS['EMAIL_VERIFICATION'].
+    CSRF protection enabled.
     """
     permission_classes = []  # Allow anonymous access
-    
+
     def post(self, request, *args, **kwargs):
         serializer = EmailVerificationSerializer(data=request.data)
         
@@ -358,12 +362,12 @@ class PasswordChangeSerializer(serializers.Serializer):
         return data
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-@method_decorator(ratelimit(key='user', rate='5/m', method='POST', block=True), name='post')
+@method_decorator(ratelimit(key='user', rate=settings.RATE_LIMITS['LOGOUT'], method='POST', block=True), name='post')
 class PasswordChangeView(APIView):
     """
     Change user password. Requires old password for verification.
-    Rate limited to 5 attempts per minute per user.
+    Rate limiting configured via settings.RATE_LIMITS['LOGOUT'].
+    CSRF protection enabled.
     """
     permission_classes = [IsAuthenticated]
     

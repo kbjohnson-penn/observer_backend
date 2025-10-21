@@ -14,7 +14,7 @@ class VisitOccurrenceViewSet(BaseAuthenticatedViewSet):
             VisitOccurrence.objects.using('research').select_related('person', 'provider').all(),
             self.request.user,
             related_field='tier_id'
-        )
+        ).order_by('-visit_start_date', '-id')
 
     def get_object(self):
         queryset = self.get_queryset()

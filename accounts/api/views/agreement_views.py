@@ -3,16 +3,14 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from accounts.models import UserAgreement, AgreementType, Agreement
 from accounts.api.serializers.agreement_serializers import (
-    UserAgreementListSerializer, 
+    UserAgreementListSerializer,
     AgreementTypeSerializer,
     AgreementSerializer
 )
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class UserAgreementViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ViewSet for retrieving user's signed agreements.
@@ -89,15 +87,15 @@ class UserAgreementViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class AgreementViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ViewSet for retrieving available agreements.
     Allows users to view agreements before signing them.
+    CSRF protection enabled - frontend must include CSRF token for state-changing operations.
     """
     serializer_class = AgreementSerializer
     permission_classes = [IsAuthenticated]
-    queryset = Agreement.objects.using('accounts').filter(is_active=True)
+    queryset = Agreement.objects.using('accounts').filter(is_active=True).order_by('-created_at', 'id')
 
     @action(detail=False, methods=['get'])
     def by_type(self, request):

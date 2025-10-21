@@ -47,11 +47,11 @@ class LabsAPITest(BaseResearchAPITestCase):
         self.authenticate_user()
         
         response = self.client.get('/api/v1/research/private/labs/')
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertGreater(len(response.data), 0)
+        self.assertGreater(len(response.data['results']), 0)
         # Verify the response contains the created lab
-        self.assertEqual(response.data[0]['id'], self.lab.id)
+        self.assertEqual(response.data['results'][0]['id'], self.lab.id)
 
     def test_get_lab_detail_authenticated(self):
         """Test retrieving lab detail for authenticated user."""

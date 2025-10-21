@@ -36,9 +36,10 @@ DATABASES = {
     }
 }
 
-# Password hashers (faster for testing)
+# Password hashers - Use secure hasher even in tests
+# MD5 is cryptographically broken and should never be used
 PASSWORD_HASHERS = [
-    'django.contrib.auth.hashers.MD5PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
 ]
 
 # Disable migrations for faster tests

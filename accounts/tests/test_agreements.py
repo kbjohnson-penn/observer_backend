@@ -86,12 +86,12 @@ class AgreementAPITest(BaseTestCase):
         self.authenticate_user()
         url = '/api/v1/accounts/agreements/user-agreements/'
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)  # User has 2 signed agreements
-        
+        self.assertEqual(len(response.data['results']), 2)  # User has 2 signed agreements
+
         # Check agreement data structure (using UserAgreementListSerializer)
-        agreement_data = response.data[0]
+        agreement_data = response.data['results'][0]
         expected_fields = ['id', 'agreement_title', 'agreement_version', 'agreement_type', 'date_signed', 'is_active']
         for field in expected_fields:
             self.assertIn(field, agreement_data)
@@ -144,12 +144,12 @@ class AgreementAPITest(BaseTestCase):
         self.authenticate_user()
         url = '/api/v1/accounts/agreements/agreements/'
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 3)  # 3 total agreements created
-        
+        self.assertEqual(len(response.data['results']), 3)  # 3 total agreements created
+
         # Check agreement data structure (using AgreementSerializer)
-        agreement_data = response.data[0]
+        agreement_data = response.data['results'][0]
         expected_fields = ['id', 'title', 'version', 'project_name', 'agreement_type', 'content', 'created_at']
         for field in expected_fields:
             self.assertIn(field, agreement_data)
@@ -187,12 +187,12 @@ class AgreementAPITest(BaseTestCase):
         self.authenticate_user()
         url = '/api/v1/accounts/agreements/user-agreements/'
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 3)  # Now 3 signed agreements
-        
+        self.assertEqual(len(response.data['results']), 3)  # Now 3 signed agreements
+
         # Check that agreements are ordered by signed_at descending
-        signed_dates = [agreement['date_signed'] for agreement in response.data]
+        signed_dates = [agreement['date_signed'] for agreement in response.data['results']]
         self.assertEqual(signed_dates, sorted(signed_dates, reverse=True))
     
     def test_user_agreements_only_active(self):
@@ -210,12 +210,12 @@ class AgreementAPITest(BaseTestCase):
         self.authenticate_user()
         url = '/api/v1/accounts/agreements/user-agreements/'
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)  # Still only 2 active agreements
+        self.assertEqual(len(response.data['results']), 2)  # Still only 2 active agreements
         
         # Verify all returned agreements are active
-        for agreement in response.data:
+        for agreement in response.data['results']:
             self.assertTrue(agreement['is_active'])
     
     def test_user_can_only_see_own_agreements(self):
@@ -239,13 +239,13 @@ class AgreementAPITest(BaseTestCase):
         self.authenticate_user()
         url = '/api/v1/accounts/agreements/user-agreements/'
         response = self.client.get(url)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)  # Only original user's agreements
-        
+        self.assertEqual(len(response.data['results']), 2)  # Only original user's agreements
+
         # Verify all agreements belong to the authenticated user (UserAgreementListSerializer doesn't include user field, but that's by design since we filter by user in queryset)
         # The fact that we only get 2 agreements (not 3 including other user's) proves the filtering works
-        for agreement in response.data:
+        for agreement in response.data['results']:
             # All returned agreements should be from the authenticated user
             self.assertTrue(agreement['is_active'])
 
