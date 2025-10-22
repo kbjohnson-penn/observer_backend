@@ -33,29 +33,24 @@ jobs:
         with:
           python-version: '3.13'
           cache: 'pip'
-          cache-dependency-path: 'observer_backend/requirements*.txt'
+          cache-dependency-path: 'requirements*.txt'
 
       - name: Install dependencies
-        working-directory: observer_backend
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
       - name: Run Black format check
-        working-directory: observer_backend
         run: python -m black --check .
 
       - name: Run isort import check
-        working-directory: observer_backend
         run: python -m isort --check-only .
 
       - name: Run Flake8 linting
-        working-directory: observer_backend
         run: python -m flake8 .
 
       - name: Run Pylint linting
-        working-directory: observer_backend
         run: |
           python -m pylint accounts/ clinical/ research/ shared/ backend/ || PYLINT_EXIT=$?
           if [ "${PYLINT_EXIT:-0}" -eq 1 ] || [ "${PYLINT_EXIT:-0}" -eq 32 ]; then
@@ -65,7 +60,6 @@ jobs:
           echo "Pylint completed successfully (rating displayed above)"
 
       - name: Run Django system checks
-        working-directory: observer_backend
         run: python manage.py check
         env:
           DJANGO_SETTINGS_MODULE: backend.settings.test
@@ -73,7 +67,6 @@ jobs:
           DEBUG: 'False'
 
       - name: Check for pending migrations
-        working-directory: observer_backend
         run: python manage.py makemigrations --check --dry-run
         env:
           DJANGO_SETTINGS_MODULE: backend.settings.test
@@ -81,7 +74,6 @@ jobs:
           DEBUG: 'False'
 
       - name: Run tests with coverage
-        working-directory: observer_backend
         run: python -m pytest --cov --cov-report=xml --cov-report=term-missing
         env:
           DJANGO_SETTINGS_MODULE: backend.settings.test
@@ -92,6 +84,6 @@ jobs:
         uses: codecov/codecov-action@v4
         if: success()
         with:
-          files: ./observer_backend/coverage.xml
+          files: ./coverage.xml
           fail_ci_if_error: false
           verbose: true
