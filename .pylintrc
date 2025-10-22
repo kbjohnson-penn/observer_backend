@@ -3,7 +3,7 @@
 jobs=4
 
 # Django settings module for pylint-django
-django-settings-module=backend.settings.dev
+django-settings-module=backend.settings.test
 
 # Load pylint-django plugin
 load-plugins=pylint_django
