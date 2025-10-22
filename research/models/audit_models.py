@@ -1,4 +1,5 @@
 from django.db import models
+
 from .clinical_models import VisitOccurrence
 
 
@@ -6,8 +7,11 @@ class AuditLogs(models.Model):
     """
     This table tracks access and actions performed within the audit logs of the visit.
     """
+
     id = models.AutoField(primary_key=True, verbose_name="Audit Log ID")
-    visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE, null=True, blank=True)
+    visit_occurrence = models.ForeignKey(
+        VisitOccurrence, on_delete=models.CASCADE, null=True, blank=True
+    )
     access_time = models.DateTimeField()
     user_id = models.CharField(max_length=255)
     workstation_id = models.CharField(max_length=255)
@@ -22,7 +26,8 @@ class AuditLogs(models.Model):
 
     def __str__(self):
         return f"Audit Log {self.id}"
+
     class Meta:
-        app_label = 'research'
-        db_table = 'audit_logs'
-        verbose_name_plural = 'Audit Logs'
+        app_label = "research"
+        db_table = "audit_logs"
+        verbose_name_plural = "Audit Logs"

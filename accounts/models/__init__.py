@@ -1,5 +1,5 @@
-from .user_models import User, EmailVerificationToken
-from .profile_models import Profile
+from .agreement_models import Agreement, AgreementType, UserAgreement
 from .organization_models import Organization
+from .profile_models import Profile
 from .tier_models import Tier
-from .agreement_models import AgreementType, Agreement, UserAgreement
+from .user_models import EmailVerificationToken, User

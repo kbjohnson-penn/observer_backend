@@ -1,24 +1,25 @@
 from rest_framework import serializers
+
 from research.models import (
-    Person, 
-    Provider, 
-    VisitOccurrence, 
-    Note, 
+    AuditLogs,
     ConditionOccurrence,
     DrugExposure,
-    ProcedureOccurrence,
-    Observation,
+    Labs,
     Measurement,
-    AuditLogs,
+    Note,
+    Observation,
     PatientSurvey,
+    Person,
+    ProcedureOccurrence,
+    Provider,
     ProviderSurvey,
-    Labs
+    VisitOccurrence,
 )
 
 
 class PersonSerializer(serializers.ModelSerializer):
     """Private serializer for Person model - full access for authenticated users."""
-    
+
     class Meta:
         model = Person
         fields = [
@@ -29,13 +30,13 @@ class PersonSerializer(serializers.ModelSerializer):
             "race_source_value",
             "race_source_concept_id",
             "ethnicity_source_value",
-            "ethnicity_source_concept_id"
+            "ethnicity_source_concept_id",
         ]
 
 
 class ProviderSerializer(serializers.ModelSerializer):
     """Private serializer for Provider model - full access for authenticated users."""
-    
+
     class Meta:
         model = Provider
         fields = [
@@ -46,13 +47,13 @@ class ProviderSerializer(serializers.ModelSerializer):
             "race_source_value",
             "race_source_concept_id",
             "ethnicity_source_value",
-            "ethnicity_source_concept_id"
+            "ethnicity_source_concept_id",
         ]
 
 
 class VisitOccurrenceSerializer(serializers.ModelSerializer):
     """Private serializer for VisitOccurrence model - full access with related data."""
-    
+
     class Meta:
         model = VisitOccurrence
         fields = [
@@ -63,13 +64,13 @@ class VisitOccurrenceSerializer(serializers.ModelSerializer):
             "visit_source_id",
             "tier_id",
             "person_id",
-            "provider_id"
+            "provider_id",
         ]
 
 
 class NoteSerializer(serializers.ModelSerializer):
     """Private serializer for Note model - full access for authenticated users."""
-    
+
     class Meta:
         model = Note
         fields = [
@@ -80,13 +81,13 @@ class NoteSerializer(serializers.ModelSerializer):
             "note_status",
             "person_id",
             "provider_id",
-            "visit_occurrence_id"
+            "visit_occurrence_id",
         ]
 
 
 class ConditionOccurrenceSerializer(serializers.ModelSerializer):
     """Private serializer for ConditionOccurrence model - full access for authenticated users."""
-    
+
     class Meta:
         model = ConditionOccurrence
         fields = [
@@ -101,7 +102,7 @@ class ConditionOccurrenceSerializer(serializers.ModelSerializer):
 
 class DrugExposureSerializer(serializers.ModelSerializer):
     """Private serializer for DrugExposure model - full access for authenticated users."""
-    
+
     class Meta:
         model = DrugExposure
         fields = [
@@ -111,13 +112,13 @@ class DrugExposureSerializer(serializers.ModelSerializer):
             "drug_exposure_end_datetime",
             "description",
             "quantity",
-            "visit_occurrence_id"
+            "visit_occurrence_id",
         ]
 
 
 class ProcedureOccurrenceSerializer(serializers.ModelSerializer):
     """Private serializer for ProcedureOccurrence model - full access for authenticated users."""
-    
+
     class Meta:
         model = ProcedureOccurrence
         fields = [
@@ -126,27 +127,21 @@ class ProcedureOccurrenceSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "future_or_stand",
-            "visit_occurrence_id"
+            "visit_occurrence_id",
         ]
 
 
 class ObservationSerializer(serializers.ModelSerializer):
     """Private serializer for Observation model - full access for authenticated users."""
-    
+
     class Meta:
         model = Observation
-        fields = [
-            "id", 
-            "file_type", 
-            "file_path", 
-            "observation_date", 
-            "visit_occurrence_id"
-        ]
+        fields = ["id", "file_type", "file_path", "observation_date", "visit_occurrence_id"]
 
 
 class MeasurementSerializer(serializers.ModelSerializer):
     """Private serializer for Measurement model - full access for authenticated users."""
-    
+
     class Meta:
         model = Measurement
         fields = [
@@ -158,13 +153,13 @@ class MeasurementSerializer(serializers.ModelSerializer):
             "height",
             "pulse",
             "phys_spo2",
-            "visit_occurrence_id"
+            "visit_occurrence_id",
         ]
 
 
 class AuditLogsSerializer(serializers.ModelSerializer):
     """Private serializer for AuditLogs model - full access for authenticated users."""
-    
+
     class Meta:
         model = AuditLogs
         fields = [
@@ -180,13 +175,13 @@ class AuditLogsSerializer(serializers.ModelSerializer):
             "metric_group",
             "event_action_type",
             "event_action_subtype",
-            "visit_occurrence_id"
+            "visit_occurrence_id",
         ]
 
 
 class PatientSurveySerializer(serializers.ModelSerializer):
     """Private serializer for PatientSurvey model - full access for authenticated users."""
-    
+
     class Meta:
         model = PatientSurvey
         fields = [
@@ -217,13 +212,13 @@ class PatientSurveySerializer(serializers.ModelSerializer):
             "open_ended_interaction",
             "open_ended_change",
             "open_ended_experience",
-            "visit_occurrence_id"
+            "visit_occurrence_id",
         ]
 
 
 class ProviderSurveySerializer(serializers.ModelSerializer):
     """Private serializer for ProviderSurvey model - full access for authenticated users."""
-    
+
     class Meta:
         model = ProviderSurvey
         fields = [
@@ -252,13 +247,13 @@ class ProviderSurveySerializer(serializers.ModelSerializer):
             "hawthorne_3",
             "open_ended_1",
             "open_ended_2",
-            "visit_occurrence_id"
+            "visit_occurrence_id",
         ]
 
 
 class LabsSerializer(serializers.ModelSerializer):
     """Private serializer for Labs model - full access for authenticated users."""
-    
+
     class Meta:
         model = Labs
         fields = [
@@ -279,5 +274,5 @@ class LabsSerializer(serializers.ModelSerializer):
             "reference_unit",
             "result_flag",
             "lab_status",
-            "person_id"
+            "person_id",
         ]

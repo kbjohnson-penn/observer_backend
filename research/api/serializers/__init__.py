@@ -1,21 +1,19 @@
 # Private serializers
 from .private_serializers import (
-    PersonSerializer,
-    ProviderSerializer,
-    VisitOccurrenceSerializer,
-    NoteSerializer,
+    AuditLogsSerializer,
     ConditionOccurrenceSerializer,
     DrugExposureSerializer,
-    ProcedureOccurrenceSerializer,
-    ObservationSerializer,
+    LabsSerializer,
     MeasurementSerializer,
-    AuditLogsSerializer,
+    NoteSerializer,
+    ObservationSerializer,
     PatientSurveySerializer,
+    PersonSerializer,
+    ProcedureOccurrenceSerializer,
+    ProviderSerializer,
     ProviderSurveySerializer,
-    LabsSerializer
+    VisitOccurrenceSerializer,
 )
 
 # Search serializers
-from .search_serializers import (
-    VisitSearchResultSerializer
-)
+from .search_serializers import VisitSearchResultSerializer

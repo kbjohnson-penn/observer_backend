@@ -1,0 +1,68 @@
+[flake8]
+# Maximum line length
+max-line-length = 100
+
+# Exclude directories
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    .tox,
+    .eggs,
+    *.egg,
+    migrations,
+    static,
+    media,
+    htmlcov,
+    .pytest_cache,
+    build,
+    dist
+
+# Ignore specific errors for Black compatibility and Django patterns
+ignore =
+    # E203: whitespace before ':' (conflicts with Black)
+    E203,
+    # W503: line break before binary operator (conflicts with Black)
+    W503,
+    # E501: line too long (handled by Black)
+    E501
+
+# Per-file ignores for common Django patterns
+per-file-ignores =
+    # Settings files use star imports (standard Django pattern)
+    */settings/*.py:F403,F405
+    # __init__.py files often have unused imports for re-exports
+    */__init__.py:F401,F403
+    # Test files may have unused variables (test data setup)
+    */tests/*.py:F841
+    # Test files may have unused imports
+    */test_*.py:F841
+    # Django apps.py - signal imports are intentional (registers handlers in ready())
+    */apps.py:F401
+    # Complex storage backend method with extensive error handling
+    clinical/storage_backend.py:C901
+    # Complex filter validation with multiple conditions
+    research/api/serializers/filter_serializer.py:C901
+    # Complex view aggregating multiple data sources
+    research/api/views/sample_data_views.py:C901
+    # Complex filter application logic
+    research/api/viewsets/private/visit_search_viewset.py:C901
+    # Time validation with multiple format checks
+    shared/validators.py:C901
+
+# Maximum cyclomatic complexity (informational - specific files ignored above)
+max-complexity = 10
+
+# Specify error codes to always report
+select = E,W,F,C
+
+# Show source code for errors
+show-source = True
+
+# Show statistics
+statistics = True
+
+# Count errors
+count = True

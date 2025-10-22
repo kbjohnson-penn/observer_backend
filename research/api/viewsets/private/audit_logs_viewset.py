@@ -1,9 +1,11 @@
-from shared.api.permissions import BaseAuthenticatedViewSet, filter_queryset_by_user_tier
-from research.models import AuditLogs, VisitOccurrence
-from research.api.serializers import AuditLogsSerializer
-from rest_framework.response import Response
-from rest_framework import status
 from django.http import Http404
+
+from rest_framework import status
+from rest_framework.response import Response
+
+from research.api.serializers import AuditLogsSerializer
+from research.models import AuditLogs, VisitOccurrence
+from shared.api.permissions import BaseAuthenticatedViewSet, filter_queryset_by_user_tier
 
 
 class AuditLogsViewSet(BaseAuthenticatedViewSet):
@@ -11,20 +13,22 @@ class AuditLogsViewSet(BaseAuthenticatedViewSet):
 
     def get_queryset(self):
         accessible_visits = filter_queryset_by_user_tier(
-            VisitOccurrence.objects.using('research')
-                .select_related('person', 'provider')
-                .all(),
+            VisitOccurrence.objects.using("research").select_related("person", "provider").all(),
             self.request.user,
-            related_field='tier_id'
+            related_field="tier_id",
         )
-        return AuditLogs.objects.using('research').filter(
-            visit_occurrence__in=accessible_visits
-        ).select_related('visit_occurrence').distinct().order_by("-id")
+        return (
+            AuditLogs.objects.using("research")
+            .filter(visit_occurrence__in=accessible_visits)
+            .select_related("visit_occurrence")
+            .distinct()
+            .order_by("-id")
+        )
 
     def get_object(self):
         queryset = self.get_queryset()
         try:
-            audit_log = queryset.get(pk=self.kwargs['pk'])
+            audit_log = queryset.get(pk=self.kwargs["pk"])
             self.check_object_permissions(self.request, audit_log)
             return audit_log
         except AuditLogs.DoesNotExist:

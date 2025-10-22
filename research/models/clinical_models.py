@@ -1,4 +1,5 @@
 from django.db import models
+
 from .person_provider_models import Person, Provider
 
 
@@ -25,6 +26,7 @@ class VisitOccurrence(models.Model):
         Routed to 'research' database via DatabaseRouter.
         Table: visit_occurrence
     """
+
     id = models.AutoField(primary_key=True, verbose_name="Visit Occurrence ID")
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE)
@@ -38,13 +40,15 @@ class VisitOccurrence(models.Model):
         return f"Visit Occurrence {self.id}"
 
     class Meta:
-        app_label = 'research'
-        db_table = 'visit_occurrence'
+        app_label = "research"
+        db_table = "visit_occurrence"
+
 
 class Note(models.Model):
     """
     This table stores clinical notes and their associated metadata.
     """
+
     id = models.AutoField(primary_key=True, verbose_name="Note ID")
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     provider = models.ForeignKey(Provider, on_delete=models.CASCADE)
@@ -56,10 +60,10 @@ class Note(models.Model):
 
     def __str__(self):
         return f"Note {self.id}"
-    
+
     class Meta:
-        app_label = 'research'
-        db_table = 'note'
+        app_label = "research"
+        db_table = "note"
 
 
 class ConditionOccurrence(models.Model):
@@ -77,6 +81,7 @@ class ConditionOccurrence(models.Model):
         Routed to 'research' database via DatabaseRouter.
         Table: condition_occurrence
     """
+
     id = models.AutoField(primary_key=True, verbose_name="Condition Occurrence ID")
     visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)
     is_primary_dx = models.CharField(max_length=255)
@@ -86,16 +91,17 @@ class ConditionOccurrence(models.Model):
 
     def __str__(self):
         return f"Condition Occurrence {self.id}"
-    
+
     class Meta:
-        app_label = 'research'
-        db_table = 'condition_occurrence'
+        app_label = "research"
+        db_table = "condition_occurrence"
 
 
 class DrugExposure(models.Model):
     """
     This table records details about a patient's exposure to specific drugs.
     """
+
     id = models.AutoField(primary_key=True, verbose_name="Drug Exposure ID")
     visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)
     drug_ordering_date = models.DateField(null=True, blank=True)
@@ -106,10 +112,10 @@ class DrugExposure(models.Model):
 
     def __str__(self):
         return f"Drug Exposure {self.id}"
-    
+
     class Meta:
-        app_label = 'research'
-        db_table = 'drug_exposure'
+        app_label = "research"
+        db_table = "drug_exposure"
 
 
 class ProcedureOccurrence(models.Model):
@@ -127,6 +133,7 @@ class ProcedureOccurrence(models.Model):
         Routed to 'research' database via DatabaseRouter.
         Table: procedure_occurrence
     """
+
     id = models.AutoField(primary_key=True, verbose_name="Procedure Occurrence ID")
     visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)
     procedure_ordering_date = models.DateField()
@@ -136,16 +143,17 @@ class ProcedureOccurrence(models.Model):
 
     def __str__(self):
         return f"Procedure Occurrence {self.id}"
-    
+
     class Meta:
-        app_label = 'research'
-        db_table = 'procedure_occurrence'
+        app_label = "research"
+        db_table = "procedure_occurrence"
 
 
 class Measurement(models.Model):
     """
     This table stores quantitative measurements and observations taken during a visit.
     """
+
     id = models.AutoField(primary_key=True, verbose_name="Measurement ID")
     visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)
     bp_systolic = models.IntegerField(null=True, blank=True)
@@ -158,16 +166,17 @@ class Measurement(models.Model):
 
     def __str__(self):
         return f"Measurement {self.id}"
-    
+
     class Meta:
-        app_label = 'research'
-        db_table = 'measurement'
+        app_label = "research"
+        db_table = "measurement"
 
 
 class Observation(models.Model):
     """
     This table stores paths to multimodal data files.
     """
+
     id = models.AutoField(primary_key=True, verbose_name="Observation ID")
     visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)
     file_type = models.CharField(max_length=255)
@@ -176,16 +185,17 @@ class Observation(models.Model):
 
     def __str__(self):
         return f"Observation {self.id}"
-    
+
     class Meta:
-        app_label = 'research'
-        db_table = 'observation'
+        app_label = "research"
+        db_table = "observation"
 
 
 class Labs(models.Model):
     """
     This table records details about a patient's lab orders.
     """
+
     id = models.AutoField(primary_key=True, verbose_name="Labs ID")
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     ordering_date_shifted = models.DateTimeField(null=True, blank=True)
@@ -207,8 +217,8 @@ class Labs(models.Model):
 
     def __str__(self):
         return f"Labs {self.id}"
-    
+
     class Meta:
-        app_label = 'research'
-        db_table = 'labs'
-        verbose_name_plural = 'Labs'
+        app_label = "research"
+        db_table = "labs"
+        verbose_name_plural = "Labs"

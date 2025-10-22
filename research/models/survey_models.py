@@ -1,4 +1,5 @@
 from django.db import models
+
 from .clinical_models import VisitOccurrence
 
 
@@ -6,6 +7,7 @@ class PatientSurvey(models.Model):
     """
     This table stores patient survey responses related to their healthcare visit experiences.
     """
+
     id = models.AutoField(primary_key=True, verbose_name="Patient Survey ID")
     visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)
     form_1_timestamp = models.DateTimeField(null=True)
@@ -37,16 +39,18 @@ class PatientSurvey(models.Model):
 
     def __str__(self):
         return f"Patient Survey {self.id}"
+
     class Meta:
-        app_label = 'research'
-        db_table = 'patient_survey'
+        app_label = "research"
+        db_table = "patient_survey"
 
 
 class ProviderSurvey(models.Model):
     """
-    This table stores responses from healthcare providers regarding their experiences 
+    This table stores responses from healthcare providers regarding their experiences
     and satisfaction with patient visits, including communication preferences and technology use.
     """
+
     id = models.AutoField(primary_key=True, verbose_name="Provider Survey ID")
     visit_occurrence = models.ForeignKey(VisitOccurrence, on_delete=models.CASCADE)
     form_1_timestamp = models.DateTimeField(null=True)
@@ -76,6 +80,7 @@ class ProviderSurvey(models.Model):
 
     def __str__(self):
         return f"Provider Survey {self.id}"
+
     class Meta:
-        app_label = 'research'
-        db_table = 'provider_survey'
+        app_label = "research"
+        db_table = "provider_survey"

@@ -22,31 +22,48 @@ class FilterSerializer(serializers.Serializer):
         }
     }
     """
+
     filters = serializers.JSONField(required=False, default=dict)
     sort = serializers.JSONField(required=False, default=dict)
 
     # Allowed top-level filter categories (nested structure)
     ALLOWED_FILTER_CATEGORIES = {
-        'visit', 'person_demographics', 'provider_demographics', 'clinical'
+        "visit",
+        "person_demographics",
+        "provider_demographics",
+        "clinical",
     }
 
     # Allowed flat filter keys (legacy support - for backward compatibility)
     ALLOWED_FLAT_FILTER_KEYS = {
-        'age_from', 'age_to', 'gender', 'race', 'ethnicity',
-        'tier_id', 'visit_start_date_from', 'visit_start_date_to',
-        'visit_source_value', 'provider_gender', 'provider_race',
-        'provider_ethnicity', 'year_of_birth_from', 'year_of_birth_to'
+        "age_from",
+        "age_to",
+        "gender",
+        "race",
+        "ethnicity",
+        "tier_id",
+        "visit_start_date_from",
+        "visit_start_date_to",
+        "visit_source_value",
+        "provider_gender",
+        "provider_race",
+        "provider_ethnicity",
+        "year_of_birth_from",
+        "year_of_birth_to",
     }
 
     # Allowed sort keys (new structure: field + direction)
-    ALLOWED_SORT_KEYS = {
-        'field', 'direction'
-    }
+    ALLOWED_SORT_KEYS = {"field", "direction"}
 
     # Allowed sort field values
     ALLOWED_SORT_FIELDS = {
-        'id', 'visit_start_date', 'tier_id', 'person_id', 'provider_id',
-        'visit_source_value', 'year_of_birth'
+        "id",
+        "visit_start_date",
+        "tier_id",
+        "person_id",
+        "provider_id",
+        "visit_source_value",
+        "year_of_birth",
     }
 
     # Maximum number of filters to prevent DoS
@@ -67,9 +84,7 @@ class FilterSerializer(serializers.Serializer):
         # Validate max filter count to prevent DoS (count all nested filters)
         total_filters = self._count_nested_filters(value)
         if total_filters > self.MAX_FILTER_COUNT:
-            raise serializers.ValidationError(
-                f"Too many filters (max {self.MAX_FILTER_COUNT})"
-            )
+            raise serializers.ValidationError(f"Too many filters (max {self.MAX_FILTER_COUNT})")
 
         # Check if using nested structure (preferred) or flat structure (legacy)
         is_nested = any(key in self.ALLOWED_FILTER_CATEGORIES for key in value.keys())
@@ -92,40 +107,35 @@ class FilterSerializer(serializers.Serializer):
                     )
 
             # Validate tier_id if present in visit filters
-            visit_filters = value.get('visit', {})
+            visit_filters = value.get("visit", {})
             if visit_filters:
-                self._validate_tier_id(visit_filters.get('tier_id'))
+                self._validate_tier_id(visit_filters.get("tier_id"))
 
             # Validate year of birth ranges if present
-            person_demo = value.get('person_demographics', {})
+            person_demo = value.get("person_demographics", {})
             if person_demo:
                 self._validate_year_of_birth_range(
-                    person_demo.get('year_of_birth_from'),
-                    person_demo.get('year_of_birth_to')
+                    person_demo.get("year_of_birth_from"), person_demo.get("year_of_birth_to")
                 )
 
-            provider_demo = value.get('provider_demographics', {})
+            provider_demo = value.get("provider_demographics", {})
             if provider_demo:
                 self._validate_year_of_birth_range(
-                    provider_demo.get('year_of_birth_from'),
-                    provider_demo.get('year_of_birth_to')
+                    provider_demo.get("year_of_birth_from"), provider_demo.get("year_of_birth_to")
                 )
 
         elif is_flat:
             # Validate flat structure (legacy support)
             invalid_keys = set(value.keys()) - self.ALLOWED_FLAT_FILTER_KEYS
             if invalid_keys:
-                raise serializers.ValidationError(
-                    f"Invalid filter keys: {', '.join(invalid_keys)}"
-                )
+                raise serializers.ValidationError(f"Invalid filter keys: {', '.join(invalid_keys)}")
 
             # Validate tier_id for flat structure
-            self._validate_tier_id(value.get('tier_id'))
+            self._validate_tier_id(value.get("tier_id"))
 
             # Validate year of birth range for flat structure
             self._validate_year_of_birth_range(
-                value.get('year_of_birth_from'),
-                value.get('year_of_birth_to')
+                value.get("year_of_birth_from"), value.get("year_of_birth_to")
             )
 
         return value
@@ -142,7 +152,7 @@ class FilterSerializer(serializers.Serializer):
         for key, value in filters.items():
             if isinstance(value, dict):
                 count += self._count_nested_filters(value, depth + 1)
-            elif value is not None and value != [] and value != '':
+            elif value is not None and value != [] and value != "":
                 count += 1
 
         return count
@@ -161,25 +171,17 @@ class FilterSerializer(serializers.Serializer):
                 try:
                     tid_val = int(tid)
                     if tid_val < 1 or tid_val > 5:
-                        raise serializers.ValidationError(
-                            "tier_id values must be between 1 and 5"
-                        )
+                        raise serializers.ValidationError("tier_id values must be between 1 and 5")
                 except (ValueError, TypeError):
-                    raise serializers.ValidationError(
-                        "tier_id values must be valid integers"
-                    )
+                    raise serializers.ValidationError("tier_id values must be valid integers")
         else:
             # Single tier ID
             try:
                 tier_id_val = int(tier_id)
                 if tier_id_val < 1 or tier_id_val > 5:
-                    raise serializers.ValidationError(
-                        "tier_id must be between 1 and 5"
-                    )
+                    raise serializers.ValidationError("tier_id must be between 1 and 5")
             except (ValueError, TypeError):
-                raise serializers.ValidationError(
-                    "tier_id must be a valid integer"
-                )
+                raise serializers.ValidationError("tier_id must be a valid integer")
 
     def _validate_year_of_birth_range(self, year_from, year_to):
         """
@@ -197,6 +199,7 @@ class FilterSerializer(serializers.Serializer):
 
                 # Validate reasonable year range (1900 to current year + 1)
                 from datetime import datetime
+
                 current_year = datetime.now().year
                 if year_from_val < 1900 or year_from_val > current_year + 1:
                     raise serializers.ValidationError(
@@ -208,9 +211,7 @@ class FilterSerializer(serializers.Serializer):
                     )
 
             except (ValueError, TypeError):
-                raise serializers.ValidationError(
-                    "year_of_birth values must be valid integers"
-                )
+                raise serializers.ValidationError("year_of_birth values must be valid integers")
 
     def validate_sort(self, value):
         """
@@ -233,16 +234,15 @@ class FilterSerializer(serializers.Serializer):
             )
 
         # Validate field value if present
-        field = value.get('field')
+        field = value.get("field")
         if field and field not in self.ALLOWED_SORT_FIELDS:
             raise serializers.ValidationError(
-                f"Invalid sort field: '{field}'. "
-                f"Allowed: {', '.join(self.ALLOWED_SORT_FIELDS)}"
+                f"Invalid sort field: '{field}'. " f"Allowed: {', '.join(self.ALLOWED_SORT_FIELDS)}"
             )
 
         # Validate direction value if present
-        direction = value.get('direction')
-        if direction and direction not in ['asc', 'desc', 'ASC', 'DESC']:
+        direction = value.get("direction")
+        if direction and direction not in ["asc", "desc", "ASC", "DESC"]:
             raise serializers.ValidationError(
                 f"Invalid sort direction: must be 'asc' or 'desc', got '{direction}'"
             )

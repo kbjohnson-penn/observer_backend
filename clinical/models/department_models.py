@@ -1,4 +1,5 @@
 from django.db import models
+
 from shared.validators import validate_field
 
 
@@ -9,9 +10,9 @@ class EncounterSource(models.Model):
         return self.name
 
     class Meta:
-        app_label = 'clinical'
-        verbose_name = 'Source'
-        verbose_name_plural = 'Source'
+        app_label = "clinical"
+        verbose_name = "Source"
+        verbose_name_plural = "Source"
 
 
 class Department(models.Model):
@@ -21,6 +22,6 @@ class Department(models.Model):
         return self.name
 
     class Meta:
-        app_label = 'clinical'
-        verbose_name = 'Department'
-        verbose_name_plural = 'Departments'
+        app_label = "clinical"
+        verbose_name = "Department"
+        verbose_name_plural = "Departments"

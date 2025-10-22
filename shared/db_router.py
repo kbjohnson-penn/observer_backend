@@ -3,7 +3,7 @@ Database router for Observer platform.
 
 Routes models to appropriate databases based on app labels:
 - accounts app -> accounts database (observer_accounts)
-- clinical app -> clinical database (observer_clinical)  
+- clinical app -> clinical database (observer_clinical)
 - research app -> research database (observer_research)
 """
 
@@ -14,15 +14,15 @@ class DatabaseRouter:
     """
 
     route_app_labels = {
-        'accounts': 'accounts',
-        'clinical': 'clinical',
-        'research': 'research',
+        "accounts": "accounts",
+        "clinical": "clinical",
+        "research": "research",
         # Route Django's auth models to accounts database
-        'auth': 'accounts',
-        'contenttypes': 'accounts',
-        'sessions': 'accounts',
-        'admin': 'accounts',
-        'token_blacklist': 'accounts',
+        "auth": "accounts",
+        "contenttypes": "accounts",
+        "sessions": "accounts",
+        "admin": "accounts",
+        "token_blacklist": "accounts",
     }
 
     def db_for_read(self, model, **hints):
@@ -49,4 +49,4 @@ class DatabaseRouter:
             # If the database is one of the routed databases, but the app is not routed to it, don't migrate.
             return False
         # For any other app (Django built-ins), only migrate to 'default' database
-        return db == 'default'
+        return db == "default"

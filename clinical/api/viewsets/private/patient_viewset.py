@@ -1,9 +1,15 @@
-from shared.api.permissions import BaseAuthenticatedViewSet, HasAccessToEncounter, filter_queryset_by_user_tier
-from clinical.models import Patient, Encounter
-from clinical.api.serializers.patient_serializers import PatientSerializer
-from rest_framework.response import Response
-from rest_framework import status
 from django.http import Http404
+
+from rest_framework import status
+from rest_framework.response import Response
+
+from clinical.api.serializers.patient_serializers import PatientSerializer
+from clinical.models import Encounter, Patient
+from shared.api.permissions import (
+    BaseAuthenticatedViewSet,
+    HasAccessToEncounter,
+    filter_queryset_by_user_tier,
+)
 
 
 class PatientViewSet(BaseAuthenticatedViewSet):
@@ -12,12 +18,18 @@ class PatientViewSet(BaseAuthenticatedViewSet):
 
     def get_queryset(self):
         accessible_encounters = filter_queryset_by_user_tier(
-            Encounter.objects.using('clinical').all(), self.request.user, related_field='tier_id')
-        return Patient.objects.using('clinical').filter(encounter__in=accessible_encounters).distinct().order_by('id')
+            Encounter.objects.using("clinical").all(), self.request.user, related_field="tier_id"
+        )
+        return (
+            Patient.objects.using("clinical")
+            .filter(encounter__in=accessible_encounters)
+            .distinct()
+            .order_by("id")
+        )
 
     def get_object(self):
         try:
-            patient = Patient.objects.using('clinical').get(pk=self.kwargs['pk'])
+            patient = Patient.objects.using("clinical").get(pk=self.kwargs["pk"])
             self.check_object_permissions(self.request, patient)
             return patient
         except Patient.DoesNotExist:

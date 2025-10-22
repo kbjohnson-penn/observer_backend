@@ -8,11 +8,12 @@ class IsReadOnly(BasePermission):
     """
 
     def has_permission(self, request, view):
-        return request.method in ('GET', 'HEAD', 'OPTIONS')
+        return request.method in ("GET", "HEAD", "OPTIONS")
 
 
 class BasePublicReadOnlyViewSet(ReadOnlyModelViewSet):
     """
     Base viewset for public APIs with read-only access.
     """
+
     permission_classes = [IsReadOnly]

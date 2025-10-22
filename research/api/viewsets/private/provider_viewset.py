@@ -1,9 +1,11 @@
-from shared.api.permissions import BaseAuthenticatedViewSet, filter_queryset_by_user_tier
-from research.models import Provider, VisitOccurrence
-from research.api.serializers import ProviderSerializer
-from rest_framework.response import Response
-from rest_framework import status
 from django.http import Http404
+
+from rest_framework import status
+from rest_framework.response import Response
+
+from research.api.serializers import ProviderSerializer
+from research.models import Provider, VisitOccurrence
+from shared.api.permissions import BaseAuthenticatedViewSet, filter_queryset_by_user_tier
 
 
 class ProviderViewSet(BaseAuthenticatedViewSet):
@@ -11,25 +13,26 @@ class ProviderViewSet(BaseAuthenticatedViewSet):
 
     def get_queryset(self):
         accessible_visits = filter_queryset_by_user_tier(
-            VisitOccurrence.objects.using('research')
-                .select_related('person', 'provider')
-                .all(),
+            VisitOccurrence.objects.using("research").select_related("person", "provider").all(),
             self.request.user,
-            related_field='tier_id'
+            related_field="tier_id",
         )
-        return Provider.objects.using('research').filter(
-            visitoccurrence__in=accessible_visits
-        ).distinct().order_by('id')
+        return (
+            Provider.objects.using("research")
+            .filter(visitoccurrence__in=accessible_visits)
+            .distinct()
+            .order_by("id")
+        )
 
     def get_object(self):
         queryset = self.get_queryset()
         try:
-            provider = queryset.get(pk=self.kwargs['pk'])
+            provider = queryset.get(pk=self.kwargs["pk"])
             self.check_object_permissions(self.request, provider)
             return provider
         except Provider.DoesNotExist:
             raise Http404
-        
+
     def retrieve(self, request, *args, **kwargs):
         try:
             provider = self.get_object()

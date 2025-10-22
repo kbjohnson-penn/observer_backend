@@ -1,29 +1,38 @@
 # Import private viewsets
 from .private import (
-    EncounterViewSet, PatientViewSet, ProviderViewSet, DepartmentViewSet,
-    EncounterSourceViewSet, EncounterFileViewSet, MultiModalDataViewSet
+    DepartmentViewSet,
+    EncounterFileViewSet,
+    EncounterSourceViewSet,
+    EncounterViewSet,
+    MultiModalDataViewSet,
+    PatientViewSet,
+    ProviderViewSet,
 )
 
 # Import public viewsets
 from .public import (
-    PublicEncounterSourceViewSet, PublicPatientViewSet, PublicProviderViewSet,
-    PublicEncounterViewSet, PublicDepartmentViewSet, PublicMultiModalDataViewSet
+    PublicDepartmentViewSet,
+    PublicEncounterSourceViewSet,
+    PublicEncounterViewSet,
+    PublicMultiModalDataViewSet,
+    PublicPatientViewSet,
+    PublicProviderViewSet,
 )
 
 __all__ = [
     # Private viewsets
-    'EncounterViewSet',
-    'PatientViewSet',
-    'ProviderViewSet',
-    'DepartmentViewSet',
-    'EncounterSourceViewSet',
-    'EncounterFileViewSet',
-    'MultiModalDataViewSet',
+    "EncounterViewSet",
+    "PatientViewSet",
+    "ProviderViewSet",
+    "DepartmentViewSet",
+    "EncounterSourceViewSet",
+    "EncounterFileViewSet",
+    "MultiModalDataViewSet",
     # Public viewsets
-    'PublicEncounterSourceViewSet',
-    'PublicPatientViewSet',
-    'PublicProviderViewSet',
-    'PublicEncounterViewSet',
-    'PublicDepartmentViewSet',
-    'PublicMultiModalDataViewSet',
+    "PublicEncounterSourceViewSet",
+    "PublicPatientViewSet",
+    "PublicProviderViewSet",
+    "PublicEncounterViewSet",
+    "PublicDepartmentViewSet",
+    "PublicMultiModalDataViewSet",
 ]

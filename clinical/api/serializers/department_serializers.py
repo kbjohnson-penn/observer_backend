@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from clinical.models import EncounterSource, Department
+
+from clinical.models import Department, EncounterSource
 
 
 class EncounterSourceSerializer(serializers.ModelSerializer):
@@ -11,7 +12,7 @@ class EncounterSourceSerializer(serializers.ModelSerializer):
 class PublicEncounterSourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = EncounterSource
-        fields = ['name']
+        fields = ["name"]
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -23,4 +24,4 @@ class DepartmentSerializer(serializers.ModelSerializer):
 class PublicDepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
-        fields = ['name']
+        fields = ["name"]

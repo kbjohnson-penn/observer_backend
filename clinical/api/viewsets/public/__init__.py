@@ -1,13 +1,17 @@
 from .public_viewsets import (
-    PublicEncounterSourceViewSet, PublicPatientViewSet, PublicProviderViewSet,
-    PublicEncounterViewSet, PublicDepartmentViewSet, PublicMultiModalDataViewSet
+    PublicDepartmentViewSet,
+    PublicEncounterSourceViewSet,
+    PublicEncounterViewSet,
+    PublicMultiModalDataViewSet,
+    PublicPatientViewSet,
+    PublicProviderViewSet,
 )
 
 __all__ = [
-    'PublicEncounterSourceViewSet',
-    'PublicPatientViewSet',
-    'PublicProviderViewSet',
-    'PublicEncounterViewSet',
-    'PublicDepartmentViewSet',
-    'PublicMultiModalDataViewSet',
+    "PublicEncounterSourceViewSet",
+    "PublicPatientViewSet",
+    "PublicProviderViewSet",
+    "PublicEncounterViewSet",
+    "PublicDepartmentViewSet",
+    "PublicMultiModalDataViewSet",
 ]

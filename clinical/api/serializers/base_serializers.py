@@ -1,5 +1,7 @@
-from rest_framework import serializers
 from datetime import date
+
+from rest_framework import serializers
+
 from shared.utils import calculate_age
 
 
@@ -8,6 +10,7 @@ class PersonSerializer(serializers.ModelSerializer):
     A base serializer for person-like models (Patient, Provider) that
     includes shared de-identification and data consistency logic.
     """
+
     year_of_birth = serializers.SerializerMethodField()
 
     def get_year_of_birth(self, instance):
@@ -29,7 +32,7 @@ class PersonSerializer(serializers.ModelSerializer):
         instead of null for API consistency.
         """
         rep = super().to_representation(instance)
-        for field in ['race', 'sex', 'ethnicity']:
+        for field in ["race", "sex", "ethnicity"]:
             # Ensure sensitive fields have a default value if not set.
-            rep[field] = rep.get(field, 'UN')
+            rep[field] = rep.get(field, "UN")
         return rep

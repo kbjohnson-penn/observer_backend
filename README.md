@@ -37,21 +37,61 @@ For local development without Docker:
 ```bash
 # Install dependencies
 pip install -r requirements.txt
+pip install -r requirements-dev.txt  # Development tools
+
+# Set up pre-commit hooks (recommended)
+make pre-commit
 
 # Set up MariaDB databases
 ./helpers/clean_db.sh  # From main project directory
 
 # Run migrations
-python manage.py migrate --database=accounts
-python manage.py migrate --database=clinical
-python manage.py migrate --database=research
+make migrate
+# OR manually:
+# python manage.py migrate --database=accounts
+# python manage.py migrate --database=clinical
+# python manage.py migrate --database=research
 
 # Create admin user
 python manage.py createsuperuser
 
 # Run server
-python manage.py runserver
+make run
+# OR: python manage.py runserver
 ```
+
+### Development Workflow
+
+This project uses several tools to maintain code quality:
+
+```bash
+# Format code automatically
+make format              # Runs Black and isort
+
+# Run linting checks
+make lint               # Runs flake8 and pylint
+make lint-quick         # Runs flake8 only (faster)
+
+# Run tests
+make test               # With coverage report
+make test-fast          # Without coverage (faster)
+
+# Run Django checks
+make check              # System checks
+
+# Clean cache files
+make clean
+
+# View all commands
+make help
+```
+
+**Pre-commit Hooks**: Automatically format and lint code before committing:
+```bash
+make pre-commit  # Install hooks (run once)
+```
+
+After installation, hooks will run on `git commit` to ensure code quality.
 
 ### Environment-Specific Settings
 
@@ -112,9 +152,39 @@ shared/                   # Shared utilities
 └── api/                 # Shared API components
 ```
 
+## Code Quality & CI/CD
+
+### Automated CI Pipeline
+
+This project uses GitHub Actions for continuous integration. On every push or pull request to `main` or `dev` branches, the following checks run automatically:
+
+1. **Code Formatting**: Black and isort format checks
+2. **Linting**: Flake8 code quality checks
+3. **Django Checks**: System validation and migration checks
+4. **Tests**: Full test suite with coverage reporting
+
+### Code Quality Tools
+
+- **Black**: Code formatter (line length: 100)
+- **isort**: Import statement organizer
+- **Flake8**: PEP 8 compliance and code quality linter
+- **Pylint**: Deep code analysis (optional, for local use)
+- **pytest**: Test framework with coverage tracking
+
+### Local Quality Checks
+
+Before pushing code, run:
+```bash
+make format      # Auto-format code
+make lint-quick  # Quick linting
+make test        # Run tests
+```
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+All pull requests must pass CI checks before merging.
 
 ## Changelog
 
@@ -130,7 +200,7 @@ The Observer backend uses a multi-database architecture with separate databases 
 mysql -u root -p
 
 DROP DATABASE IF EXISTS observer_accounts;
-DROP DATABASE IF EXISTS observer_clinical; 
+DROP DATABASE IF EXISTS observer_clinical;
 DROP DATABASE IF EXISTS observer_research;
 
 CREATE DATABASE observer_accounts;

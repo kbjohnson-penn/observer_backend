@@ -2,9 +2,12 @@
 Search serializers for visit filtering with comprehensive data.
 Includes visit info, patient demographics, and clinical data counts.
 """
-from rest_framework import serializers
-from research.models import VisitOccurrence
+
 from datetime import date
+
+from rest_framework import serializers
+
+from research.models import VisitOccurrence
 
 
 class VisitSearchResultSerializer(serializers.ModelSerializer):
@@ -13,59 +16,44 @@ class VisitSearchResultSerializer(serializers.ModelSerializer):
     Includes visit data, patient demographics, and clinical data counts.
     Optimized for research data browsing and cohort building.
     """
+
     # Visit fields
-    visit_id = serializers.IntegerField(source='id', read_only=True)
-    visit_date = serializers.DateField(source='visit_start_date', read_only=True)
-    visit_time = serializers.TimeField(source='visit_start_time', read_only=True)
-    visit_source = serializers.CharField(source='visit_source_value', read_only=True)
-    tier = serializers.IntegerField(source='tier_id', read_only=True)
+    visit_id = serializers.IntegerField(source="id", read_only=True)
+    visit_date = serializers.DateField(source="visit_start_date", read_only=True)
+    visit_time = serializers.TimeField(source="visit_start_time", read_only=True)
+    visit_source = serializers.CharField(source="visit_source_value", read_only=True)
+    tier = serializers.IntegerField(source="tier_id", read_only=True)
 
     # Patient demographics (from related Person model)
-    patient_id = serializers.IntegerField(source='person_id', read_only=True)
+    patient_id = serializers.IntegerField(source="person_id", read_only=True)
     patient_year_of_birth = serializers.IntegerField(
-        source='person.year_of_birth',
-        allow_null=True,
-        read_only=True
+        source="person.year_of_birth", allow_null=True, read_only=True
     )
     patient_age = serializers.SerializerMethodField()
     patient_gender = serializers.CharField(
-        source='person.gender_source_value',
-        allow_null=True,
-        read_only=True
+        source="person.gender_source_value", allow_null=True, read_only=True
     )
     patient_race = serializers.CharField(
-        source='person.race_source_value',
-        allow_null=True,
-        read_only=True
+        source="person.race_source_value", allow_null=True, read_only=True
     )
     patient_ethnicity = serializers.CharField(
-        source='person.ethnicity_source_value',
-        allow_null=True,
-        read_only=True
+        source="person.ethnicity_source_value", allow_null=True, read_only=True
     )
 
     # Provider info (from related Provider model)
     provider_id = serializers.IntegerField(read_only=True)
     provider_year_of_birth = serializers.IntegerField(
-        source='provider.year_of_birth',
-        allow_null=True,
-        read_only=True
+        source="provider.year_of_birth", allow_null=True, read_only=True
     )
     provider_age = serializers.SerializerMethodField()
     provider_gender = serializers.CharField(
-        source='provider.gender_source_value',
-        allow_null=True,
-        read_only=True
+        source="provider.gender_source_value", allow_null=True, read_only=True
     )
     provider_race = serializers.CharField(
-        source='provider.race_source_value',
-        allow_null=True,
-        read_only=True
+        source="provider.race_source_value", allow_null=True, read_only=True
     )
     provider_ethnicity = serializers.CharField(
-        source='provider.ethnicity_source_value',
-        allow_null=True,
-        read_only=True
+        source="provider.ethnicity_source_value", allow_null=True, read_only=True
     )
 
     # Clinical data counts (DISABLED - annotate_counts is disabled for performance)
@@ -88,29 +76,26 @@ class VisitSearchResultSerializer(serializers.ModelSerializer):
         model = VisitOccurrence
         fields = [
             # Visit info
-            'visit_id',
-            'visit_date',
-            'visit_time',
-            'visit_source',
-            'visit_source_id',
-            'tier',
-
+            "visit_id",
+            "visit_date",
+            "visit_time",
+            "visit_source",
+            "visit_source_id",
+            "tier",
             # Patient demographics
-            'patient_id',
-            'patient_year_of_birth',
-            'patient_age',
-            'patient_gender',
-            'patient_race',
-            'patient_ethnicity',
-
+            "patient_id",
+            "patient_year_of_birth",
+            "patient_age",
+            "patient_gender",
+            "patient_race",
+            "patient_ethnicity",
             # Provider info
-            'provider_id',
-            'provider_year_of_birth',
-            'provider_age',
-            'provider_gender',
-            'provider_race',
-            'provider_ethnicity',
-
+            "provider_id",
+            "provider_year_of_birth",
+            "provider_age",
+            "provider_gender",
+            "provider_race",
+            "provider_ethnicity",
             # Clinical data counts (DISABLED - uncomment when implemented)
             # 'condition_count',
             # 'drug_count',
@@ -119,7 +104,6 @@ class VisitSearchResultSerializer(serializers.ModelSerializer):
             # 'note_count',
             # 'observation_count',
             # 'measurement_count',
-
             # Boolean flags (DISABLED - uncomment when implemented)
             # 'has_notes',
             # 'has_multimodal',

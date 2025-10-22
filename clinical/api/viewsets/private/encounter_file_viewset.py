@@ -1,18 +1,24 @@
-from shared.api.permissions import BaseAuthenticatedViewSet, HasAccessToEncounter, filter_queryset_by_user_tier
-from clinical.models import EncounterFile
-from accounts.models import Tier
-from clinical.api.serializers.encounter_serializers import EncounterFileSerializer
-from rest_framework.response import Response
-from rest_framework.decorators import action
+from django.http import Http404, StreamingHttpResponse
+
 from rest_framework import status
-from django.http import StreamingHttpResponse, Http404
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from clinical.api.serializers.encounter_serializers import EncounterFileSerializer
+from clinical.models import EncounterFile
 from clinical.storage_backend import AzureDataLakeStorage
+from shared.api.permissions import (
+    BaseAuthenticatedViewSet,
+    HasAccessToEncounter,
+    filter_queryset_by_user_tier,
+)
 
 
 class EncounterFileViewSet(BaseAuthenticatedViewSet):
     """
     Viewset for managing EncounterFile objects with access control.
     """
+
     serializer_class = EncounterFileSerializer
     permission_classes = [HasAccessToEncounter]
 
@@ -21,8 +27,10 @@ class EncounterFileViewSet(BaseAuthenticatedViewSet):
         Return only EncounterFile instances accessible to the user based on their tier.
         """
         return filter_queryset_by_user_tier(
-            EncounterFile.objects.using('clinical').select_related('encounter').all(), self.request.user, related_field="encounter__tier_id"
-        ).order_by('-id')
+            EncounterFile.objects.using("clinical").select_related("encounter").all(),
+            self.request.user,
+            related_field="encounter__tier_id",
+        ).order_by("-id")
 
     def get_object(self):
         """

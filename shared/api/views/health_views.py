@@ -6,14 +6,17 @@ Security:
 - Simple liveness check is public (minimal information)
 - Detailed health check requires IP whitelisting (internal monitoring only)
 """
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+
+import ipaddress
+import logging
+
+from django.conf import settings
 from django.db import connections
 from django.db.utils import OperationalError
-from django.conf import settings
-import logging
-import ipaddress
+
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 logger = logging.getLogger(__name__)
 
@@ -28,14 +31,13 @@ class LivenessCheckView(APIView):
     Returns:
         200 OK: Application is running
     """
+
     permission_classes = []
     authentication_classes = []
 
     def get(self, request):
         """Simple alive check with no sensitive information."""
-        return Response({
-            'status': 'alive'
-        }, status=status.HTTP_200_OK)
+        return Response({"status": "alive"}, status=status.HTTP_200_OK)
 
 
 class HealthCheckView(APIView):
@@ -53,17 +55,18 @@ class HealthCheckView(APIView):
         403 Forbidden: Request from non-whitelisted IP
         503 Service Unavailable: Service is unhealthy (database issues)
     """
+
     permission_classes = []
     authentication_classes = []
 
     def get_client_ip(self, request):
         """Extract client IP from request, handling proxy headers."""
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
         if x_forwarded_for:
             # Get the first IP in the chain (original client)
-            ip = x_forwarded_for.split(',')[0].strip()
+            ip = x_forwarded_for.split(",")[0].strip()
         else:
-            ip = request.META.get('REMOTE_ADDR')
+            ip = request.META.get("REMOTE_ADDR")
         return ip
 
     def is_ip_allowed(self, client_ip, allowed_ips):
@@ -77,7 +80,7 @@ class HealthCheckView(APIView):
             for allowed in allowed_ips:
                 try:
                     # Check if it's a network (CIDR notation)
-                    if '/' in allowed:
+                    if "/" in allowed:
                         network = ipaddress.ip_network(allowed, strict=False)
                         if client_ip_obj in network:
                             return True
@@ -100,28 +103,26 @@ class HealthCheckView(APIView):
         Only accessible from whitelisted IPs.
         """
         # Get whitelisted IPs from settings
-        allowed_ips = getattr(settings, 'HEALTH_CHECK_ALLOWED_IPS', [
-            '127.0.0.1',  # Localhost
-            '::1',         # IPv6 localhost
-        ])
+        allowed_ips = getattr(
+            settings,
+            "HEALTH_CHECK_ALLOWED_IPS",
+            [
+                "127.0.0.1",  # Localhost
+                "::1",  # IPv6 localhost
+            ],
+        )
 
         # Check if request is from allowed IP
         client_ip = self.get_client_ip(request)
         if not self.is_ip_allowed(client_ip, allowed_ips):
             logger.warning(f"Health check access denied from IP: {client_ip}")
-            return Response(
-                {'error': 'Access denied'},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            return Response({"error": "Access denied"}, status=status.HTTP_403_FORBIDDEN)
 
         # Perform health checks
-        health_status = {
-            'status': 'healthy',
-            'checks': {}
-        }
+        health_status = {"status": "healthy", "checks": {}}
 
         # Check each database connection
-        databases_to_check = ['accounts', 'clinical', 'research']
+        databases_to_check = ["accounts", "clinical", "research"]
 
         for db_name in databases_to_check:
             try:
@@ -134,22 +135,22 @@ class HealthCheckView(APIView):
                     cursor.execute("SELECT 1")
                     cursor.fetchone()
 
-                health_status['checks'][f'{db_name}_db'] = 'healthy'
+                health_status["checks"][f"{db_name}_db"] = "healthy"
 
             except OperationalError as e:
                 logger.error(f"Database {db_name} health check failed: {str(e)}")
-                health_status['status'] = 'unhealthy'
-                health_status['checks'][f'{db_name}_db'] = 'unhealthy'
+                health_status["status"] = "unhealthy"
+                health_status["checks"][f"{db_name}_db"] = "unhealthy"
 
             except Exception as e:
                 logger.error(f"Unexpected error checking {db_name} database: {str(e)}")
-                health_status['status'] = 'unhealthy'
-                health_status['checks'][f'{db_name}_db'] = 'error'
+                health_status["status"] = "unhealthy"
+                health_status["checks"][f"{db_name}_db"] = "error"
 
         # Determine HTTP status code
         status_code = (
             status.HTTP_200_OK
-            if health_status['status'] == 'healthy'
+            if health_status["status"] == "healthy"
             else status.HTTP_503_SERVICE_UNAVAILABLE
         )
 
@@ -166,6 +167,7 @@ class ReadinessCheckView(APIView):
 
     Security: Same IP whitelist as health check.
     """
+
     permission_classes = []
     authentication_classes = []
 

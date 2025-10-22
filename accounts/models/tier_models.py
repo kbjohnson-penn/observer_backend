@@ -1,5 +1,6 @@
-from django.db import models
 from django.core.validators import MaxValueValidator
+from django.db import models
+
 from shared.validators import validate_field
 
 
@@ -15,9 +16,9 @@ class Tier(models.Model):
 
     def __str__(self):
         return f"{self.tier_name} (Level {self.level})"
-    
+
     class Meta:
-        app_label = 'accounts'
-        ordering = ['level']
-        verbose_name = 'Tier'
-        verbose_name_plural = 'Tiers'
+        app_label = "accounts"
+        ordering = ["level"]
+        verbose_name = "Tier"
+        verbose_name_plural = "Tiers"

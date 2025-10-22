@@ -1,9 +1,11 @@
-from shared.api.permissions import BaseAuthenticatedViewSet, filter_queryset_by_user_tier
-from research.models import Note, VisitOccurrence
-from research.api.serializers import NoteSerializer
-from rest_framework.response import Response
-from rest_framework import status
 from django.http import Http404
+
+from rest_framework import status
+from rest_framework.response import Response
+
+from research.api.serializers import NoteSerializer
+from research.models import Note, VisitOccurrence
+from shared.api.permissions import BaseAuthenticatedViewSet, filter_queryset_by_user_tier
 
 
 class NoteViewSet(BaseAuthenticatedViewSet):
@@ -11,25 +13,27 @@ class NoteViewSet(BaseAuthenticatedViewSet):
 
     def get_queryset(self):
         accessible_visits = filter_queryset_by_user_tier(
-            VisitOccurrence.objects.using('research')
-                .select_related('person', 'provider')
-                .all(),
+            VisitOccurrence.objects.using("research").select_related("person", "provider").all(),
             self.request.user,
-            related_field='tier_id'
+            related_field="tier_id",
         )
-        return Note.objects.using('research').filter(
-            visit_occurrence__in=accessible_visits
-        ).select_related('visit_occurrence').distinct().order_by('-id')
+        return (
+            Note.objects.using("research")
+            .filter(visit_occurrence__in=accessible_visits)
+            .select_related("visit_occurrence")
+            .distinct()
+            .order_by("-id")
+        )
 
     def get_object(self):
         queryset = self.get_queryset()
         try:
-            note = queryset.get(pk=self.kwargs['pk'])
+            note = queryset.get(pk=self.kwargs["pk"])
             self.check_object_permissions(self.request, note)
             return note
         except Note.DoesNotExist:
             raise Http404
-        
+
     def retrieve(self, request, *args, **kwargs):
         try:
             note = self.get_object()

@@ -21,6 +21,7 @@ class Person(models.Model):
         Routed to 'research' database via DatabaseRouter.
         Table: person
     """
+
     id = models.AutoField(primary_key=True, verbose_name="Person ID")
     year_of_birth = models.IntegerField(null=True)
     gender_source_value = models.CharField(blank=True, null=True, max_length=255)
@@ -32,9 +33,11 @@ class Person(models.Model):
 
     def __str__(self):
         return f"Person {self.id}"
+
     class Meta:
-        app_label = 'research'
-        db_table = 'person'
+        app_label = "research"
+        db_table = "person"
+
 
 class Provider(models.Model):
     """
@@ -55,6 +58,7 @@ class Provider(models.Model):
         Routed to 'research' database via DatabaseRouter.
         Table: provider
     """
+
     id = models.AutoField(primary_key=True, verbose_name="Provider ID")
     year_of_birth = models.IntegerField(null=True)
     gender_source_value = models.CharField(blank=True, null=True, max_length=255)
@@ -66,6 +70,7 @@ class Provider(models.Model):
 
     def __str__(self):
         return f"Provider {self.id}"
+
     class Meta:
-        app_label = 'research'
-        db_table = 'provider'
+        app_label = "research"
+        db_table = "provider"

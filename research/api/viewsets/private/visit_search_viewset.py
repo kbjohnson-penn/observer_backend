@@ -2,13 +2,16 @@
 Visit search viewset with JSON body-based filtering.
 Handles complex filtering across visit, demographic, and clinical data.
 """
-from rest_framework.response import Response
-from rest_framework import status as http_status
+
 from django.db.models import Count, Q
-from research.models import VisitOccurrence
+
+from rest_framework import status as http_status
+from rest_framework.response import Response
+
+from research.api.pagination import ResearchPagination
 from research.api.serializers import VisitSearchResultSerializer
 from research.api.serializers.filter_serializer import FilterSerializer
-from research.api.pagination import ResearchPagination
+from research.models import VisitOccurrence
 from shared.api.permissions import BaseAuthenticatedViewSet, filter_queryset_by_user_tier
 
 
@@ -19,6 +22,7 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
     Returns comprehensive visit data including patient demographics.
     Only supports POST/create method for searching.
     """
+
     serializer_class = VisitSearchResultSerializer
     pagination_class = ResearchPagination
 
@@ -42,12 +46,12 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
         if not validator.is_valid():
             return Response(
                 {"detail": "Invalid filter parameters", "errors": validator.errors},
-                status=http_status.HTTP_400_BAD_REQUEST
+                status=http_status.HTTP_400_BAD_REQUEST,
             )
 
         # Extract validated request data
-        filters = request.data.get('filters', {})
-        sort_params = request.data.get('sort', {})
+        filters = request.data.get("filters", {})
+        sort_params = request.data.get("sort", {})
 
         # Start with base queryset filtered by user tier
         queryset = self._get_base_queryset(request.user)
@@ -57,10 +61,14 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
         active_filter_count = self._count_active_filters(filters)
 
         # Apply filters
-        queryset = self._apply_visit_filters(queryset, filters.get('visit', {}))
-        queryset = self._apply_person_demographic_filters(queryset, filters.get('person_demographics', {}))
-        queryset = self._apply_provider_demographic_filters(queryset, filters.get('provider_demographics', {}))
-        queryset = self._apply_clinical_filters(queryset, filters.get('clinical', {}))
+        queryset = self._apply_visit_filters(queryset, filters.get("visit", {}))
+        queryset = self._apply_person_demographic_filters(
+            queryset, filters.get("person_demographics", {})
+        )
+        queryset = self._apply_provider_demographic_filters(
+            queryset, filters.get("provider_demographics", {})
+        )
+        queryset = self._apply_clinical_filters(queryset, filters.get("clinical", {}))
 
         # Apply sorting
         queryset = self._apply_sorting(queryset, sort_params)
@@ -87,9 +95,9 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
         Includes person and provider data for demographics.
         """
         return filter_queryset_by_user_tier(
-            VisitOccurrence.objects.using('research').select_related('person', 'provider').all(),
+            VisitOccurrence.objects.using("research").select_related("person", "provider").all(),
             user,
-            related_field='tier_id'
+            related_field="tier_id",
         )
 
     def _count_active_filters(self, filters):
@@ -99,29 +107,29 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
         count = 0
 
         # Visit filters
-        visit_filters = filters.get('visit', {})
+        visit_filters = filters.get("visit", {})
         for key, value in visit_filters.items():
-            if value and value != [] and value != '':
+            if value and value != [] and value != "":
                 count += 1
 
         # Person demographics filters
-        person_demo_filters = filters.get('person_demographics', {})
+        person_demo_filters = filters.get("person_demographics", {})
         for key, value in person_demo_filters.items():
-            if value and value != [] and value != '':
+            if value and value != [] and value != "":
                 count += 1
 
         # Provider demographics filters
-        provider_demo_filters = filters.get('provider_demographics', {})
+        provider_demo_filters = filters.get("provider_demographics", {})
         for key, value in provider_demo_filters.items():
-            if value and value != [] and value != '':
+            if value and value != [] and value != "":
                 count += 1
 
         # Clinical filters
-        clinical_filters = filters.get('clinical', {})
+        clinical_filters = filters.get("clinical", {})
         for category, category_filters in clinical_filters.items():
             if isinstance(category_filters, dict):
                 for key, value in category_filters.items():
-                    if value and value != [] and value != '':
+                    if value and value != [] and value != "":
                         count += 1
 
         return count
@@ -134,33 +142,33 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
             return queryset
 
         # Tier filter (multi-select)
-        if visit_filters.get('tier_id'):
-            queryset = queryset.filter(tier_id__in=visit_filters['tier_id'])
+        if visit_filters.get("tier_id"):
+            queryset = queryset.filter(tier_id__in=visit_filters["tier_id"])
 
         # Person ID filter
-        if visit_filters.get('person_id'):
-            queryset = queryset.filter(person_id=visit_filters['person_id'])
+        if visit_filters.get("person_id"):
+            queryset = queryset.filter(person_id=visit_filters["person_id"])
 
         # Provider ID filter
-        if visit_filters.get('provider_id'):
-            queryset = queryset.filter(provider_id=visit_filters['provider_id'])
+        if visit_filters.get("provider_id"):
+            queryset = queryset.filter(provider_id=visit_filters["provider_id"])
 
         # Visit source filter (text search)
-        if visit_filters.get('visit_source_value'):
+        if visit_filters.get("visit_source_value"):
             queryset = queryset.filter(
-                visit_source_value__icontains=visit_filters['visit_source_value']
+                visit_source_value__icontains=visit_filters["visit_source_value"]
             )
 
         # Visit source ID filter
-        if visit_filters.get('visit_source_id'):
-            queryset = queryset.filter(visit_source_id=visit_filters['visit_source_id'])
+        if visit_filters.get("visit_source_id"):
+            queryset = queryset.filter(visit_source_id=visit_filters["visit_source_id"])
 
         # Date range filters
-        if visit_filters.get('date_from'):
-            queryset = queryset.filter(visit_start_date__gte=visit_filters['date_from'])
+        if visit_filters.get("date_from"):
+            queryset = queryset.filter(visit_start_date__gte=visit_filters["date_from"])
 
-        if visit_filters.get('date_to'):
-            queryset = queryset.filter(visit_start_date__lte=visit_filters['date_to'])
+        if visit_filters.get("date_to"):
+            queryset = queryset.filter(visit_start_date__lte=visit_filters["date_to"])
 
         return queryset
 
@@ -172,23 +180,25 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
             return queryset
 
         # Gender filter (multi-select)
-        if demo_filters.get('gender'):
-            queryset = queryset.filter(person__gender_source_value__in=demo_filters['gender'])
+        if demo_filters.get("gender"):
+            queryset = queryset.filter(person__gender_source_value__in=demo_filters["gender"])
 
         # Race filter (multi-select)
-        if demo_filters.get('race'):
-            queryset = queryset.filter(person__race_source_value__in=demo_filters['race'])
+        if demo_filters.get("race"):
+            queryset = queryset.filter(person__race_source_value__in=demo_filters["race"])
 
         # Ethnicity filter (multi-select)
-        if demo_filters.get('ethnicity'):
-            queryset = queryset.filter(person__ethnicity_source_value__in=demo_filters['ethnicity'])
+        if demo_filters.get("ethnicity"):
+            queryset = queryset.filter(person__ethnicity_source_value__in=demo_filters["ethnicity"])
 
         # Year of birth range
-        if demo_filters.get('year_of_birth_from'):
-            queryset = queryset.filter(person__year_of_birth__gte=demo_filters['year_of_birth_from'])
+        if demo_filters.get("year_of_birth_from"):
+            queryset = queryset.filter(
+                person__year_of_birth__gte=demo_filters["year_of_birth_from"]
+            )
 
-        if demo_filters.get('year_of_birth_to'):
-            queryset = queryset.filter(person__year_of_birth__lte=demo_filters['year_of_birth_to'])
+        if demo_filters.get("year_of_birth_to"):
+            queryset = queryset.filter(person__year_of_birth__lte=demo_filters["year_of_birth_to"])
 
         return queryset
 
@@ -200,23 +210,33 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
             return queryset
 
         # Provider gender filter (multi-select)
-        if provider_demo_filters.get('gender'):
-            queryset = queryset.filter(provider__gender_source_value__in=provider_demo_filters['gender'])
+        if provider_demo_filters.get("gender"):
+            queryset = queryset.filter(
+                provider__gender_source_value__in=provider_demo_filters["gender"]
+            )
 
         # Provider race filter (multi-select)
-        if provider_demo_filters.get('race'):
-            queryset = queryset.filter(provider__race_source_value__in=provider_demo_filters['race'])
+        if provider_demo_filters.get("race"):
+            queryset = queryset.filter(
+                provider__race_source_value__in=provider_demo_filters["race"]
+            )
 
         # Provider ethnicity filter (multi-select)
-        if provider_demo_filters.get('ethnicity'):
-            queryset = queryset.filter(provider__ethnicity_source_value__in=provider_demo_filters['ethnicity'])
+        if provider_demo_filters.get("ethnicity"):
+            queryset = queryset.filter(
+                provider__ethnicity_source_value__in=provider_demo_filters["ethnicity"]
+            )
 
         # Provider year of birth range
-        if provider_demo_filters.get('year_of_birth_from'):
-            queryset = queryset.filter(provider__year_of_birth__gte=provider_demo_filters['year_of_birth_from'])
+        if provider_demo_filters.get("year_of_birth_from"):
+            queryset = queryset.filter(
+                provider__year_of_birth__gte=provider_demo_filters["year_of_birth_from"]
+            )
 
-        if provider_demo_filters.get('year_of_birth_to'):
-            queryset = queryset.filter(provider__year_of_birth__lte=provider_demo_filters['year_of_birth_to'])
+        if provider_demo_filters.get("year_of_birth_to"):
+            queryset = queryset.filter(
+                provider__year_of_birth__lte=provider_demo_filters["year_of_birth_to"]
+            )
 
         return queryset
 
@@ -229,105 +249,93 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
             return queryset
 
         # Conditions filters
-        conditions = clinical_filters.get('conditions', {})
+        conditions = clinical_filters.get("conditions", {})
         if conditions:
-            if conditions.get('condition_codes'):
+            if conditions.get("condition_codes"):
                 queryset = queryset.filter(
-                    conditionoccurrence__concept_code__in=conditions['condition_codes']
+                    conditionoccurrence__concept_code__in=conditions["condition_codes"]
                 )
 
-            if conditions.get('condition_source_values'):
+            if conditions.get("condition_source_values"):
                 # Apply OR condition for each search term
                 condition_query = Q()
-                for term in conditions['condition_source_values']:
-                    condition_query |= Q(conditionoccurrence__condition_source_value__icontains=term)
+                for term in conditions["condition_source_values"]:
+                    condition_query |= Q(
+                        conditionoccurrence__condition_source_value__icontains=term
+                    )
                 queryset = queryset.filter(condition_query)
 
-            if conditions.get('is_primary_dx') is not None:
+            if conditions.get("is_primary_dx") is not None:
                 queryset = queryset.filter(
-                    conditionoccurrence__is_primary_dx=conditions['is_primary_dx']
+                    conditionoccurrence__is_primary_dx=conditions["is_primary_dx"]
                 )
 
         # Labs filters (Labs is linked to Person, not Visit, so we filter through person)
-        labs = clinical_filters.get('labs', {})
+        labs = clinical_filters.get("labs", {})
         if labs:
-            if labs.get('procedure_names'):
-                queryset = queryset.filter(
-                    person__labs__procedure_name__in=labs['procedure_names']
-                )
+            if labs.get("procedure_names"):
+                queryset = queryset.filter(person__labs__procedure_name__in=labs["procedure_names"])
 
-            if labs.get('result_flags'):
-                queryset = queryset.filter(
-                    person__labs__result_flag__in=labs['result_flags']
-                )
+            if labs.get("result_flags"):
+                queryset = queryset.filter(person__labs__result_flag__in=labs["result_flags"])
 
-            if labs.get('order_statuses'):
-                queryset = queryset.filter(
-                    person__labs__order_status__in=labs['order_statuses']
-                )
+            if labs.get("order_statuses"):
+                queryset = queryset.filter(person__labs__order_status__in=labs["order_statuses"])
 
         # Drugs filters
-        drugs = clinical_filters.get('drugs', {})
-        if drugs and drugs.get('descriptions'):
+        drugs = clinical_filters.get("drugs", {})
+        if drugs and drugs.get("descriptions"):
             drug_query = Q()
-            for term in drugs['descriptions']:
+            for term in drugs["descriptions"]:
                 drug_query |= Q(drugexposure__description__icontains=term)
             queryset = queryset.filter(drug_query)
 
         # Procedures filters
-        procedures = clinical_filters.get('procedures', {})
+        procedures = clinical_filters.get("procedures", {})
         if procedures:
-            if procedures.get('names'):
-                queryset = queryset.filter(
-                    procedureoccurrence__name__in=procedures['names']
-                )
+            if procedures.get("names"):
+                queryset = queryset.filter(procedureoccurrence__name__in=procedures["names"])
 
-            if procedures.get('future_or_stand'):
+            if procedures.get("future_or_stand"):
                 queryset = queryset.filter(
-                    procedureoccurrence__future_or_stand=procedures['future_or_stand']
+                    procedureoccurrence__future_or_stand=procedures["future_or_stand"]
                 )
 
         # Notes filters
-        notes = clinical_filters.get('notes', {})
+        notes = clinical_filters.get("notes", {})
         if notes:
-            if notes.get('note_types'):
-                queryset = queryset.filter(
-                    note__note_type__in=notes['note_types']
-                )
+            if notes.get("note_types"):
+                queryset = queryset.filter(note__note_type__in=notes["note_types"])
 
-            if notes.get('note_statuses'):
-                queryset = queryset.filter(
-                    note__note_status__in=notes['note_statuses']
-                )
+            if notes.get("note_statuses"):
+                queryset = queryset.filter(note__note_status__in=notes["note_statuses"])
 
         # Observations filters
-        observations = clinical_filters.get('observations', {})
-        if observations and observations.get('file_types'):
-            queryset = queryset.filter(
-                observation__file_type__in=observations['file_types']
-            )
+        observations = clinical_filters.get("observations", {})
+        if observations and observations.get("file_types"):
+            queryset = queryset.filter(observation__file_type__in=observations["file_types"])
 
         # Measurements filters
-        measurements = clinical_filters.get('measurements', {})
+        measurements = clinical_filters.get("measurements", {})
         if measurements:
-            if measurements.get('bp_systolic_min'):
+            if measurements.get("bp_systolic_min"):
                 queryset = queryset.filter(
-                    measurement__bp_systolic__gte=measurements['bp_systolic_min']
+                    measurement__bp_systolic__gte=measurements["bp_systolic_min"]
                 )
 
-            if measurements.get('bp_systolic_max'):
+            if measurements.get("bp_systolic_max"):
                 queryset = queryset.filter(
-                    measurement__bp_systolic__lte=measurements['bp_systolic_max']
+                    measurement__bp_systolic__lte=measurements["bp_systolic_max"]
                 )
 
-            if measurements.get('weight_lb_min'):
+            if measurements.get("weight_lb_min"):
                 queryset = queryset.filter(
-                    measurement__weight_lb__gte=measurements['weight_lb_min']
+                    measurement__weight_lb__gte=measurements["weight_lb_min"]
                 )
 
-            if measurements.get('weight_lb_max'):
+            if measurements.get("weight_lb_max"):
                 queryset = queryset.filter(
-                    measurement__weight_lb__lte=measurements['weight_lb_max']
+                    measurement__weight_lb__lte=measurements["weight_lb_max"]
                 )
 
         # DISTINCT can be slow with many joins - only use when filtering by clinical data
@@ -340,25 +348,25 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
         Apply sorting to the queryset.
         """
         if not sort_params:
-            return queryset.order_by('-visit_start_date', '-visit_start_time')
+            return queryset.order_by("-visit_start_date", "-visit_start_time")
 
-        field = sort_params.get('field', 'visit_start_date')
-        direction = sort_params.get('direction', 'desc')
+        field = sort_params.get("field", "visit_start_date")
+        direction = sort_params.get("direction", "desc")
 
         # Map frontend field names to model field names
         field_mapping = {
-            'id': 'id',
-            'visit_start_date': 'visit_start_date',
-            'visit_source_value': 'visit_source_value',
-            'tier_id': 'tier_id',
-            'person_id': 'person_id',
-            'provider_id': 'provider_id'
+            "id": "id",
+            "visit_start_date": "visit_start_date",
+            "visit_source_value": "visit_source_value",
+            "tier_id": "tier_id",
+            "person_id": "person_id",
+            "provider_id": "provider_id",
         }
 
-        order_field = field_mapping.get(field, 'visit_start_date')
+        order_field = field_mapping.get(field, "visit_start_date")
 
-        if direction == 'desc':
-            order_field = f'-{order_field}'
+        if direction == "desc":
+            order_field = f"-{order_field}"
 
         return queryset.order_by(order_field)
 
@@ -369,11 +377,11 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
         DISABLED due to performance - re-enable if needed.
         """
         return queryset.annotate(
-            condition_count=Count('conditionoccurrence', distinct=True),
-            drug_count=Count('drugexposure', distinct=True),
-            procedure_count=Count('procedureoccurrence', distinct=True),
-            lab_count=Count('person__labs', distinct=True),  # Labs linked through person
-            note_count=Count('note', distinct=True),
-            observation_count=Count('observation', distinct=True),
-            measurement_count=Count('measurement', distinct=True)
+            condition_count=Count("conditionoccurrence", distinct=True),
+            drug_count=Count("drugexposure", distinct=True),
+            procedure_count=Count("procedureoccurrence", distinct=True),
+            lab_count=Count("person__labs", distinct=True),  # Labs linked through person
+            note_count=Count("note", distinct=True),
+            observation_count=Count("observation", distinct=True),
+            measurement_count=Count("measurement", distinct=True),
         )

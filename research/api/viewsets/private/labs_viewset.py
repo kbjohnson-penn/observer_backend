@@ -1,9 +1,11 @@
-from shared.api.permissions import BaseAuthenticatedViewSet, filter_queryset_by_user_tier
-from research.models import Labs, VisitOccurrence
-from research.api.serializers import LabsSerializer
-from rest_framework.response import Response
-from rest_framework import status
 from django.http import Http404
+
+from rest_framework import status
+from rest_framework.response import Response
+
+from research.api.serializers import LabsSerializer
+from research.models import Labs, VisitOccurrence
+from shared.api.permissions import BaseAuthenticatedViewSet, filter_queryset_by_user_tier
 
 
 class LabViewSet(BaseAuthenticatedViewSet):
@@ -12,22 +14,24 @@ class LabViewSet(BaseAuthenticatedViewSet):
     def get_queryset(self):
         # First get accessible visits based on user tier
         accessible_visits = filter_queryset_by_user_tier(
-            VisitOccurrence.objects.using('research')
-                .select_related('person', 'provider')
-                .all(),
+            VisitOccurrence.objects.using("research").select_related("person", "provider").all(),
             self.request.user,
-            related_field='tier_id'
+            related_field="tier_id",
         )
         # Then get labs for those persons who have accessible visits
-        accessible_person_ids = accessible_visits.values_list('person_id', flat=True)
-        return Labs.objects.using('research').filter(
-            person_id__in=accessible_person_ids
-        ).select_related('person').distinct().order_by("-id")
+        accessible_person_ids = accessible_visits.values_list("person_id", flat=True)
+        return (
+            Labs.objects.using("research")
+            .filter(person_id__in=accessible_person_ids)
+            .select_related("person")
+            .distinct()
+            .order_by("-id")
+        )
 
     def get_object(self):
         queryset = self.get_queryset()
         try:
-            lab = queryset.get(pk=self.kwargs['pk'])
+            lab = queryset.get(pk=self.kwargs["pk"])
             self.check_object_permissions(self.request, lab)
             return lab
         except Labs.DoesNotExist:

@@ -1,7 +1,8 @@
+from rest_framework import status
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
+
 from accounts.api.serializers.profile_serializers import ProfileSerializer
 from accounts.models import Profile
 
@@ -10,6 +11,7 @@ class ProfileView(RetrieveUpdateAPIView):
     """
     View for retrieving and updating user profiles.
     """
+
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated]
 
@@ -17,9 +19,8 @@ class ProfileView(RetrieveUpdateAPIView):
         """
         Fetch the profile for the logged-in user, create if it doesn't exist.
         """
-        profile, created = Profile.objects.using('accounts').get_or_create(
-            user=self.request.user,
-            defaults={}
+        profile, created = Profile.objects.using("accounts").get_or_create(
+            user=self.request.user, defaults={}
         )
         return profile
 
