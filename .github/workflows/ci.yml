@@ -76,6 +76,13 @@ jobs:
           DJANGO_SETTINGS_MODULE: backend.settings.test
           SECRET_KEY: test-secret-key-for-ci-do-not-use-in-production
           DEBUG: 'False'
+          DB_USER: test_user
+          DB_PASSWORD: test_password
+          DB_HOST: localhost
+          DB_PORT: '3306'
+          AZURE_STORAGE_ACCOUNT_NAME: test_account
+          AZURE_STORAGE_FILE_SYSTEM_NAME: test_filesystem
+          AZURE_SAS_TOKEN: test_token
 
       - name: Check for pending migrations
         run: python manage.py makemigrations --check --dry-run
@@ -83,6 +90,13 @@ jobs:
           DJANGO_SETTINGS_MODULE: backend.settings.test
           SECRET_KEY: test-secret-key-for-ci-do-not-use-in-production
           DEBUG: 'False'
+          DB_USER: test_user
+          DB_PASSWORD: test_password
+          DB_HOST: localhost
+          DB_PORT: '3306'
+          AZURE_STORAGE_ACCOUNT_NAME: test_account
+          AZURE_STORAGE_FILE_SYSTEM_NAME: test_filesystem
+          AZURE_SAS_TOKEN: test_token
 
       - name: Run tests with coverage
         run: python -m pytest --cov --cov-report=xml --cov-report=term-missing
@@ -90,6 +104,13 @@ jobs:
           DJANGO_SETTINGS_MODULE: backend.settings.test
           SECRET_KEY: test-secret-key-for-ci-do-not-use-in-production
           DEBUG: 'False'
+          DB_USER: test_user
+          DB_PASSWORD: test_password
+          DB_HOST: localhost
+          DB_PORT: '3306'
+          AZURE_STORAGE_ACCOUNT_NAME: test_account
+          AZURE_STORAGE_FILE_SYSTEM_NAME: test_filesystem
+          AZURE_SAS_TOKEN: test_token
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
