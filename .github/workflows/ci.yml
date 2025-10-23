@@ -55,6 +55,13 @@ jobs:
           DJANGO_SETTINGS_MODULE: backend.settings.test
           SECRET_KEY: test-secret-key-for-ci-do-not-use-in-production
           DEBUG: 'False'
+          DB_USER: test_user
+          DB_PASSWORD: test_password
+          DB_HOST: localhost
+          DB_PORT: '3306'
+          AZURE_STORAGE_ACCOUNT_NAME: test_account
+          AZURE_STORAGE_FILE_SYSTEM_NAME: test_filesystem
+          AZURE_SAS_TOKEN: test_token
         run: |
           python -m pylint accounts/ clinical/ research/ shared/ backend/ || PYLINT_EXIT=$?
           if [ "${PYLINT_EXIT:-0}" -eq 1 ] || [ "${PYLINT_EXIT:-0}" -eq 32 ]; then
