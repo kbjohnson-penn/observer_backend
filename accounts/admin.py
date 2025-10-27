@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Organization, Profile, Tier, User
+from .models import Cohort, Organization, Profile, Tier, User
 
 
 # Register the custom User model
@@ -49,3 +49,8 @@ class ProfileAdmin(admin.ModelAdmin):
     date_hierarchy = "created_at"
     raw_id_fields = ["user"]
     ordering = ["-created_at"]
+
+
+@admin.register(Cohort)
+class CohortAdmin(admin.ModelAdmin):
+    list_display = ["name", "description", "created_at"]
