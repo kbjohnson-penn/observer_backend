@@ -1,6 +1,9 @@
+from django.urls import path
+
 from rest_framework.routers import DefaultRouter
 
 from research.api.viewsets.private.audit_logs_viewset import AuditLogsViewSet
+from research.api.viewsets.private.cohort_data_viewset import CohortDataViewSet
 from research.api.viewsets.private.condition_occurrence_viewset import ConditionOccurrenceViewSet
 from research.api.viewsets.private.drug_exposure_viewset import DrugExposureViewSet
 from research.api.viewsets.private.filter_options_viewset import FilterOptionsViewSet
@@ -43,4 +46,15 @@ router.register(r"filter-options", FilterOptionsViewSet, basename="v1-research-f
 router.register(r"visits-search", VisitSearchViewSet, basename="v1-research-visit-search")
 router.register(r"labs", LabViewSet, basename="v1-research-lab")
 
-urlpatterns = router.urls
+# Custom URL patterns for non-standard endpoints
+urlpatterns = [
+    # Cohort data endpoint - fetch all OMOP tables filtered by cohort
+    path(
+        "cohorts/<int:pk>/data/",
+        CohortDataViewSet.as_view({"get": "retrieve"}),
+        name="cohort-data",
+    ),
+]
+
+# Add router URLs
+urlpatterns += router.urls
