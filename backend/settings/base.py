@@ -44,7 +44,11 @@ RATE_LIMITS = {
     "LOGIN": config("RATE_LIMIT_LOGIN", default="5/m"),
     "REGISTRATION": config("RATE_LIMIT_REGISTRATION", default="3/m"),
     "PASSWORD_CHANGE": config("RATE_LIMIT_PASSWORD_CHANGE", default="10/m"),
+    "PASSWORD_RESET_REQUEST": config("RATE_LIMIT_PASSWORD_RESET_REQUEST", default="3/m"),
+    "PASSWORD_RESET_CONFIRM": config("RATE_LIMIT_PASSWORD_RESET_CONFIRM", default="5/m"),
     "EMAIL_VERIFICATION": config("RATE_LIMIT_EMAIL_VERIFICATION", default="10/m"),
+    "PROFILE_UPDATE": config("RATE_LIMIT_PROFILE_UPDATE", default="10/m"),
+    "USERNAME_UPDATE": config("RATE_LIMIT_USERNAME_UPDATE", default="5/m"),
     "LOGOUT": config("RATE_LIMIT_LOGOUT", default="5/m"),
 }
 
