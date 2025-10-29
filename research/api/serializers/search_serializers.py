@@ -3,8 +3,6 @@ Search serializers for visit filtering with comprehensive data.
 Includes visit info, patient demographics, and clinical data counts.
 """
 
-from datetime import date
-
 from rest_framework import serializers
 
 from research.models import VisitOccurrence
@@ -113,26 +111,26 @@ class VisitSearchResultSerializer(serializers.ModelSerializer):
 
     def get_patient_age(self, obj):
         """
-        Calculate current age from year of birth.
-        Returns None if year_of_birth is not available.
+        Calculate patient age at time of visit from year of birth.
+        Returns None if year_of_birth or visit_start_date is not available.
         """
         try:
-            if obj.person and obj.person.year_of_birth:
-                current_year = date.today().year
-                return current_year - obj.person.year_of_birth
+            if obj.person and obj.person.year_of_birth and obj.visit_start_date:
+                visit_year = obj.visit_start_date.year
+                return visit_year - obj.person.year_of_birth
         except (AttributeError, TypeError):
             pass
         return None
 
     def get_provider_age(self, obj):
         """
-        Calculate provider's current age from year of birth.
-        Returns None if year_of_birth is not available.
+        Calculate provider age at time of visit from year of birth.
+        Returns None if year_of_birth or visit_start_date is not available.
         """
         try:
-            if obj.provider and obj.provider.year_of_birth:
-                current_year = date.today().year
-                return current_year - obj.provider.year_of_birth
+            if obj.provider and obj.provider.year_of_birth and obj.visit_start_date:
+                visit_year = obj.visit_start_date.year
+                return visit_year - obj.provider.year_of_birth
         except (AttributeError, TypeError):
             pass
         return None
