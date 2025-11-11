@@ -28,6 +28,15 @@ SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=True, cast=bool)
 CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=True, cast=bool)
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+# Cross-subdomain cookie sharing (optional)
+# Enable these if backend and frontend are on different subdomains
+# and need to share authentication cookies
+# Example: backend on observer-dev.pmacs.upenn.edu, frontend on observer-dev-d.pmacs.upenn.edu
+if config("SESSION_COOKIE_DOMAIN", default=None):
+    SESSION_COOKIE_DOMAIN = config("SESSION_COOKIE_DOMAIN")
+if config("CSRF_COOKIE_DOMAIN", default=None):
+    CSRF_COOKIE_DOMAIN = config("CSRF_COOKIE_DOMAIN")
+
 # Production database test configuration
 DATABASES["default"]["TEST"] = {
     "NAME": config("TEST_DEFAULT_DB", default="test_observer_default"),
