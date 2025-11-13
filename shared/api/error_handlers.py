@@ -59,7 +59,7 @@ def handle_not_found(detail="Resource not found", log_message=None):
         Response with 404 status
     """
     if log_message:
-        logger.warning(f"404 Error: {log_message}")
+        logger.warning("404 Error: %s", log_message)
 
     return Response({"detail": detail, "code": "not_found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -76,7 +76,7 @@ def handle_permission_denied(detail="Permission denied", log_message=None):
         Response with 403 status
     """
     if log_message:
-        logger.warning(f"Permission denied: {log_message}")
+        logger.warning("Permission denied: %s", log_message)
 
     return Response(
         {"detail": detail, "code": "permission_denied"}, status=status.HTTP_403_FORBIDDEN
@@ -96,7 +96,7 @@ def handle_validation_error(detail="Invalid input provided", errors=None, log_me
         Response with 400 status
     """
     if log_message:
-        logger.info(f"Validation error: {log_message}")
+        logger.info("Validation error: %s", log_message)
 
     response_data = {"detail": detail, "code": "validation_error"}
     if errors:
@@ -118,9 +118,9 @@ def handle_server_error(detail="An internal error occurred", log_message=None, e
         Response with 500 status
     """
     if exception:
-        logger.error(f"Server error: {log_message or 'Unhandled exception'}", exc_info=exception)
+        logger.error("Server error: %s", log_message or "Unhandled exception", exc_info=exception)
     elif log_message:
-        logger.error(f"Server error: {log_message}")
+        logger.error("Server error: %s", log_message)
 
     return Response(
         {"detail": detail, "code": "server_error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -145,7 +145,7 @@ def safe_get_object_or_404(model_class, error_message="Resource not found", **kw
     try:
         return model_class.objects.get(**kwargs)
     except model_class.DoesNotExist:
-        logger.info(f"Object not found: {model_class.__name__} with {kwargs}")
+        logger.info("Object not found: %s with %s", model_class.__name__, kwargs)
         raise ObserverNotFound(detail=error_message)
 
 
@@ -173,5 +173,5 @@ class ErrorHandlerMixin:
             )
         else:
             # Log unexpected errors but don't expose details
-            logger.error(f"Unhandled exception in {self.__class__.__name__}", exc_info=exc)
+            logger.error("Unhandled exception in %s", self.__class__.__name__, exc_info=exc)
             return handle_server_error()

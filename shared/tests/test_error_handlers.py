@@ -96,7 +96,7 @@ class ErrorHandlersTest(TestCase):
         log_message = "User ID 123 not found"
         response = handle_not_found(log_message=log_message)
 
-        mock_logger.warning.assert_called_once_with(f"404 Error: {log_message}")
+        mock_logger.warning.assert_called_once_with("404 Error: %s", log_message)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_handle_permission_denied_basic(self):
@@ -122,7 +122,7 @@ class ErrorHandlersTest(TestCase):
         log_message = "User lacks tier 3 access"
         response = handle_permission_denied(log_message=log_message)
 
-        mock_logger.warning.assert_called_once_with(f"Permission denied: {log_message}")
+        mock_logger.warning.assert_called_once_with("Permission denied: %s", log_message)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_handle_validation_error_basic(self):
@@ -151,7 +151,7 @@ class ErrorHandlersTest(TestCase):
         log_message = "Invalid phone number format"
         response = handle_validation_error(log_message=log_message)
 
-        mock_logger.info.assert_called_once_with(f"Validation error: {log_message}")
+        mock_logger.info.assert_called_once_with("Validation error: %s", log_message)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_handle_server_error_basic(self):
@@ -180,7 +180,7 @@ class ErrorHandlersTest(TestCase):
         response = handle_server_error(log_message=log_message, exception=test_exception)
 
         mock_logger.error.assert_called_once_with(
-            f"Server error: {log_message}", exc_info=test_exception
+            "Server error: %s", log_message, exc_info=test_exception
         )
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -191,7 +191,7 @@ class ErrorHandlersTest(TestCase):
 
         response = handle_server_error(log_message=log_message)
 
-        mock_logger.error.assert_called_once_with(f"Server error: {log_message}")
+        mock_logger.error.assert_called_once_with("Server error: %s", log_message)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -236,7 +236,7 @@ class SafeGetObjectTest(TestCase):
             safe_get_object_or_404(mock_model, id=999, name="test")
 
         mock_logger.info.assert_called_once_with(
-            "Object not found: TestModel with {'id': 999, 'name': 'test'}"
+            "Object not found: %s with %s", "TestModel", {"id": 999, "name": "test"}
         )
 
     def test_safe_get_object_custom_error_message(self):
@@ -313,7 +313,7 @@ class ErrorHandlerMixinTest(APITestCase):
 
         # Should log the unexpected error
         mock_logger.error.assert_called_once_with(
-            "Unhandled exception in TestViewSet", exc_info=exc
+            "Unhandled exception in %s", "TestViewSet", exc_info=exc
         )
 
         # Should return generic server error

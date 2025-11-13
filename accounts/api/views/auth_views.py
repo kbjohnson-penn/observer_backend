@@ -20,7 +20,7 @@ from accounts.api.serializers.auth_serializers import (
     UserRegistrationSerializer,
 )
 from accounts.models.user_models import EmailVerificationToken
-from shared.api.error_handlers import handle_validation_error
+from shared.api.error_handlers import handle_server_error, handle_validation_error
 
 User = get_user_model()
 
@@ -100,7 +100,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 import logging
 
                 logger = logging.getLogger(__name__)
-                logger.error(f"Failed to update last_login for user: {e}")
+                logger.error("Failed to update last_login for user: %s", e)
 
         return response
 
@@ -136,7 +136,7 @@ class LogoutView(APIView):
                 import logging
 
                 logger = logging.getLogger(__name__)
-                logger.error(f"Token blacklist failed: {str(e)}")
+                logger.error("Token blacklist failed: %s", str(e))
 
         return response
 
@@ -226,7 +226,7 @@ class UserRegistrationView(APIView):
                     user=user
                 )
 
-                # Send verification email (if email settings are configured)
+                # Send verification email (non-blocking - registration succeeds even if email fails)
                 self.send_verification_email(user, verification_token.token)
 
                 return Response(
@@ -237,10 +237,20 @@ class UserRegistrationView(APIView):
                     status=status.HTTP_201_CREATED,
                 )
 
+            except serializers.ValidationError:
+                # Re-raise validation errors to be handled by DRF
+                raise
             except Exception as e:
-                return handle_validation_error(
-                    detail="Registration failed. Please try again.",
+                # Log unexpected errors with full traceback
+                import logging
+
+                logger = logging.getLogger(__name__)
+                logger.error("Unexpected registration error: %s", str(e), exc_info=True)
+
+                return handle_server_error(
+                    detail="Registration failed due to a server error. Please try again later.",
                     log_message=f"Registration error: {str(e)}",
+                    exception=e,
                 )
 
         return handle_validation_error(
@@ -248,11 +258,23 @@ class UserRegistrationView(APIView):
         )
 
     def send_verification_email(self, user, token):
-        """Send verification email to user"""
+        """Send verification email to user - non-blocking"""
+        import logging
+
+        logger = logging.getLogger(__name__)
+
         try:
             # Get frontend URL from settings or environment
             frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3000")
             verification_url = f"{frontend_url}/verify-email?token={token}"
+
+            logger.info("Attempting to send verification email to %s", user.email)
+            logger.debug(
+                "Email configuration: HOST=%s, PORT=%s, USER=%s",
+                getattr(settings, "EMAIL_HOST", "Not configured"),
+                getattr(settings, "EMAIL_PORT", "Not configured"),
+                getattr(settings, "EMAIL_HOST_USER", "Not configured"),
+            )
 
             subject = "Verify your Observer account"
             message = f"""
@@ -275,14 +297,16 @@ The Observer Team
                 message=message,
                 from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@observer.com"),
                 recipient_list=[user.email],
-                fail_silently=False,
+                fail_silently=True,  # Don't crash registration if email fails
             )
-        except Exception as e:
-            # Log error but don't fail registration
-            import logging
 
-            logger = logging.getLogger(__name__)
-            logger.error(f"Failed to send verification email to {user.email}: {str(e)}")
+            logger.info("Verification email sent successfully to %s", user.email)
+
+        except Exception as e:
+            # Log error with full traceback for debugging
+            logger.error(
+                "Failed to send verification email to %s: %s", user.email, str(e), exc_info=True
+            )
 
 
 @method_decorator(
