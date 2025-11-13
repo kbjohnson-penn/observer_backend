@@ -265,9 +265,9 @@ class CookieAuthenticationTest(BaseTestCase):
 
         self.assertTrue(access_cookie["httponly"])
         self.assertTrue(refresh_cookie["httponly"])
-        # In test environment DEBUG=False, so samesite should be 'Strict'
-        self.assertEqual(access_cookie["samesite"], "Strict")
-        self.assertEqual(refresh_cookie["samesite"], "Strict")
+        # SameSite set to 'None' to support cross-subdomain authentication
+        self.assertEqual(access_cookie["samesite"], "None")
+        self.assertEqual(refresh_cookie["samesite"], "None")
 
     def test_logout_clears_cookies(self):
         """Test that logout endpoint clears httpOnly cookies."""

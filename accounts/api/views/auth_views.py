@@ -62,28 +62,26 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                         response.set_cookie(
                             "access_token",
                             access_token,
+                            domain=getattr(settings, "SESSION_COOKIE_DOMAIN", None),
                             max_age=settings.SIMPLE_JWT.get(
                                 "ACCESS_TOKEN_LIFETIME"
                             ).total_seconds(),
                             httponly=True,
-                            secure=not settings.DEBUG,  # Secure in production
-                            samesite=(
-                                "Strict" if not settings.DEBUG else "Lax"
-                            ),  # Strict in production
+                            secure=True,  # Always secure in production (HTTPS required)
+                            samesite="None",  # Required for cross-subdomain cookies
                         )
 
                     if refresh_token:
                         response.set_cookie(
                             "refresh_token",
                             refresh_token,
+                            domain=getattr(settings, "SESSION_COOKIE_DOMAIN", None),
                             max_age=settings.SIMPLE_JWT.get(
                                 "REFRESH_TOKEN_LIFETIME"
                             ).total_seconds(),
                             httponly=True,
-                            secure=not settings.DEBUG,  # Secure in production
-                            samesite=(
-                                "Strict" if not settings.DEBUG else "Lax"
-                            ),  # Strict in production
+                            secure=True,  # Always secure in production (HTTPS required)
+                            samesite="None",  # Required for cross-subdomain cookies
                         )
 
                     # Remove tokens from response body for security
