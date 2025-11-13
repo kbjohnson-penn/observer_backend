@@ -15,6 +15,18 @@ CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS").split(",")
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS").split(",")
 
+# Cookie settings for cross-subdomain authentication
+# SameSite=None is required for cookies to work across different subdomains (cross-origin requests)
+# This is safe because we're using HTTPS (SESSION_COOKIE_SECURE=True and CSRF_COOKIE_SECURE=True)
+SESSION_COOKIE_SAMESITE = (
+    "None"  # Required for cross-origin requests (frontend on different subdomain)
+)
+CSRF_COOKIE_SAMESITE = (
+    "None"  # Required for cross-origin requests (frontend on different subdomain)
+)
+SESSION_COOKIE_HTTPONLY = True  # Security: prevent JavaScript access to session cookie
+CSRF_COOKIE_HTTPONLY = False  # Frontend JavaScript needs to read CSRF token for API calls
+
 # Documentation URL
 DOCUMENTATION_URL = config("DOCUMENTATION_URL")
 
