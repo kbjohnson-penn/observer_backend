@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
@@ -11,6 +13,7 @@ from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -23,6 +26,7 @@ from accounts.models.user_models import EmailVerificationToken
 from shared.api.error_handlers import handle_server_error, handle_validation_error
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 @method_decorator(
@@ -413,6 +417,7 @@ class PasswordChangeSerializer(serializers.Serializer):
 class PasswordChangeView(APIView):
     """
     Change user password. Requires old password for verification.
+    Blacklists all existing refresh tokens and logs user out for security.
     Rate limiting configured via settings.RATE_LIMITS['LOGOUT'].
     CSRF protection enabled.
     """
@@ -439,6 +444,36 @@ class PasswordChangeView(APIView):
             user.set_password(new_password)
             user.save(using="accounts")
 
-            return Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)
+            # Blacklist all outstanding tokens for this user for security
+            try:
+                outstanding_tokens = OutstandingToken.objects.using("accounts").filter(user=user)
+                for outstanding_token in outstanding_tokens:
+                    try:
+                        token = RefreshToken(outstanding_token.token)
+                        token.blacklist()
+                    except Exception as e:
+                        # Token might already be blacklisted or invalid
+                        logger.warning(
+                            f"Could not blacklist token {outstanding_token.id} for user {user.id}: {e}"
+                        )
+            except Exception as e:
+                logger.error(
+                    f"Error blacklisting tokens for user {user.id} after password change: {e}"
+                )
+
+            # Create response with logout required flag
+            response = Response(
+                {
+                    "detail": "Password updated successfully. Please log in again with your new password.",
+                    "logout_required": True,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+            # Clear httpOnly cookies to force logout
+            response.delete_cookie("access_token", samesite="Lax")
+            response.delete_cookie("refresh_token", samesite="Lax")
+
+            return response
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
