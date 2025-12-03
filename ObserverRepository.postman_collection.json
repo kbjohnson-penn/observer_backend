@@ -168,27 +168,138 @@
             },
             {
               "name": "Agreement",
+              "description": "Agreement management endpoints. View available agreements and user's signed agreements.",
               "item": [
                 {
-                  "name": "agreements",
+                  "name": "List agreements",
                   "request": {
-                    "auth": {
-                      "type": "bearer",
-                      "bearer": [
-                        {
-                          "key": "token",
-                          "value": "{{auth_token}}",
-                          "type": "string"
-                        }
-                      ]
-                    },
                     "method": "GET",
                     "header": [],
                     "url": {
                       "raw": "{{base_url}}/api/v1/accounts/agreements/",
                       "host": ["{{base_url}}"],
                       "path": ["api", "v1", "accounts", "agreements", ""]
-                    }
+                    },
+                    "description": "List all available agreements.\n\n**Authentication:** Required (cookie-based)\n\n**Response:** List of active agreements"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get agreement",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/agreements/{{agreement_id}}/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "agreements", "{{agreement_id}}", ""]
+                    },
+                    "description": "Get details of a specific agreement.\n\n**Authentication:** Required (cookie-based)\n\n**Path Parameter:**\n- agreement_id (integer): Agreement ID\n\n**Response:** Agreement details"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get agreements by type",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/agreements/by_type/?type=Data Use Agreement",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "agreements", "by_type", ""],
+                      "query": [
+                        {
+                          "key": "type",
+                          "value": "Data Use Agreement"
+                        }
+                      ]
+                    },
+                    "description": "Get agreements filtered by type.\n\n**Authentication:** Required (cookie-based)\n\n**Query Parameter:**\n- type (string, optional): Agreement type name (e.g., 'Data Use Agreement', 'Code of Conduct')\n\n**Response:** List of agreements matching the type"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "List user agreements",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/user-agreements/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "user-agreements", ""]
+                    },
+                    "description": "List all agreements signed by the authenticated user.\n\n**Authentication:** Required (cookie-based)\n\n**Response:** List of user's signed agreements"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get user agreements grouped",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/user-agreements/grouped/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "user-agreements", "grouped", ""]
+                    },
+                    "description": "Get user agreements grouped by type (for settings page).\n\n**Authentication:** Required (cookie-based)\n\n**Response:** Agreements grouped by type (data_use_agreements, code_of_conduct, etc.)"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get agreement types",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/user-agreements/types/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "user-agreements", "types", ""]
+                    },
+                    "description": "Get all available agreement types.\n\n**Authentication:** Required (cookie-based)\n\n**Response:** List of agreement types"
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "Profile",
+              "description": "User profile endpoints. View and update user profile information.",
+              "item": [
+                {
+                  "name": "Get profile",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/profile/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "profile", ""]
+                    },
+                    "description": "Get the authenticated user's profile.\n\n**Authentication:** Required (cookie-based)\n\n**Response:** User profile details"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Update profile",
+                  "request": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"bio\": \"Updated bio\",\n    \"organization\": \"Updated organization\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/profile/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "profile", ""]
+                    },
+                    "description": "Update the authenticated user's profile (partial update).\n\n**Authentication:** Required (cookie-based)\n\n**Request Body:** Profile fields to update\n\n**Response:** Updated profile details"
                   },
                   "response": []
                 }
@@ -196,27 +307,139 @@
             },
             {
               "name": "Cohort",
+              "description": "Cohort management endpoints. Users can create, update, and delete their own cohorts for filtering research data.",
               "item": [
                 {
-                  "name": "cohorts",
+                  "name": "List cohorts",
                   "request": {
-                    "auth": {
-                      "type": "bearer",
-                      "bearer": [
-                        {
-                          "key": "token",
-                          "value": "{{auth_token}}",
-                          "type": "string"
-                        }
-                      ]
-                    },
                     "method": "GET",
                     "header": [],
                     "url": {
                       "raw": "{{base_url}}/api/v1/accounts/cohorts/",
                       "host": ["{{base_url}}"],
                       "path": ["api", "v1", "accounts", "cohorts", ""]
-                    }
+                    },
+                    "description": "List all cohorts owned by the authenticated user.\n\n**Authentication:** Required (cookie-based)\n\n**Response:** List of cohorts with filter summaries"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Create cohort",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"name\": \"High Blood Pressure Patients\",\n    \"description\": \"Patients with systolic BP > 140\",\n    \"filters\": {\n        \"visit\": {},\n        \"person_demographics\": {},\n        \"provider_demographics\": {},\n        \"clinical\": {}\n    },\n    \"visit_count\": 234\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/cohorts/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "cohorts", ""]
+                    },
+                    "description": "Create a new cohort.\n\n**Authentication:** Required (cookie-based)\n\n**Request Body:**\n- name (string, required): Cohort name\n- description (string, optional): Cohort description\n- filters (object, required): Filter criteria\n- visit_count (integer, optional): Number of visits matching filters\n\n**Response:** 201 Created with cohort details"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get cohort",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/cohorts/{{cohort_id}}/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "cohorts", "{{cohort_id}}", ""]
+                    },
+                    "description": "Get detailed information about a specific cohort.\n\n**Authentication:** Required (cookie-based)\n\n**Path Parameter:**\n- cohort_id (integer): Cohort ID\n\n**Response:** Cohort details including filters"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Update cohort",
+                  "request": {
+                    "method": "PUT",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"name\": \"Updated Cohort Name\",\n    \"description\": \"Updated description\",\n    \"filters\": {\n        \"visit\": {},\n        \"person_demographics\": {},\n        \"provider_demographics\": {},\n        \"clinical\": {}\n    },\n    \"visit_count\": 456\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/cohorts/{{cohort_id}}/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "cohorts", "{{cohort_id}}", ""]
+                    },
+                    "description": "Full update of a cohort.\n\n**Authentication:** Required (cookie-based)\n\n**Path Parameter:**\n- cohort_id (integer): Cohort ID\n\n**Response:** Updated cohort details"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Partial update cohort",
+                  "request": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"name\": \"New Name Only\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/cohorts/{{cohort_id}}/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "cohorts", "{{cohort_id}}", ""]
+                    },
+                    "description": "Partial update of a cohort (only provided fields are updated).\n\n**Authentication:** Required (cookie-based)\n\n**Path Parameter:**\n- cohort_id (integer): Cohort ID\n\n**Response:** Updated cohort details"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Delete cohort",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/cohorts/{{cohort_id}}/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "cohorts", "{{cohort_id}}", ""]
+                    },
+                    "description": "Delete a cohort.\n\n**Authentication:** Required (cookie-based)\n\n**Path Parameter:**\n- cohort_id (integer): Cohort ID\n\n**Response:** 204 No Content"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Duplicate cohort",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"name\": \"Copy of Original Cohort\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/cohorts/{{cohort_id}}/duplicate/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "cohorts", "{{cohort_id}}", "duplicate", ""]
+                    },
+                    "description": "Create a duplicate of an existing cohort.\n\n**Authentication:** Required (cookie-based)\n\n**Path Parameter:**\n- cohort_id (integer): Cohort ID to duplicate\n\n**Request Body:**\n- name (string, optional): Name for the duplicate (defaults to 'Copy of [original name]')\n\n**Response:** 201 Created with new cohort details"
                   },
                   "response": []
                 }
