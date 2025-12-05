@@ -59,6 +59,7 @@ def delete_auth_cookie(response, name):
     response.delete_cookie(
         name,
         domain=cookie_settings["domain"],
+        path="/",  # Must match path used when setting cookies
         samesite=cookie_settings["samesite"],
     )
 
