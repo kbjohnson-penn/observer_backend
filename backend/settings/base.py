@@ -50,6 +50,8 @@ RATE_LIMITS = {
     "PROFILE_UPDATE": config("RATE_LIMIT_PROFILE_UPDATE", default="10/m"),
     "USERNAME_UPDATE": config("RATE_LIMIT_USERNAME_UPDATE", default="5/m"),
     "LOGOUT": config("RATE_LIMIT_LOGOUT", default="5/m"),
+    "TOKEN_REFRESH": config("RATE_LIMIT_TOKEN_REFRESH", default="30/m"),
+    "TOKEN_VERIFY": config("RATE_LIMIT_TOKEN_VERIFY", default="30/m"),
 }
 
 # Application definition

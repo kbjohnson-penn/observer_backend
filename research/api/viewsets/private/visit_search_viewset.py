@@ -153,11 +153,16 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
         if visit_filters.get("provider_id"):
             queryset = queryset.filter(provider_id=visit_filters["provider_id"])
 
-        # Visit source filter (text search)
+        # Visit source filter (multi-select with exact match)
         if visit_filters.get("visit_source_value"):
-            queryset = queryset.filter(
-                visit_source_value__icontains=visit_filters["visit_source_value"]
-            )
+            visit_source_values = visit_filters["visit_source_value"]
+            # Support both array format (preferred) and comma-separated string (legacy)
+            if isinstance(visit_source_values, str):
+                visit_source_values = [
+                    v.strip() for v in visit_source_values.split(",") if v.strip()
+                ]
+            if visit_source_values:
+                queryset = queryset.filter(visit_source_value__in=visit_source_values)
 
         # Visit source ID filter
         if visit_filters.get("visit_source_id"):

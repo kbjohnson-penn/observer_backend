@@ -5,6 +5,8 @@ from django.test import TestCase
 from model_bakery import baker
 from rest_framework import status
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.models import Organization, Profile, Tier
 
@@ -29,7 +31,29 @@ class PasswordChangeAPITest(BaseTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("detail", response.data)
-        self.assertEqual(response.data["detail"], "Password updated successfully.")
+        self.assertEqual(
+            response.data["detail"],
+            "Password updated successfully. Please log in again with your new password.",
+        )
+
+        # Verify logout_required flag is set for security
+        self.assertTrue(response.data.get("logout_required"))
+
+        # Verify cookies are cleared
+        self.assertIn("access_token", response.cookies)
+        self.assertIn("refresh_token", response.cookies)
+        # Cookies should be deleted (empty value with max_age=0 or expires in past)
+        access_cookie = response.cookies.get("access_token")
+        refresh_cookie = response.cookies.get("refresh_token")
+        # Check that cookies are being cleared (value is empty or max_age is 0)
+        self.assertTrue(
+            access_cookie.value == "" or access_cookie["max-age"] == 0,
+            "Access token cookie should be cleared",
+        )
+        self.assertTrue(
+            refresh_cookie.value == "" or refresh_cookie["max-age"] == 0,
+            "Refresh token cookie should be cleared",
+        )
 
         # Verify the password was actually changed
         self.user.refresh_from_db(using="accounts")
@@ -117,6 +141,129 @@ class PasswordChangeAPITest(BaseTestCase):
         # Skip this test as rate limiting interferes with other tests
         # In production, rate limiting is important but in tests it causes issues
         self.skipTest("Rate limiting test skipped to avoid interference with other tests")
+
+    def test_password_change_blacklists_all_tokens(self):
+        """Test that password change blacklists all outstanding refresh tokens."""
+        # Create multiple refresh tokens (simulating multiple devices/sessions)
+        token1 = RefreshToken.for_user(self.user)
+        token2 = RefreshToken.for_user(self.user)
+        token3 = RefreshToken.for_user(self.user)
+
+        # Verify tokens are created
+        outstanding_tokens_before = OutstandingToken.objects.using("accounts").filter(
+            user=self.user
+        )
+        self.assertGreaterEqual(outstanding_tokens_before.count(), 3)
+
+        # Authenticate and change password
+        self.authenticate_user()
+        url = "/api/v1/accounts/auth/change-password/"
+        data = {
+            "old_password": "testpass123",
+            "new_password": "NewSecurePassword123!",
+            "new_password_confirm": "NewSecurePassword123!",
+        }
+        response = self.client.post(url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify all tokens are blacklisted
+        outstanding_tokens_after = OutstandingToken.objects.using("accounts").filter(user=self.user)
+        for token in outstanding_tokens_after:
+            # Each token should have a corresponding BlacklistedToken entry
+            try:
+                # Try to access the blacklisted token - will raise DoesNotExist if not blacklisted
+                token.blacklistedtoken
+                # If we get here, token is blacklisted
+                blacklisted = True
+            except Exception:
+                blacklisted = False
+
+            self.assertTrue(
+                blacklisted,
+                f"Token {token.id} should be blacklisted after password change",
+            )
+
+    def test_password_change_invalidates_all_sessions(self):
+        """Test that old tokens cannot be used after password change."""
+        # Create refresh tokens before password change
+        old_refresh1 = RefreshToken.for_user(self.user)
+        old_refresh2 = RefreshToken.for_user(self.user)
+
+        # Change password
+        self.authenticate_user()
+        url = "/api/v1/accounts/auth/change-password/"
+        data = {
+            "old_password": "testpass123",
+            "new_password": "NewSecurePassword123!",
+            "new_password_confirm": "NewSecurePassword123!",
+        }
+        response = self.client.post(url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Try to refresh with old tokens - should fail
+        refresh_url = "/api/v1/accounts/auth/token/refresh/"
+
+        # Test first old token
+        response1 = self.client.post(refresh_url, {"refresh": str(old_refresh1)}, format="json")
+        self.assertEqual(
+            response1.status_code,
+            status.HTTP_401_UNAUTHORIZED,
+            "Old refresh token should be invalid after password change",
+        )
+
+        # Test second old token
+        response2 = self.client.post(refresh_url, {"refresh": str(old_refresh2)}, format="json")
+        self.assertEqual(
+            response2.status_code,
+            status.HTTP_401_UNAUTHORIZED,
+            "Old refresh token should be invalid after password change",
+        )
+
+        # Verify we can create new tokens with new password
+        login_url = "/api/v1/accounts/auth/token/"
+        login_response = self.client.post(
+            login_url,
+            {"username": self.user.username, "password": "NewSecurePassword123!"},
+            format="json",
+        )
+        self.assertEqual(
+            login_response.status_code,
+            status.HTTP_200_OK,
+            "Should be able to login with new password",
+        )
+
+    def test_password_change_clears_cookies(self):
+        """Test that password change response clears authentication cookies."""
+        self.authenticate_user()
+        url = "/api/v1/accounts/auth/change-password/"
+        data = {
+            "old_password": "testpass123",
+            "new_password": "NewSecurePassword123!",
+            "new_password_confirm": "NewSecurePassword123!",
+        }
+
+        response = self.client.post(url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify both cookies are present in response (being cleared)
+        self.assertIn("access_token", response.cookies)
+        self.assertIn("refresh_token", response.cookies)
+
+        # Verify cookies are cleared (empty value or max_age=0)
+        access_cookie = response.cookies["access_token"]
+        refresh_cookie = response.cookies["refresh_token"]
+
+        # Check cookies are being deleted
+        self.assertTrue(
+            access_cookie.value == "" or access_cookie["max-age"] == 0,
+            "Access token cookie should be cleared",
+        )
+        self.assertTrue(
+            refresh_cookie.value == "" or refresh_cookie["max-age"] == 0,
+            "Refresh token cookie should be cleared",
+        )
 
 
 class PasswordChangeRateLimitTest(TestCase):

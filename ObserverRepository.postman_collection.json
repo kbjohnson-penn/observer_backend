@@ -1,0 +1,1080 @@
+{
+  "info": {
+    "_postman_id": "d25d48fb-9889-47dd-a6a0-baab154ecd5f",
+    "name": "ObserverAPI",
+    "description": "Observer API Collection - Healthcare research and clinical data management platform.\n\n## Environment Variables Required\n- `base_url` - API base URL (e.g., https://api.observer.com)\n- `username` - Test username\n- `password` - Test password\n- `verification_token` - Email verification token (for testing)\n\n## Cookie-based Authentication\nThis API uses httpOnly cookies for JWT tokens. After calling `/token/`, cookies are automatically set and sent with subsequent requests. No manual token handling required.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "v1",
+      "item": [
+        {
+          "name": "Accounts",
+          "item": [
+            {
+              "name": "Authorization",
+              "description": "Authentication endpoints for the Observer API. These endpoints handle user registration, login, token management, and password operations.\n\n## Authentication Flow\n1. Call `csrf-token` to get CSRF token\n2. Call `register` to create account (sends verification email)\n3. Call `verify-email` with token from email to activate account and set password\n4. Call `token` to login and receive JWT tokens in httpOnly cookies\n5. Use `refresh` to get new access token when expired\n6. Call `logout` to end session\n\n## Cookie-based Authentication\nTokens are stored in httpOnly cookies for security. The `access_token` cookie is used automatically by the browser.",
+              "item": [
+                {
+                  "name": "token",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"username\": \"{{username}}\",\n    \"password\": \"{{password}}\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/auth/token/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "auth", "token", ""]
+                    },
+                    "description": "Authenticates user and returns JWT tokens in httpOnly cookies.\n\n**Request Body:**\n- username (string, required): Username or email address\n- password (string, required): User password\n\n**Response:** Sets access_token and refresh_token in httpOnly cookies. Response body contains user info only (tokens NOT in response body).\n\n**Rate Limit:** 5 requests/minute per IP"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "refresh",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/auth/token/refresh/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "auth", "token", "refresh", ""]
+                    },
+                    "description": "Refreshes the access token using the refresh_token from httpOnly cookies.\n\n**No request body required** - reads refresh_token from cookies automatically.\n\n**Response:** Sets new access_token (and optionally new refresh_token) in httpOnly cookies.\n\n**Rate Limit:** 5 requests/minute per user"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "verify",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/auth/token/verify/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "auth", "token", "verify", ""]
+                    },
+                    "description": "Verifies if the current access token is valid.\n\n**No request body required** - reads access_token from httpOnly cookies automatically.\n\n**Response:** 200 OK if token is valid, 401 Unauthorized if invalid or expired."
+                  },
+                  "response": []
+                },
+                {
+                  "name": "logout",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/auth/logout/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "auth", "logout", ""]
+                    },
+                    "description": "Logs out the user by blacklisting the refresh token and clearing cookies.\n\n**No request body required** - reads refresh_token from httpOnly cookies.\n\n**Response:** 205 Reset Content on success. Clears access_token and refresh_token cookies.\n\n**Rate Limit:** 5 requests/minute per user"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "register",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"email\": \"user@example.com\",\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"organization_name\": \"Optional Organization\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/auth/register/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "auth", "register", ""]
+                    },
+                    "description": "Registers a new user account. Sends verification email.\n\n**Request Body:**\n- email (string, required): User's email address\n- first_name (string, required): User's first name\n- last_name (string, required): User's last name\n- organization_name (string, optional): Organization name\n\n**Response:** 201 Created with verification email sent\n\n**Rate Limit:** 3 requests/minute per IP"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "verify-email",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"token\": \"{{verification_token}}\",\n    \"password\": \"newPassword123\",\n    \"password_confirm\": \"newPassword123\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/auth/verify-email/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "auth", "verify-email", ""]
+                    },
+                    "description": "Verifies user email and sets their password (completes registration).\n\n**Request Body:**\n- token (string, required): Email verification token from email link\n- password (string, required): New password (min 8 characters)\n- password_confirm (string, required): Password confirmation\n\n**Response:** 200 OK - Account activated, can now login\n\n**Rate Limit:** 10 requests/minute per IP"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "change-password",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"old_password\": \"currentPassword\",\n    \"new_password\": \"newPassword123\",\n    \"new_password_confirm\": \"newPassword123\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/auth/change-password/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "auth", "change-password", ""]
+                    },
+                    "description": "Changes the authenticated user's password. Forces logout after success.\n\n**Authentication:** Required (uses access_token from httpOnly cookie)\n\n**Request Body:**\n- old_password (string, required): Current password\n- new_password (string, required): New password (min 8 characters)\n- new_password_confirm (string, required): New password confirmation\n\n**Response:** 200 OK - All tokens blacklisted, cookies cleared, must re-login\n\n**Rate Limit:** 5 requests/minute per user"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "csrf-token",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/auth/csrf-token/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "auth", "csrf-token", ""]
+                    },
+                    "description": "Retrieves a CSRF token for subsequent state-changing requests.\n\n**Method:** GET (no request body)\n\n**Response:**\n- csrfToken (string): CSRF token value\n- Also sets CSRF cookie"
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "Agreement",
+              "description": "Agreement management endpoints. View available agreements and user's signed agreements.",
+              "item": [
+                {
+                  "name": "List agreements",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/agreements/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "agreements", ""]
+                    },
+                    "description": "List all available agreements.\n\n**Authentication:** Required (cookie-based)\n\n**Response:** List of active agreements"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get agreement",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/agreements/{{agreement_id}}/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "agreements", "{{agreement_id}}", ""]
+                    },
+                    "description": "Get details of a specific agreement.\n\n**Authentication:** Required (cookie-based)\n\n**Path Parameter:**\n- agreement_id (integer): Agreement ID\n\n**Response:** Agreement details"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get agreements by type",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/agreements/by_type/?type=Data Use Agreement",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "agreements", "by_type", ""],
+                      "query": [
+                        {
+                          "key": "type",
+                          "value": "Data Use Agreement"
+                        }
+                      ]
+                    },
+                    "description": "Get agreements filtered by type.\n\n**Authentication:** Required (cookie-based)\n\n**Query Parameter:**\n- type (string, optional): Agreement type name (e.g., 'Data Use Agreement', 'Code of Conduct')\n\n**Response:** List of agreements matching the type"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "List user agreements",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/user-agreements/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "user-agreements", ""]
+                    },
+                    "description": "List all agreements signed by the authenticated user.\n\n**Authentication:** Required (cookie-based)\n\n**Response:** List of user's signed agreements"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get user agreements grouped",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/user-agreements/grouped/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "user-agreements", "grouped", ""]
+                    },
+                    "description": "Get user agreements grouped by type (for settings page).\n\n**Authentication:** Required (cookie-based)\n\n**Response:** Agreements grouped by type (data_use_agreements, code_of_conduct, etc.)"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get agreement types",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/user-agreements/types/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "user-agreements", "types", ""]
+                    },
+                    "description": "Get all available agreement types.\n\n**Authentication:** Required (cookie-based)\n\n**Response:** List of agreement types"
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "Profile",
+              "description": "User profile endpoints. View and update user profile information.",
+              "item": [
+                {
+                  "name": "Get profile",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/profile/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "profile", ""]
+                    },
+                    "description": "Get the authenticated user's profile.\n\n**Authentication:** Required (cookie-based)\n\n**Response:** User profile details"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Update profile",
+                  "request": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"bio\": \"Updated bio\",\n    \"organization\": \"Updated organization\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/profile/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "profile", ""]
+                    },
+                    "description": "Update the authenticated user's profile (partial update).\n\n**Authentication:** Required (cookie-based)\n\n**Request Body:** Profile fields to update\n\n**Response:** Updated profile details"
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "Cohort",
+              "description": "Cohort management endpoints. Users can create, update, and delete their own cohorts for filtering research data.",
+              "item": [
+                {
+                  "name": "List cohorts",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/cohorts/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "cohorts", ""]
+                    },
+                    "description": "List all cohorts owned by the authenticated user.\n\n**Authentication:** Required (cookie-based)\n\n**Response:** List of cohorts with filter summaries"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Create cohort",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"name\": \"High Blood Pressure Patients\",\n    \"description\": \"Patients with systolic BP > 140\",\n    \"filters\": {\n        \"visit\": {},\n        \"person_demographics\": {},\n        \"provider_demographics\": {},\n        \"clinical\": {}\n    },\n    \"visit_count\": 234\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/cohorts/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "cohorts", ""]
+                    },
+                    "description": "Create a new cohort.\n\n**Authentication:** Required (cookie-based)\n\n**Request Body:**\n- name (string, required): Cohort name\n- description (string, optional): Cohort description\n- filters (object, required): Filter criteria\n- visit_count (integer, optional): Number of visits matching filters\n\n**Response:** 201 Created with cohort details"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get cohort",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/cohorts/{{cohort_id}}/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "cohorts", "{{cohort_id}}", ""]
+                    },
+                    "description": "Get detailed information about a specific cohort.\n\n**Authentication:** Required (cookie-based)\n\n**Path Parameter:**\n- cohort_id (integer): Cohort ID\n\n**Response:** Cohort details including filters"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Update cohort",
+                  "request": {
+                    "method": "PUT",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"name\": \"Updated Cohort Name\",\n    \"description\": \"Updated description\",\n    \"filters\": {\n        \"visit\": {},\n        \"person_demographics\": {},\n        \"provider_demographics\": {},\n        \"clinical\": {}\n    },\n    \"visit_count\": 456\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/cohorts/{{cohort_id}}/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "cohorts", "{{cohort_id}}", ""]
+                    },
+                    "description": "Full update of a cohort.\n\n**Authentication:** Required (cookie-based)\n\n**Path Parameter:**\n- cohort_id (integer): Cohort ID\n\n**Response:** Updated cohort details"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Partial update cohort",
+                  "request": {
+                    "method": "PATCH",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"name\": \"New Name Only\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/cohorts/{{cohort_id}}/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "cohorts", "{{cohort_id}}", ""]
+                    },
+                    "description": "Partial update of a cohort (only provided fields are updated).\n\n**Authentication:** Required (cookie-based)\n\n**Path Parameter:**\n- cohort_id (integer): Cohort ID\n\n**Response:** Updated cohort details"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Delete cohort",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/cohorts/{{cohort_id}}/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "cohorts", "{{cohort_id}}", ""]
+                    },
+                    "description": "Delete a cohort.\n\n**Authentication:** Required (cookie-based)\n\n**Path Parameter:**\n- cohort_id (integer): Cohort ID\n\n**Response:** 204 No Content"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Duplicate cohort",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"name\": \"Copy of Original Cohort\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/cohorts/{{cohort_id}}/duplicate/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "cohorts", "{{cohort_id}}", "duplicate", ""]
+                    },
+                    "description": "Create a duplicate of an existing cohort.\n\n**Authentication:** Required (cookie-based)\n\n**Path Parameter:**\n- cohort_id (integer): Cohort ID to duplicate\n\n**Request Body:**\n- name (string, optional): Name for the duplicate (defaults to 'Copy of [original name]')\n\n**Response:** 201 Created with new cohort details"
+                  },
+                  "response": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Research",
+          "item": [
+            {
+              "name": "Private",
+              "item": [
+                {
+                  "name": "persons",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/persons/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "persons", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "providers",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/providers/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "providers", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "visits",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/visits/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "visits", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "notes",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/notes/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "notes", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "condition-occurrences",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/condition-occurrences/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "condition-occurrences", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "drug-exposures",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/drug-exposures/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "drug-exposures", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "procedure-occurrences",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/procedure-occurrences/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "procedure-occurrences", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "observations",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/observations/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "observations", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "measurements",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/measurements/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "measurements", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "audit-logs",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/audit-logs/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "audit-logs", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "patient-surveys",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/patient-surveys/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "patient-surveys", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "provider-surveys",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/provider-surveys/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "provider-surveys", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "filter-options",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/filter-options/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "filter-options", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "visits-search",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"filters\": {\n    \"visit\": {\n      \"tier_id\": [1],\n      \"visit_source_value\": \"clinic\"\n    },\n    \"person_demographics\": {\n      \"gender\": [\"F\"],\n      \"race\": [\"W\"]\n    }\n  },\n  \"sort\": {\n    \"field\": \"visit_start_date\",\n    \"direction\": \"desc\"\n  }\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/visits-search/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "visits-search", ""]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "Public",
+              "item": [
+                {
+                  "name": "sample-data",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/public/sample-data/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "public", "sample-data", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "video",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/public/video/{{file_path}}/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "public", "video", "{{file_path}}", ""]
+                    },
+                    "description": "Streams a video file.\n\n**Path Parameter:**\n- file_path (string, required): Path to the video file"
+                  },
+                  "response": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Clinical",
+          "item": [
+            {
+              "name": "Public",
+              "item": [
+                {
+                  "name": "encountersources",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/clinical/public/encountersources/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "clinical", "public", "encountersources", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "departments",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/clinical/public/departments/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "clinical", "public", "departments", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "providers",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/clinical/public/providers/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "clinical", "public", "providers", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "patients",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/clinical/public/patients/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "clinical", "public", "patients", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "mmdata",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/clinical/public/mmdata/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "clinical", "public", "mmdata", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "encounters",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/clinical/public/encounters/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "clinical", "public", "encounters", ""]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "Private",
+              "item": [
+                {
+                  "name": "encountersources",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/clinical/private/encountersources/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "clinical", "private", "encountersources", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "departments",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/clinical/private/departments/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "clinical", "private", "departments", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "patients",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/clinical/private/patients/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "clinical", "private", "patients", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "providers",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/clinical/private/providers/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "clinical", "private", "providers", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "mmdata",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/clinical/private/mmdata/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "clinical", "private", "mmdata", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "encounters",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/clinical/private/encounters/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "clinical", "private", "encounters", ""]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "encounterfiles",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/clinical/private/encounterfiles/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "clinical", "private", "encounterfiles", ""]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
@@ -11,8 +13,9 @@ from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
 
 from accounts.api.serializers.auth_serializers import (
     CustomTokenObtainPairSerializer,
@@ -23,6 +26,41 @@ from accounts.models.user_models import EmailVerificationToken
 from shared.api.error_handlers import handle_server_error, handle_validation_error
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
+
+
+def get_cookie_settings():
+    """
+    Get consistent cookie settings for JWT tokens.
+    Returns a dict with domain, httponly, secure, and samesite settings.
+    """
+    return {
+        "domain": getattr(settings, "SESSION_COOKIE_DOMAIN", None),
+        "httponly": True,
+        "secure": not settings.DEBUG,
+        "samesite": "None" if not settings.DEBUG else "Lax",
+    }
+
+
+def set_auth_cookie(response, name, value, max_age):
+    """Set an authentication cookie with consistent settings."""
+    cookie_settings = get_cookie_settings()
+    response.set_cookie(
+        name,
+        value,
+        max_age=max_age,
+        **cookie_settings,
+    )
+
+
+def delete_auth_cookie(response, name):
+    """Delete an authentication cookie with consistent settings."""
+    cookie_settings = get_cookie_settings()
+    response.delete_cookie(
+        name,
+        domain=cookie_settings["domain"],
+        samesite=cookie_settings["samesite"],
+    )
 
 
 @method_decorator(
@@ -59,29 +97,23 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                     refresh_token = response.data.get("refresh")
 
                     if access_token:
-                        response.set_cookie(
+                        set_auth_cookie(
+                            response,
                             "access_token",
                             access_token,
-                            domain=getattr(settings, "SESSION_COOKIE_DOMAIN", None),
                             max_age=settings.SIMPLE_JWT.get(
                                 "ACCESS_TOKEN_LIFETIME"
                             ).total_seconds(),
-                            httponly=True,
-                            secure=True,  # Always secure in production (HTTPS required)
-                            samesite="None",  # Required for cross-subdomain cookies
                         )
 
                     if refresh_token:
-                        response.set_cookie(
+                        set_auth_cookie(
+                            response,
                             "refresh_token",
                             refresh_token,
-                            domain=getattr(settings, "SESSION_COOKIE_DOMAIN", None),
                             max_age=settings.SIMPLE_JWT.get(
                                 "REFRESH_TOKEN_LIFETIME"
                             ).total_seconds(),
-                            httponly=True,
-                            secure=True,  # Always secure in production (HTTPS required)
-                            samesite="None",  # Required for cross-subdomain cookies
                         )
 
                     # Remove tokens from response body for security
@@ -92,12 +124,11 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
             except User.DoesNotExist:
                 # Don't reveal user existence in login endpoint
-                pass
+                logger.warning(
+                    "Authentication succeeded but user lookup failed for username: %s", username
+                )
             except Exception as e:
                 # Log error but don't fail the response
-                import logging
-
-                logger = logging.getLogger(__name__)
                 logger.error("Failed to update last_login for user: %s", e)
 
         return response
@@ -121,9 +152,9 @@ class LogoutView(APIView):
 
         response = Response({"detail": "Logout successful."}, status=status.HTTP_205_RESET_CONTENT)
 
-        # Clear httpOnly cookies
-        response.delete_cookie("access_token", samesite="Lax")
-        response.delete_cookie("refresh_token", samesite="Lax")
+        # Clear httpOnly cookies with consistent settings
+        delete_auth_cookie(response, "access_token")
+        delete_auth_cookie(response, "refresh_token")
 
         if refresh_token:
             try:
@@ -131,9 +162,6 @@ class LogoutView(APIView):
                 token.blacklist()
             except Exception as e:
                 # Still log the error but don't fail logout
-                import logging
-
-                logger = logging.getLogger(__name__)
                 logger.error("Token blacklist failed: %s", str(e))
 
         return response
@@ -141,14 +169,14 @@ class LogoutView(APIView):
 
 @method_decorator(
     ratelimit(
-        key="user_or_ip", rate=settings.RATE_LIMITS["PASSWORD_CHANGE"], method="POST", block=True
+        key="user_or_ip", rate=settings.RATE_LIMITS["TOKEN_REFRESH"], method="POST", block=True
     ),
     name="post",
 )
 class CustomTokenRefreshView(TokenRefreshView):
     """
     Custom JWT refresh view that works with httpOnly cookies.
-    Rate limiting configured via settings.RATE_LIMITS['PASSWORD_CHANGE'].
+    Rate limiting configured via settings.RATE_LIMITS['TOKEN_REFRESH'].
     CSRF protection enabled.
     """
 
@@ -174,29 +202,52 @@ class CustomTokenRefreshView(TokenRefreshView):
             new_refresh_token = response.data.get("refresh")
 
             if access_token:
-                response.set_cookie(
+                set_auth_cookie(
+                    response,
                     "access_token",
                     access_token,
                     max_age=settings.SIMPLE_JWT.get("ACCESS_TOKEN_LIFETIME").total_seconds(),
-                    httponly=True,
-                    secure=not settings.DEBUG,
-                    samesite="Strict" if not settings.DEBUG else "Lax",  # Strict in production
                 )
 
             if new_refresh_token:
-                response.set_cookie(
+                set_auth_cookie(
+                    response,
                     "refresh_token",
                     new_refresh_token,
                     max_age=settings.SIMPLE_JWT.get("REFRESH_TOKEN_LIFETIME").total_seconds(),
-                    httponly=True,
-                    secure=not settings.DEBUG,
-                    samesite="Strict" if not settings.DEBUG else "Lax",  # Strict in production
                 )
 
             # Remove tokens from response body
             response.data = {"detail": "Token refresh successful"}
 
         return response
+
+
+@method_decorator(
+    ratelimit(key="ip", rate=settings.RATE_LIMITS["TOKEN_VERIFY"], method="POST", block=True),
+    name="post",
+)
+class CustomTokenVerifyView(TokenVerifyView):
+    """
+    Custom JWT verify view that reads access token from httpOnly cookies.
+    Rate limiting configured via settings.RATE_LIMITS['TOKEN_VERIFY'].
+    """
+
+    def post(self, request, *args, **kwargs):
+        # Get access token from cookie
+        access_token = request.COOKIES.get("access_token")
+
+        if not access_token:
+            return Response(
+                {"detail": "Access token not found in cookies"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        # Add token to request data for parent class
+        request.data["token"] = access_token
+
+        # Call parent method
+        return super().post(request, *args, **kwargs)
 
 
 @method_decorator(
@@ -240,9 +291,6 @@ class UserRegistrationView(APIView):
                 raise
             except Exception as e:
                 # Log unexpected errors with full traceback
-                import logging
-
-                logger = logging.getLogger(__name__)
                 logger.error("Unexpected registration error: %s", str(e), exc_info=True)
 
                 return handle_server_error(
@@ -257,10 +305,6 @@ class UserRegistrationView(APIView):
 
     def send_verification_email(self, user, token):
         """Send verification email to user - non-blocking"""
-        import logging
-
-        logger = logging.getLogger(__name__)
-
         try:
             # Get frontend URL from settings or environment
             frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3000")
@@ -407,13 +451,14 @@ class PasswordChangeSerializer(serializers.Serializer):
 
 
 @method_decorator(
-    ratelimit(key="user", rate=settings.RATE_LIMITS["LOGOUT"], method="POST", block=True),
+    ratelimit(key="user", rate=settings.RATE_LIMITS["PASSWORD_CHANGE"], method="POST", block=True),
     name="post",
 )
 class PasswordChangeView(APIView):
     """
     Change user password. Requires old password for verification.
-    Rate limiting configured via settings.RATE_LIMITS['LOGOUT'].
+    Blacklists all existing refresh tokens and logs user out for security.
+    Rate limiting configured via settings.RATE_LIMITS['PASSWORD_CHANGE'].
     CSRF protection enabled.
     """
 
@@ -439,6 +484,36 @@ class PasswordChangeView(APIView):
             user.set_password(new_password)
             user.save(using="accounts")
 
-            return Response({"detail": "Password updated successfully."}, status=status.HTTP_200_OK)
+            # Blacklist all outstanding tokens for this user for security
+            try:
+                outstanding_tokens = OutstandingToken.objects.using("accounts").filter(user=user)
+                for outstanding_token in outstanding_tokens:
+                    try:
+                        token = RefreshToken(outstanding_token.token)
+                        token.blacklist()
+                    except Exception as e:
+                        # Token might already be blacklisted or invalid
+                        logger.warning(
+                            f"Could not blacklist token {outstanding_token.id} for user {user.id}: {e}"
+                        )
+            except Exception as e:
+                logger.error(
+                    f"Error blacklisting tokens for user {user.id} after password change: {e}"
+                )
+
+            # Create response with logout required flag
+            response = Response(
+                {
+                    "detail": "Password updated successfully. Please log in again with your new password.",
+                    "logout_required": True,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+            # Clear httpOnly cookies to force logout with consistent settings
+            delete_auth_cookie(response, "access_token")
+            delete_auth_cookie(response, "refresh_token")
+
+            return response
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

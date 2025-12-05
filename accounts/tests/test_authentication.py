@@ -71,22 +71,35 @@ class TokenVerificationTest(BaseTestCase):
     """Test cases for token verification."""
 
     def test_token_verification_with_valid_token(self):
-        """Test token verification with valid access token."""
+        """Test token verification with valid access token via cookie."""
         access_token, _ = self.authenticate_user()
 
+        # Set access token in cookie (cookie-based auth)
+        self.client.cookies["access_token"] = str(access_token)
+
         verify_url = "/api/v1/accounts/auth/token/verify/"
-        verify_data = {"token": str(access_token)}
-        response = self.client.post(verify_url, verify_data, format="json")
+        response = self.client.post(verify_url, {}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_token_verification_with_invalid_token(self):
-        """Test token verification with invalid token."""
+        """Test token verification with invalid token via cookie."""
+        # Set invalid token in cookie
+        self.client.cookies["access_token"] = "invalid_token"
+
         verify_url = "/api/v1/accounts/auth/token/verify/"
-        verify_data = {"token": "invalid_token"}
-        response = self.client.post(verify_url, verify_data, format="json")
+        response = self.client.post(verify_url, {}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_token_verification_without_cookie(self):
+        """Test token verification fails when no cookie is present."""
+        verify_url = "/api/v1/accounts/auth/token/verify/"
+        response = self.client.post(verify_url, {}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertIn("detail", response.data)
+        self.assertEqual(response.data["detail"], "Access token not found in cookies")
 
 
 class LogoutAPITest(TestCase):
