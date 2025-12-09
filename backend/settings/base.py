@@ -250,8 +250,8 @@ SPECTACULAR_SETTINGS = {
 
 # JWT Configuration
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),  # 15 minutes for active sessions
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),  # 24 hours, requires daily re-login
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "ALGORITHM": "HS256",
