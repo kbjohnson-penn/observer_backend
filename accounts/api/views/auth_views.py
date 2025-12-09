@@ -49,6 +49,7 @@ def set_auth_cookie(response, name, value, max_age):
         name,
         value,
         max_age=max_age,
+        path="/",  # Explicitly set root path to match delete_auth_cookie
         **cookie_settings,
     )
 
@@ -118,9 +119,13 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                         )
 
                     # Remove tokens from response body for security
+                    # Include access token expiry for frontend auto-logout scheduling
+                    access_lifetime = settings.SIMPLE_JWT.get("ACCESS_TOKEN_LIFETIME")
+                    expires_at = int((timezone.now() + access_lifetime).timestamp())
                     response.data = {
                         "detail": "Login successful",
                         "user": {"username": user.username, "email": user.email, "id": user.id},
+                        "expires_at": expires_at,
                     }
 
             except User.DoesNotExist:
@@ -219,7 +224,10 @@ class CustomTokenRefreshView(TokenRefreshView):
                 )
 
             # Remove tokens from response body
-            response.data = {"detail": "Token refresh successful"}
+            # Include access token expiry for frontend auto-logout scheduling
+            access_lifetime = settings.SIMPLE_JWT.get("ACCESS_TOKEN_LIFETIME")
+            expires_at = int((timezone.now() + access_lifetime).timestamp())
+            response.data = {"detail": "Token refresh successful", "expires_at": expires_at}
 
         return response
 

@@ -249,8 +249,8 @@ class CohortListTest(BaseTestCase):
         self.assertEqual(response.data["cohorts"][1]["name"], "Second")
         self.assertEqual(response.data["cohorts"][2]["name"], "First")
 
-    def test_list_cohorts_includes_filter_summary(self):
-        """Test that list response includes filter_summary field."""
+    def test_list_cohorts_includes_filters(self):
+        """Test that list response includes filters field for display."""
         self.authenticate_user()
 
         cohort = Cohort.objects.using("accounts").create(
@@ -270,10 +270,11 @@ class CohortListTest(BaseTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         cohort_data = response.data["cohorts"][0]
-        self.assertIn("filter_summary", cohort_data)
-        self.assertIn("visit", cohort_data["filter_summary"])
-        self.assertIn("person", cohort_data["filter_summary"])
-        self.assertIn("total", cohort_data["filter_summary"])
+        self.assertIn("filters", cohort_data)
+        self.assertIn("visit", cohort_data["filters"])
+        self.assertIn("person_demographics", cohort_data["filters"])
+        self.assertIn("provider_demographics", cohort_data["filters"])
+        self.assertIn("clinical", cohort_data["filters"])
 
 
 class CohortCreateTest(BaseTestCase):
