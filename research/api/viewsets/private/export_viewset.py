@@ -39,6 +39,16 @@ from research.models import (
 from research.services.export_service import ExportService
 from shared.api.permissions import filter_queryset_by_user_tier
 
+# Maximum number of records allowed per export to prevent memory exhaustion
+MAX_EXPORT_RECORDS = 100000
+
+
+class ExportLimitExceededError(Exception):
+    """Raised when export exceeds maximum allowed records."""
+
+    pass
+
+
 # Mapping from frontend table IDs to model info
 TABLE_REGISTRY = {
     "persons": {"model": Person, "filter_field": "id__in", "id_source": "person_ids"},
@@ -117,6 +127,53 @@ class ExportViewSet(ViewSet):
         super().__init__(**kwargs)
         self.export_service = ExportService()
 
+    def _validate_cohort_id(self, cohort_id) -> tuple[Optional[int], Optional[Response]]:
+        """Validate cohort_id parameter. Returns (validated_id, error_response)."""
+        if not cohort_id:
+            return None, Response(
+                {"error": "cohort_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            return int(cohort_id), None
+        except (TypeError, ValueError):
+            return None, Response(
+                {"error": "cohort_id must be an integer"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    def _validate_table_id(self, table_id) -> Optional[Response]:
+        """Validate table_id parameter. Returns error response or None if valid."""
+        if not table_id:
+            return Response(
+                {"error": "table_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if table_id not in TABLE_REGISTRY:
+            return Response(
+                {"error": f"Invalid table_id: {table_id}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return None
+
+    def _get_cohort_for_user(
+        self, cohort_id: int, user
+    ) -> tuple[Optional[Cohort], Optional[Response]]:
+        """Fetch cohort and verify ownership. Returns (cohort, error_response)."""
+        try:
+            cohort = Cohort.objects.using("accounts").get(pk=cohort_id)
+            if cohort.user_id != user.id:
+                return None, Response(
+                    {"error": "You do not have permission to export this cohort's data"},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            return cohort, None
+        except Cohort.DoesNotExist:
+            return None, Response(
+                {"error": f"Cohort with ID {cohort_id} not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
     @action(detail=False, methods=["post"])
     def single_table(self, request):
         """
@@ -132,53 +189,30 @@ class ExportViewSet(ViewSet):
         Returns:
             CSV file or ZIP file as attachment
         """
-        cohort_id = request.data.get("cohort_id")
         table_id = request.data.get("table_id")
         include_docs = request.data.get("include_docs", False)
 
-        if not cohort_id:
-            return Response(
-                {"error": "cohort_id is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # Validate inputs
+        cohort_id, error = self._validate_cohort_id(request.data.get("cohort_id"))
+        if error:
+            return error
 
-        # Validate cohort_id is an integer
-        try:
-            cohort_id = int(cohort_id)
-        except (TypeError, ValueError):
-            return Response(
-                {"error": "cohort_id must be an integer"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        error = self._validate_table_id(table_id)
+        if error:
+            return error
 
-        if not table_id:
-            return Response(
-                {"error": "table_id is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if table_id not in TABLE_REGISTRY:
-            return Response(
-                {"error": f"Invalid table_id: {table_id}"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Fetch cohort and verify ownership
-        try:
-            cohort = Cohort.objects.using("accounts").get(pk=cohort_id)
-            if cohort.user_id != request.user.id:
-                return Response(
-                    {"error": "You do not have permission to export this cohort's data"},
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-        except Cohort.DoesNotExist:
-            return Response(
-                {"error": f"Cohort with ID {cohort_id} not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        cohort, error = self._get_cohort_for_user(cohort_id, request.user)
+        if error:
+            return error
 
         # Fetch data server-side with tier filtering
-        tables_data = self._fetch_cohort_data(request.user, cohort, [table_id])
+        try:
+            tables_data = self._fetch_cohort_data(request.user, cohort, [table_id])
+        except ExportLimitExceededError as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         data = tables_data.get(table_id, [])
 
         # Get model field names for headers (used if data is empty)
@@ -228,41 +262,26 @@ class ExportViewSet(ViewSet):
         Returns:
             ZIP file as attachment
         """
-        cohort_id = request.data.get("cohort_id")
         include_docs = request.data.get("include_docs", False)
 
-        if not cohort_id:
-            return Response(
-                {"error": "cohort_id is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # Validate inputs
+        cohort_id, error = self._validate_cohort_id(request.data.get("cohort_id"))
+        if error:
+            return error
 
-        # Validate cohort_id is an integer
-        try:
-            cohort_id = int(cohort_id)
-        except (TypeError, ValueError):
-            return Response(
-                {"error": "cohort_id must be an integer"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Fetch cohort and verify ownership
-        try:
-            cohort = Cohort.objects.using("accounts").get(pk=cohort_id)
-            if cohort.user_id != request.user.id:
-                return Response(
-                    {"error": "You do not have permission to export this cohort's data"},
-                    status=status.HTTP_403_FORBIDDEN,
-                )
-        except Cohort.DoesNotExist:
-            return Response(
-                {"error": f"Cohort with ID {cohort_id} not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        cohort, error = self._get_cohort_for_user(cohort_id, request.user)
+        if error:
+            return error
 
         # Fetch all table data server-side with tier filtering
         all_table_ids = list(TABLE_REGISTRY.keys())
-        tables_data = self._fetch_cohort_data(request.user, cohort, all_table_ids)
+        try:
+            tables_data = self._fetch_cohort_data(request.user, cohort, all_table_ids)
+        except ExportLimitExceededError as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         total_records = sum(len(data) for data in tables_data.values())
         table_count = len([t for t in tables_data.values() if t])  # Count non-empty tables
@@ -329,6 +348,14 @@ class ExportViewSet(ViewSet):
             queryset, filters.get("provider_demographics", {})
         )
         queryset = vs._apply_clinical_filters(queryset, filters.get("clinical", {}))
+
+        # Check record count before loading into memory
+        record_count = queryset.count()
+        if record_count > MAX_EXPORT_RECORDS:
+            raise ExportLimitExceededError(
+                f"Export exceeds maximum of {MAX_EXPORT_RECORDS:,} records. "
+                f"This cohort contains {record_count:,} visits. Please refine your cohort filters."
+            )
 
         # Get visits and extract IDs
         visits = list(queryset.values())

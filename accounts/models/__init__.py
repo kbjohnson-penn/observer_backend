@@ -1,5 +1,5 @@
 from .agreement_models import Agreement, AgreementType, UserAgreement
-from .audit_trail_models import AuditTrail
+from .audit_trail_models import AuditTrail, FailedLoginAttempt
 from .cohort_models import Cohort
 from .organization_models import Organization
 from .profile_models import Profile

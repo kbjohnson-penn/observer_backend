@@ -15,6 +15,32 @@ from typing import Any
 class ExportService:
     """Service for generating CSV/ZIP exports of research data."""
 
+    # Characters that can trigger formula execution in spreadsheet applications
+    FORMULA_INJECTION_CHARS = ("=", "+", "-", "@", "\t", "\r", "\n")
+
+    def _sanitize_csv_value(self, value: Any) -> Any:
+        """
+        Sanitize a value to prevent CSV formula injection attacks.
+
+        Spreadsheet applications like Excel can execute formulas that start
+        with certain characters (=, +, -, @). This method prefixes such
+        values with a single quote to prevent execution.
+
+        Args:
+            value: The cell value to sanitize
+
+        Returns:
+            Sanitized value safe for CSV export
+        """
+        if isinstance(value, str) and value:
+            if value[0] in self.FORMULA_INJECTION_CHARS:
+                return f"'{value}"
+        return value
+
+    def _sanitize_row(self, row: dict[str, Any]) -> dict[str, Any]:
+        """Sanitize all values in a row dict."""
+        return {k: self._sanitize_csv_value(v) for k, v in row.items()}
+
     def generate_csv(
         self,
         table_id: str,
@@ -45,7 +71,9 @@ class ExportService:
         writer = csv.DictWriter(output, fieldnames=fields)
         writer.writeheader()
         if data:
-            writer.writerows(data)
+            # Sanitize all values to prevent CSV formula injection
+            sanitized_data = [self._sanitize_row(row) for row in data]
+            writer.writerows(sanitized_data)
         return output.getvalue()
 
     def generate_zip(

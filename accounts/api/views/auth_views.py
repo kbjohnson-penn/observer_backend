@@ -2,6 +2,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from django.core.mail import send_mail
 from django.middleware.csrf import get_token
 from django.utils import timezone
@@ -23,6 +24,8 @@ from accounts.api.serializers.auth_serializers import (
     UserRegistrationSerializer,
 )
 from accounts.models.user_models import EmailVerificationToken
+from accounts.services import AuditService
+from accounts.services.audit_constants import AuditCategories, AuditEventTypes
 from shared.api.error_handlers import handle_server_error, handle_validation_error
 
 User = get_user_model()
@@ -78,12 +81,12 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
+        username = request.data.get("username", "")
         response = super().post(request, *args, **kwargs)
 
         # Only update last_login and set cookies if authentication was successful
         if response.status_code == status.HTTP_200_OK:
             try:
-                username = request.data.get("username")
                 if username:
                     # Handle email login - get username from email
                     if "@" in username:
@@ -93,6 +96,16 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
                     user.last_login = timezone.now()
                     user.save(using="accounts")
+
+                    # Log successful login
+                    AuditService.log(
+                        request=request,
+                        event_type=AuditEventTypes.AUTH_LOGIN_SUCCESS,
+                        category=AuditCategories.AUTHENTICATION,
+                        description="User logged in successfully",
+                        metadata={"login_method": "email" if "@" in username else "username"},
+                        user=user,
+                    )
 
                     # Set httpOnly cookies for tokens
                     access_token = response.data.get("access")
@@ -136,6 +149,13 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             except Exception as e:
                 # Log error but don't fail the response
                 logger.error("Failed to update last_login for user: %s", e)
+        else:
+            # Log failed login attempt
+            AuditService.log_failed_login(
+                request=request,
+                attempted_username=username,
+                failure_reason="invalid_credentials",
+            )
 
         return response
 
@@ -149,6 +169,15 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
+        # Log logout before clearing cookies
+        AuditService.log(
+            request=request,
+            event_type=AuditEventTypes.AUTH_LOGOUT,
+            category=AuditCategories.AUTHENTICATION,
+            description="User logged out",
+            metadata={},
+        )
+
         # Get refresh token from cookie
         refresh_token = request.COOKIES.get("refresh_token")
 
@@ -229,6 +258,23 @@ class CustomTokenRefreshView(TokenRefreshView):
             expires_at = int((timezone.now() + access_lifetime).timestamp())
             response.data = {"detail": "Token refresh successful", "expires_at": expires_at}
 
+            # Log token refresh - get user from refresh token since access token may be expired
+            try:
+                token = RefreshToken(refresh_token)
+                user_id = token.payload.get("user_id")
+                user = User.objects.using("accounts").get(id=user_id)
+                AuditService.log(
+                    request=request,
+                    user=user,
+                    event_type=AuditEventTypes.AUTH_TOKEN_REFRESH,
+                    category=AuditCategories.AUTHENTICATION,
+                    description="Token refreshed",
+                    metadata={},
+                )
+            except Exception as e:
+                # Token decode or user lookup failed, skip audit logging
+                logger.warning(f"Failed to log token refresh audit: {e}")
+
         return response
 
 
@@ -286,6 +332,16 @@ class UserRegistrationView(APIView):
 
                 # Send verification email (non-blocking - registration succeeds even if email fails)
                 self.send_verification_email(user, verification_token.token)
+
+                # Log successful registration
+                AuditService.log(
+                    request=request,
+                    event_type=AuditEventTypes.AUTH_REGISTRATION,
+                    category=AuditCategories.AUTHENTICATION,
+                    description="New user registered",
+                    metadata={},
+                    user=user,
+                )
 
                 return Response(
                     {
@@ -401,6 +457,16 @@ class EmailVerificationView(APIView):
                 verification_token.is_used = True
                 verification_token.save(using="accounts")
 
+                # Log email verification
+                AuditService.log(
+                    request=request,
+                    event_type=AuditEventTypes.AUTH_EMAIL_VERIFIED,
+                    category=AuditCategories.AUTHENTICATION,
+                    description="Email verified",
+                    metadata={},
+                    user=user,
+                )
+
                 return Response(
                     {
                         "detail": "Email verified successfully. You can now log in.",
@@ -441,13 +507,13 @@ class PasswordChangeSerializer(serializers.Serializer):
     """Serializer for password change"""
 
     old_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True, min_length=8)
-    new_password_confirm = serializers.CharField(required=True, min_length=8)
+    new_password = serializers.CharField(required=True)
+    new_password_confirm = serializers.CharField(required=True)
 
     def validate_new_password(self, value):
-        """Validate new password strength"""
-        if len(value) < 8:
-            raise serializers.ValidationError("Password must be at least 8 characters long.")
+        """Validate new password using Django's password validators."""
+        user = self.context.get("request").user if self.context.get("request") else None
+        validate_password(value, user=user)
         return value
 
     def validate(self, data):
@@ -474,7 +540,7 @@ class PasswordChangeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        serializer = PasswordChangeSerializer(data=request.data)
+        serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
 
         if serializer.is_valid():
             old_password = serializer.validated_data["old_password"]
@@ -492,6 +558,15 @@ class PasswordChangeView(APIView):
             # Set new password
             user.set_password(new_password)
             user.save(using="accounts")
+
+            # Log password change
+            AuditService.log(
+                request=request,
+                event_type=AuditEventTypes.AUTH_PASSWORD_CHANGED,
+                category=AuditCategories.AUTHENTICATION,
+                description="Password changed",
+                metadata={},
+            )
 
             # Blacklist all outstanding tokens for this user for security
             try:

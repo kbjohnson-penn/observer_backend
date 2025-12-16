@@ -1,0 +1,42 @@
+"""
+Audit Trail Constants.
+
+Centralized constants for audit event types to ensure consistency
+across the codebase and prevent typos in event type strings.
+"""
+
+
+class AuditEventTypes:
+    """Event type constants for audit trail logging."""
+
+    # Authentication Events
+    AUTH_LOGIN_SUCCESS = "AUTH_LOGIN_SUCCESS"
+    AUTH_LOGIN_FAILED = "AUTH_LOGIN_FAILED"
+    AUTH_LOGOUT = "AUTH_LOGOUT"
+    AUTH_TOKEN_REFRESH = "AUTH_TOKEN_REFRESH"
+    AUTH_REGISTRATION = "AUTH_REGISTRATION"
+    AUTH_EMAIL_VERIFIED = "AUTH_EMAIL_VERIFIED"
+    AUTH_PASSWORD_CHANGED = "AUTH_PASSWORD_CHANGED"
+
+    # Cohort Management Events
+    COHORT_CREATE = "COHORT_CREATE"
+    COHORT_UPDATE = "COHORT_UPDATE"
+    COHORT_DELETE = "COHORT_DELETE"
+    COHORT_DUPLICATE = "COHORT_DUPLICATE"
+
+    # Data Export Events (already used in export_viewset.py)
+    EXPORT_SINGLE_TABLE_CSV = "EXPORT_SINGLE_TABLE_CSV"
+    EXPORT_SINGLE_TABLE_WITH_DOCS = "EXPORT_SINGLE_TABLE_WITH_DOCS"
+    EXPORT_ALL_TABLES_CSV = "EXPORT_ALL_TABLES_CSV"
+    EXPORT_ALL_TABLES_WITH_DOCS = "EXPORT_ALL_TABLES_WITH_DOCS"
+
+
+class AuditCategories:
+    """Category constants matching AuditTrail.CATEGORY_CHOICES."""
+
+    DATA_EXPORT = "DATA_EXPORT"
+    DATA_VIEW = "DATA_VIEW"
+    DATA_SEARCH = "DATA_SEARCH"
+    AUTHENTICATION = "AUTHENTICATION"
+    CONFIGURATION = "CONFIGURATION"
+    COHORT_MANAGEMENT = "COHORT_MANAGEMENT"
