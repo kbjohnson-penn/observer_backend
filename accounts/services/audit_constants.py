@@ -32,6 +32,10 @@ class AuditEventTypes:
     EXPORT_ALL_TABLES_CSV = "EXPORT_ALL_TABLES_CSV"
     EXPORT_ALL_TABLES_WITH_DOCS = "EXPORT_ALL_TABLES_WITH_DOCS"
 
+    # Profile Events
+    PROFILE_VIEW = "PROFILE_VIEW"
+    PROFILE_UPDATE = "PROFILE_UPDATE"
+
 
 class AuditCategories:
     """Category constants matching AuditTrail.CATEGORY_CHOICES."""
@@ -42,3 +46,4 @@ class AuditCategories:
     AUTHENTICATION = "AUTHENTICATION"
     CONFIGURATION = "CONFIGURATION"
     COHORT_MANAGEMENT = "COHORT_MANAGEMENT"
+    PROFILE = "PROFILE"

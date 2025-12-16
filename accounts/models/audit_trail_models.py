@@ -25,6 +25,7 @@ class AuditTrail(models.Model):
         ("AUTHENTICATION", "Authentication"),
         ("CONFIGURATION", "Configuration"),
         ("COHORT_MANAGEMENT", "Cohort Management"),
+        ("PROFILE", "Profile"),
     ]
 
     user = models.ForeignKey(
