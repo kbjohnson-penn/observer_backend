@@ -8,6 +8,8 @@ from accounts.api.views.auth_views import (
     EmailVerificationView,
     LogoutView,
     PasswordChangeView,
+    PasswordResetConfirmView,
+    PasswordResetRequestView,
     UserRegistrationView,
 )
 
@@ -19,5 +21,11 @@ urlpatterns = [
     path("register/", UserRegistrationView.as_view(), name="user_registration"),
     path("verify-email/", EmailVerificationView.as_view(), name="email_verification"),
     path("change-password/", PasswordChangeView.as_view(), name="password_change"),
+    path("password-reset/", PasswordResetRequestView.as_view(), name="password_reset_request"),
+    path(
+        "password-reset/confirm/",
+        PasswordResetConfirmView.as_view(),
+        name="password_reset_confirm",
+    ),
     path("csrf-token/", CSRFTokenView.as_view(), name="csrf_token"),
 ]

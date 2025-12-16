@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.mail import send_mail
+from django.db import transaction
 from django.middleware.csrf import get_token
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -23,9 +24,11 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from accounts.api.serializers.auth_serializers import (
     CustomTokenObtainPairSerializer,
     EmailVerificationSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
     UserRegistrationSerializer,
 )
-from accounts.models.user_models import EmailVerificationToken
+from accounts.models.user_models import EmailVerificationToken, PasswordResetToken
 from accounts.services import AuditService
 from accounts.services.audit_constants import AuditCategories, AuditEventTypes
 from shared.api.error_handlers import handle_server_error, handle_validation_error
@@ -605,3 +608,199 @@ class PasswordChangeView(APIView):
             return response
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@method_decorator(
+    ratelimit(
+        key="ip", rate=settings.RATE_LIMITS["PASSWORD_RESET_REQUEST"], method="POST", block=True
+    ),
+    name="post",
+)
+class PasswordResetRequestView(APIView):
+    """
+    Request password reset. Sends email with reset link if user exists.
+    Always returns same response to prevent user enumeration.
+    Rate limiting configured via settings.RATE_LIMITS['PASSWORD_RESET_REQUEST'].
+    """
+
+    permission_classes = []  # Allow anonymous access
+
+    def post(self, request, *args, **kwargs):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+
+            try:
+                user = User.objects.using("accounts").get(email=email, is_active=True)
+
+                # Invalidate any existing unused tokens for this user
+                PasswordResetToken.objects.using("accounts").filter(
+                    user=user, is_used=False
+                ).update(is_used=True)
+
+                # Create new token
+                reset_token = PasswordResetToken.objects.db_manager("accounts").create(user=user)
+
+                # Send email (non-blocking)
+                self.send_password_reset_email(user, reset_token.token)
+
+                # Log password reset request (no PII in metadata - user object provides context)
+                AuditService.log(
+                    request=request,
+                    event_type=AuditEventTypes.AUTH_PASSWORD_RESET_REQUEST,
+                    category=AuditCategories.AUTHENTICATION,
+                    description="Password reset requested",
+                    metadata={},
+                    user=user,
+                )
+            except User.DoesNotExist:
+                # Don't reveal if email exists - log for monitoring
+                logger.info("Password reset requested for non-existent email: %s", email)
+
+            # Always return success to prevent user enumeration
+            return Response(
+                {
+                    "detail": "If an account exists with this email, you will receive a password reset link."
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        return handle_validation_error(
+            detail="Invalid request.",
+            errors=serializer.errors,
+        )
+
+    def send_password_reset_email(self, user, token):
+        """Send password reset email - non-blocking"""
+        try:
+            frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3000")
+            reset_url = f"{frontend_url}/reset-password?token={token}"
+
+            subject = "Reset your Observer password"
+            message = f"""
+Hello {user.first_name},
+
+You requested to reset your password for your Observer account. Click the link below to set a new password:
+
+{reset_url}
+
+This link will expire in 1 hour.
+
+If you didn't request a password reset, please ignore this email. Your password will remain unchanged.
+
+Best regards,
+The Observer Team
+            """.strip()
+
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@observer.com"),
+                recipient_list=[user.email],
+                fail_silently=True,
+            )
+
+            logger.info("Password reset email sent to %s", user.email)
+        except Exception as e:
+            logger.error(
+                "Failed to send password reset email to %s: %s", user.email, str(e), exc_info=True
+            )
+
+
+@method_decorator(
+    ratelimit(
+        key="ip", rate=settings.RATE_LIMITS["PASSWORD_RESET_CONFIRM"], method="POST", block=True
+    ),
+    name="post",
+)
+class PasswordResetConfirmView(APIView):
+    """
+    Confirm password reset with token and new password.
+    Invalidates all existing sessions after successful reset.
+    Rate limiting configured via settings.RATE_LIMITS['PASSWORD_RESET_CONFIRM'].
+    """
+
+    permission_classes = []  # Allow anonymous access
+
+    def _blacklist_user_tokens(self, user):
+        """Blacklist all outstanding refresh tokens for a user."""
+        try:
+            outstanding_tokens = OutstandingToken.objects.using("accounts").filter(user=user)
+            for outstanding_token in outstanding_tokens:
+                try:
+                    refresh = RefreshToken(outstanding_token.token)
+                    refresh.blacklist()
+                except Exception as e:
+                    logger.warning(f"Could not blacklist token for user {user.id}: {e}")
+        except Exception as e:
+            logger.error(f"Error blacklisting tokens after password reset: {e}")
+
+    def _reset_password(self, token, password):
+        """
+        Reset user password atomically.
+        Returns the user on success, raises exception on failure.
+        """
+        with transaction.atomic(using="accounts"):
+            reset_token = (
+                PasswordResetToken.objects.using("accounts").select_for_update().get(token=token)
+            )
+
+            if not reset_token.is_valid():
+                return None
+
+            user = reset_token.user
+            user.set_password(password)
+            user.save(using="accounts")
+
+            reset_token.is_used = True
+            reset_token.save(using="accounts")
+
+            return user
+
+    def post(self, request, *args, **kwargs):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return handle_validation_error(detail="Invalid request.", errors=serializer.errors)
+
+        token = serializer.validated_data["token"]
+        password = serializer.validated_data["password"]
+
+        try:
+            user = self._reset_password(token, password)
+
+            if user is None:
+                return handle_validation_error(
+                    detail="This password reset link has expired or already been used. Please request a new one."
+                )
+
+            self._blacklist_user_tokens(user)
+
+            AuditService.log(
+                request=request,
+                event_type=AuditEventTypes.AUTH_PASSWORD_RESET_COMPLETE,
+                category=AuditCategories.AUTHENTICATION,
+                description="Password reset completed",
+                metadata={},
+                user=user,
+            )
+
+            return Response(
+                {
+                    "detail": "Your password has been reset successfully. You can now log in with your new password."
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except PasswordResetToken.DoesNotExist:
+            return handle_validation_error(
+                detail="Invalid password reset link. Please request a new one."
+            )
+        except Exception as e:
+            logger.error("Password reset error: %s", str(e), exc_info=True)
+            return handle_server_error(
+                detail="Password reset failed. Please try again later.",
+                log_message=f"Password reset error: {str(e)}",
+                exception=e,
+            )

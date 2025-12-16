@@ -73,3 +73,51 @@ class EmailVerificationToken(models.Model):
 
     def __str__(self):
         return f"Verification token for {self.user.email}"
+
+
+class PasswordResetToken(models.Model):
+    """
+    Model to store password reset tokens.
+    Tokens expire after 1 hour for security.
+    """
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="password_reset_tokens")
+    token = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+
+    class Meta:
+        app_label = "accounts"
+        db_table = "accounts_password_reset_token"
+        verbose_name = "Password Reset Token"
+        verbose_name_plural = "Password Reset Tokens"
+        indexes = [
+            models.Index(fields=["user", "is_used"], name="pwd_reset_user_used_idx"),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.token:
+            self.token = self.generate_token()
+        if not self.expires_at:
+            # Token expires in 1 hour (more secure than email verification)
+            self.expires_at = timezone.now() + timedelta(hours=1)
+        super().save(*args, **kwargs)
+
+    def generate_token(self):
+        """Generate a unique password reset token (64 characters for extra security)"""
+        while True:
+            token = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(64))
+            if not PasswordResetToken.objects.filter(token=token).exists():
+                return token
+
+    def is_expired(self):
+        """Check if token is expired"""
+        return timezone.now() > self.expires_at
+
+    def is_valid(self):
+        """Check if token is valid (not used and not expired)"""
+        return not self.is_used and not self.is_expired()
+
+    def __str__(self):
+        return f"Password reset token for {self.user.email}"
