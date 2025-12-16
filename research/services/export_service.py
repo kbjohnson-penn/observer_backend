@@ -26,6 +26,9 @@ class ExportService:
         with certain characters (=, +, -, @). This method prefixes such
         values with a single quote to prevent execution.
 
+        Also handles values with leading whitespace followed by formula characters,
+        which could bypass first-character-only checks.
+
         Args:
             value: The cell value to sanitize
 
@@ -33,7 +36,9 @@ class ExportService:
             Sanitized value safe for CSV export
         """
         if isinstance(value, str) and value:
-            if value[0] in self.FORMULA_INJECTION_CHARS:
+            # Check both first char and first non-whitespace char
+            stripped = value.lstrip()
+            if stripped and stripped[0] in self.FORMULA_INJECTION_CHARS:
                 return f"'{value}"
         return value
 

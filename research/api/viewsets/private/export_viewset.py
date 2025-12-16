@@ -21,6 +21,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from accounts.models import AuditTrail, Cohort
+from accounts.services import AuditService
 from research.models import (
     AuditLogs,
     ConditionOccurrence,
@@ -417,29 +418,25 @@ class ExportViewSet(ViewSet):
         This is called in the same request as export generation,
         ensuring the audit log is always created when an export happens.
         """
+        # Sanitize cohort_name to prevent log injection
+        safe_cohort_name = AuditService._sanitize_string(cohort_name or "", max_length=100)
+
         AuditTrail.objects.using("accounts").create(
             user=request.user,
             event_type=event_type,
             category="DATA_EXPORT",
-            description=f"Exported {record_count} records from cohort '{cohort_name}'",
+            description=f"Exported {record_count} records from cohort '{safe_cohort_name}'",
             metadata={
                 "table_id": table_id,
                 "table_count": table_count,
                 "record_count": record_count,
                 "include_docs": include_docs,
                 "cohort_id": cohort_id,
-                "cohort_name": cohort_name,
+                "cohort_name": safe_cohort_name,
             },
-            ip_address=self._get_client_ip(request),
-            user_agent=request.META.get("HTTP_USER_AGENT", ""),
+            ip_address=AuditService.get_client_ip(request),
+            user_agent=AuditService._sanitize_user_agent(request.META.get("HTTP_USER_AGENT", "")),
         )
-
-    def _get_client_ip(self, request) -> Optional[str]:
-        """Extract client IP address, handling proxy headers."""
-        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-        if x_forwarded_for:
-            return x_forwarded_for.split(",")[0].strip()
-        return request.META.get("REMOTE_ADDR")
 
     def _sanitize_filename(self, filename: str) -> str:
         """

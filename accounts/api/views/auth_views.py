@@ -11,9 +11,11 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 from django_ratelimit.decorators import ratelimit
 from rest_framework import serializers, status
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
@@ -80,82 +82,84 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
     serializer_class = CustomTokenObtainPairSerializer
 
+    def _get_user_by_username(self, username: str):
+        """Fetch user by username or email."""
+        if "@" in username:
+            return User.objects.using("accounts").get(email=username)
+        return User.objects.using("accounts").get(username=username)
+
+    def _set_token_cookies(self, response, access_token, refresh_token):
+        """Set httpOnly cookies for JWT tokens."""
+        if access_token:
+            set_auth_cookie(
+                response,
+                "access_token",
+                access_token,
+                max_age=settings.SIMPLE_JWT.get("ACCESS_TOKEN_LIFETIME").total_seconds(),
+            )
+        if refresh_token:
+            set_auth_cookie(
+                response,
+                "refresh_token",
+                refresh_token,
+                max_age=settings.SIMPLE_JWT.get("REFRESH_TOKEN_LIFETIME").total_seconds(),
+            )
+
+    def _handle_successful_login(self, request, response, username: str):
+        """Process successful login: update user, log audit, set cookies."""
+        if not username:
+            return
+
+        try:
+            user = self._get_user_by_username(username)
+            user.last_login = timezone.now()
+            user.save(using="accounts")
+
+            AuditService.log(
+                request=request,
+                event_type=AuditEventTypes.AUTH_LOGIN_SUCCESS,
+                category=AuditCategories.AUTHENTICATION,
+                description="User logged in successfully",
+                metadata={"login_method": "email" if "@" in username else "username"},
+                user=user,
+            )
+
+            self._set_token_cookies(
+                response, response.data.get("access"), response.data.get("refresh")
+            )
+
+            # Build secure response (remove tokens from body)
+            access_lifetime = settings.SIMPLE_JWT.get("ACCESS_TOKEN_LIFETIME")
+            expires_at = int((timezone.now() + access_lifetime).timestamp())
+            response.data = {
+                "detail": "Login successful",
+                "user": {"username": user.username, "email": user.email, "id": user.id},
+                "expires_at": expires_at,
+            }
+        except User.DoesNotExist:
+            logger.warning(
+                "Authentication succeeded but user lookup failed for username: %s", username
+            )
+        except Exception as e:
+            logger.error("Failed to update last_login for user: %s", e)
+
     def post(self, request, *args, **kwargs):
         username = request.data.get("username", "")
-        response = super().post(request, *args, **kwargs)
 
-        # Only update last_login and set cookies if authentication was successful
-        if response.status_code == status.HTTP_200_OK:
-            try:
-                if username:
-                    # Handle email login - get username from email
-                    if "@" in username:
-                        user = User.objects.using("accounts").get(email=username)
-                    else:
-                        user = User.objects.using("accounts").get(username=username)
-
-                    user.last_login = timezone.now()
-                    user.save(using="accounts")
-
-                    # Log successful login
-                    AuditService.log(
-                        request=request,
-                        event_type=AuditEventTypes.AUTH_LOGIN_SUCCESS,
-                        category=AuditCategories.AUTHENTICATION,
-                        description="User logged in successfully",
-                        metadata={"login_method": "email" if "@" in username else "username"},
-                        user=user,
-                    )
-
-                    # Set httpOnly cookies for tokens
-                    access_token = response.data.get("access")
-                    refresh_token = response.data.get("refresh")
-
-                    if access_token:
-                        set_auth_cookie(
-                            response,
-                            "access_token",
-                            access_token,
-                            max_age=settings.SIMPLE_JWT.get(
-                                "ACCESS_TOKEN_LIFETIME"
-                            ).total_seconds(),
-                        )
-
-                    if refresh_token:
-                        set_auth_cookie(
-                            response,
-                            "refresh_token",
-                            refresh_token,
-                            max_age=settings.SIMPLE_JWT.get(
-                                "REFRESH_TOKEN_LIFETIME"
-                            ).total_seconds(),
-                        )
-
-                    # Remove tokens from response body for security
-                    # Include access token expiry for frontend auto-logout scheduling
-                    access_lifetime = settings.SIMPLE_JWT.get("ACCESS_TOKEN_LIFETIME")
-                    expires_at = int((timezone.now() + access_lifetime).timestamp())
-                    response.data = {
-                        "detail": "Login successful",
-                        "user": {"username": user.username, "email": user.email, "id": user.id},
-                        "expires_at": expires_at,
-                    }
-
-            except User.DoesNotExist:
-                # Don't reveal user existence in login endpoint
-                logger.warning(
-                    "Authentication succeeded but user lookup failed for username: %s", username
-                )
-            except Exception as e:
-                # Log error but don't fail the response
-                logger.error("Failed to update last_login for user: %s", e)
-        else:
-            # Log failed login attempt
+        try:
+            response = super().post(request, *args, **kwargs)
+        except (InvalidToken, TokenError, AuthenticationFailed):
+            # Only log failed login for authentication-related exceptions
+            # Other exceptions (DB errors, etc.) should propagate without being logged as auth failures
             AuditService.log_failed_login(
                 request=request,
                 attempted_username=username,
                 failure_reason="invalid_credentials",
             )
+            raise
+
+        if response.status_code == status.HTTP_200_OK:
+            self._handle_successful_login(request, response, username)
 
         return response
 
