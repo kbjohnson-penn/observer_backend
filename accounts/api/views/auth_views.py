@@ -2,7 +2,9 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from django.core.mail import send_mail
+from django.db import transaction
 from django.middleware.csrf import get_token
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -10,9 +12,11 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 from django_ratelimit.decorators import ratelimit
 from rest_framework import serializers, status
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
@@ -20,9 +24,13 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from accounts.api.serializers.auth_serializers import (
     CustomTokenObtainPairSerializer,
     EmailVerificationSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
     UserRegistrationSerializer,
 )
-from accounts.models.user_models import EmailVerificationToken
+from accounts.models.user_models import EmailVerificationToken, PasswordResetToken
+from accounts.services import AuditService
+from accounts.services.audit_constants import AuditCategories, AuditEventTypes
 from shared.api.error_handlers import handle_server_error, handle_validation_error
 
 User = get_user_model()
@@ -77,65 +85,84 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
     serializer_class = CustomTokenObtainPairSerializer
 
+    def _get_user_by_username(self, username: str):
+        """Fetch user by username or email."""
+        if "@" in username:
+            return User.objects.using("accounts").get(email=username)
+        return User.objects.using("accounts").get(username=username)
+
+    def _set_token_cookies(self, response, access_token, refresh_token):
+        """Set httpOnly cookies for JWT tokens."""
+        if access_token:
+            set_auth_cookie(
+                response,
+                "access_token",
+                access_token,
+                max_age=settings.SIMPLE_JWT.get("ACCESS_TOKEN_LIFETIME").total_seconds(),
+            )
+        if refresh_token:
+            set_auth_cookie(
+                response,
+                "refresh_token",
+                refresh_token,
+                max_age=settings.SIMPLE_JWT.get("REFRESH_TOKEN_LIFETIME").total_seconds(),
+            )
+
+    def _handle_successful_login(self, request, response, username: str):
+        """Process successful login: update user, log audit, set cookies."""
+        if not username:
+            return
+
+        try:
+            user = self._get_user_by_username(username)
+            user.last_login = timezone.now()
+            user.save(using="accounts")
+
+            AuditService.log(
+                request=request,
+                event_type=AuditEventTypes.AUTH_LOGIN_SUCCESS,
+                category=AuditCategories.AUTHENTICATION,
+                description="User logged in successfully",
+                metadata={"login_method": "email" if "@" in username else "username"},
+                user=user,
+            )
+
+            self._set_token_cookies(
+                response, response.data.get("access"), response.data.get("refresh")
+            )
+
+            # Build secure response (remove tokens from body)
+            access_lifetime = settings.SIMPLE_JWT.get("ACCESS_TOKEN_LIFETIME")
+            expires_at = int((timezone.now() + access_lifetime).timestamp())
+            response.data = {
+                "detail": "Login successful",
+                "user": {"username": user.username, "email": user.email, "id": user.id},
+                "expires_at": expires_at,
+            }
+        except User.DoesNotExist:
+            logger.warning(
+                "Authentication succeeded but user lookup failed for username: %s", username
+            )
+        except Exception as e:
+            logger.error("Failed to update last_login for user: %s", e)
+
     def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
+        username = request.data.get("username", "")
 
-        # Only update last_login and set cookies if authentication was successful
+        try:
+            response = super().post(request, *args, **kwargs)
+        except (InvalidToken, TokenError, AuthenticationFailed):
+            # Only log failed login for authentication-related exceptions
+            # Other exceptions (DB errors, etc.) should propagate without being logged as auth failures
+            AuditService.log_failed_login(
+                request=request,
+                attempted_username=username,
+                failure_reason="invalid_credentials",
+            )
+            raise
+
         if response.status_code == status.HTTP_200_OK:
-            try:
-                username = request.data.get("username")
-                if username:
-                    # Handle email login - get username from email
-                    if "@" in username:
-                        user = User.objects.using("accounts").get(email=username)
-                    else:
-                        user = User.objects.using("accounts").get(username=username)
-
-                    user.last_login = timezone.now()
-                    user.save(using="accounts")
-
-                    # Set httpOnly cookies for tokens
-                    access_token = response.data.get("access")
-                    refresh_token = response.data.get("refresh")
-
-                    if access_token:
-                        set_auth_cookie(
-                            response,
-                            "access_token",
-                            access_token,
-                            max_age=settings.SIMPLE_JWT.get(
-                                "ACCESS_TOKEN_LIFETIME"
-                            ).total_seconds(),
-                        )
-
-                    if refresh_token:
-                        set_auth_cookie(
-                            response,
-                            "refresh_token",
-                            refresh_token,
-                            max_age=settings.SIMPLE_JWT.get(
-                                "REFRESH_TOKEN_LIFETIME"
-                            ).total_seconds(),
-                        )
-
-                    # Remove tokens from response body for security
-                    # Include access token expiry for frontend auto-logout scheduling
-                    access_lifetime = settings.SIMPLE_JWT.get("ACCESS_TOKEN_LIFETIME")
-                    expires_at = int((timezone.now() + access_lifetime).timestamp())
-                    response.data = {
-                        "detail": "Login successful",
-                        "user": {"username": user.username, "email": user.email, "id": user.id},
-                        "expires_at": expires_at,
-                    }
-
-            except User.DoesNotExist:
-                # Don't reveal user existence in login endpoint
-                logger.warning(
-                    "Authentication succeeded but user lookup failed for username: %s", username
-                )
-            except Exception as e:
-                # Log error but don't fail the response
-                logger.error("Failed to update last_login for user: %s", e)
+            self._handle_successful_login(request, response, username)
 
         return response
 
@@ -149,6 +176,15 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
+        # Log logout before clearing cookies
+        AuditService.log(
+            request=request,
+            event_type=AuditEventTypes.AUTH_LOGOUT,
+            category=AuditCategories.AUTHENTICATION,
+            description="User logged out",
+            metadata={},
+        )
+
         # Get refresh token from cookie
         refresh_token = request.COOKIES.get("refresh_token")
 
@@ -229,6 +265,23 @@ class CustomTokenRefreshView(TokenRefreshView):
             expires_at = int((timezone.now() + access_lifetime).timestamp())
             response.data = {"detail": "Token refresh successful", "expires_at": expires_at}
 
+            # Log token refresh - get user from refresh token since access token may be expired
+            try:
+                token = RefreshToken(refresh_token)
+                user_id = token.payload.get("user_id")
+                user = User.objects.using("accounts").get(id=user_id)
+                AuditService.log(
+                    request=request,
+                    user=user,
+                    event_type=AuditEventTypes.AUTH_TOKEN_REFRESH,
+                    category=AuditCategories.AUTHENTICATION,
+                    description="Token refreshed",
+                    metadata={},
+                )
+            except Exception as e:
+                # Token decode or user lookup failed, skip audit logging
+                logger.warning(f"Failed to log token refresh audit: {e}")
+
         return response
 
 
@@ -286,6 +339,16 @@ class UserRegistrationView(APIView):
 
                 # Send verification email (non-blocking - registration succeeds even if email fails)
                 self.send_verification_email(user, verification_token.token)
+
+                # Log successful registration
+                AuditService.log(
+                    request=request,
+                    event_type=AuditEventTypes.AUTH_REGISTRATION,
+                    category=AuditCategories.AUTHENTICATION,
+                    description="New user registered",
+                    metadata={},
+                    user=user,
+                )
 
                 return Response(
                     {
@@ -401,6 +464,16 @@ class EmailVerificationView(APIView):
                 verification_token.is_used = True
                 verification_token.save(using="accounts")
 
+                # Log email verification
+                AuditService.log(
+                    request=request,
+                    event_type=AuditEventTypes.AUTH_EMAIL_VERIFIED,
+                    category=AuditCategories.AUTHENTICATION,
+                    description="Email verified",
+                    metadata={},
+                    user=user,
+                )
+
                 return Response(
                     {
                         "detail": "Email verified successfully. You can now log in.",
@@ -441,13 +514,13 @@ class PasswordChangeSerializer(serializers.Serializer):
     """Serializer for password change"""
 
     old_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True, min_length=8)
-    new_password_confirm = serializers.CharField(required=True, min_length=8)
+    new_password = serializers.CharField(required=True)
+    new_password_confirm = serializers.CharField(required=True)
 
     def validate_new_password(self, value):
-        """Validate new password strength"""
-        if len(value) < 8:
-            raise serializers.ValidationError("Password must be at least 8 characters long.")
+        """Validate new password using Django's password validators."""
+        user = self.context.get("request").user if self.context.get("request") else None
+        validate_password(value, user=user)
         return value
 
     def validate(self, data):
@@ -474,7 +547,7 @@ class PasswordChangeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        serializer = PasswordChangeSerializer(data=request.data)
+        serializer = PasswordChangeSerializer(data=request.data, context={"request": request})
 
         if serializer.is_valid():
             old_password = serializer.validated_data["old_password"]
@@ -492,6 +565,15 @@ class PasswordChangeView(APIView):
             # Set new password
             user.set_password(new_password)
             user.save(using="accounts")
+
+            # Log password change
+            AuditService.log(
+                request=request,
+                event_type=AuditEventTypes.AUTH_PASSWORD_CHANGED,
+                category=AuditCategories.AUTHENTICATION,
+                description="Password changed",
+                metadata={},
+            )
 
             # Blacklist all outstanding tokens for this user for security
             try:
@@ -526,3 +608,199 @@ class PasswordChangeView(APIView):
             return response
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@method_decorator(
+    ratelimit(
+        key="ip", rate=settings.RATE_LIMITS["PASSWORD_RESET_REQUEST"], method="POST", block=True
+    ),
+    name="post",
+)
+class PasswordResetRequestView(APIView):
+    """
+    Request password reset. Sends email with reset link if user exists.
+    Always returns same response to prevent user enumeration.
+    Rate limiting configured via settings.RATE_LIMITS['PASSWORD_RESET_REQUEST'].
+    """
+
+    permission_classes = []  # Allow anonymous access
+
+    def post(self, request, *args, **kwargs):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+
+            try:
+                user = User.objects.using("accounts").get(email=email, is_active=True)
+
+                # Invalidate any existing unused tokens for this user
+                PasswordResetToken.objects.using("accounts").filter(
+                    user=user, is_used=False
+                ).update(is_used=True)
+
+                # Create new token
+                reset_token = PasswordResetToken.objects.db_manager("accounts").create(user=user)
+
+                # Send email (non-blocking)
+                self.send_password_reset_email(user, reset_token.token)
+
+                # Log password reset request (no PII in metadata - user object provides context)
+                AuditService.log(
+                    request=request,
+                    event_type=AuditEventTypes.AUTH_PASSWORD_RESET_REQUEST,
+                    category=AuditCategories.AUTHENTICATION,
+                    description="Password reset requested",
+                    metadata={},
+                    user=user,
+                )
+            except User.DoesNotExist:
+                # Don't reveal if email exists - log for monitoring
+                logger.info("Password reset requested for non-existent email: %s", email)
+
+            # Always return success to prevent user enumeration
+            return Response(
+                {
+                    "detail": "If an account exists with this email, you will receive a password reset link."
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        return handle_validation_error(
+            detail="Invalid request.",
+            errors=serializer.errors,
+        )
+
+    def send_password_reset_email(self, user, token):
+        """Send password reset email - non-blocking"""
+        try:
+            frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3000")
+            reset_url = f"{frontend_url}/reset-password?token={token}"
+
+            subject = "Reset your Observer password"
+            message = f"""
+Hello {user.first_name},
+
+You requested to reset your password for your Observer account. Click the link below to set a new password:
+
+{reset_url}
+
+This link will expire in 1 hour.
+
+If you didn't request a password reset, please ignore this email. Your password will remain unchanged.
+
+Best regards,
+The Observer Team
+            """.strip()
+
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@observer.com"),
+                recipient_list=[user.email],
+                fail_silently=True,
+            )
+
+            logger.info("Password reset email sent to %s", user.email)
+        except Exception as e:
+            logger.error(
+                "Failed to send password reset email to %s: %s", user.email, str(e), exc_info=True
+            )
+
+
+@method_decorator(
+    ratelimit(
+        key="ip", rate=settings.RATE_LIMITS["PASSWORD_RESET_CONFIRM"], method="POST", block=True
+    ),
+    name="post",
+)
+class PasswordResetConfirmView(APIView):
+    """
+    Confirm password reset with token and new password.
+    Invalidates all existing sessions after successful reset.
+    Rate limiting configured via settings.RATE_LIMITS['PASSWORD_RESET_CONFIRM'].
+    """
+
+    permission_classes = []  # Allow anonymous access
+
+    def _blacklist_user_tokens(self, user):
+        """Blacklist all outstanding refresh tokens for a user."""
+        try:
+            outstanding_tokens = OutstandingToken.objects.using("accounts").filter(user=user)
+            for outstanding_token in outstanding_tokens:
+                try:
+                    refresh = RefreshToken(outstanding_token.token)
+                    refresh.blacklist()
+                except Exception as e:
+                    logger.warning(f"Could not blacklist token for user {user.id}: {e}")
+        except Exception as e:
+            logger.error(f"Error blacklisting tokens after password reset: {e}")
+
+    def _reset_password(self, token, password):
+        """
+        Reset user password atomically.
+        Returns the user on success, raises exception on failure.
+        """
+        with transaction.atomic(using="accounts"):
+            reset_token = (
+                PasswordResetToken.objects.using("accounts").select_for_update().get(token=token)
+            )
+
+            if not reset_token.is_valid():
+                return None
+
+            user = reset_token.user
+            user.set_password(password)
+            user.save(using="accounts")
+
+            reset_token.is_used = True
+            reset_token.save(using="accounts")
+
+            return user
+
+    def post(self, request, *args, **kwargs):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return handle_validation_error(detail="Invalid request.", errors=serializer.errors)
+
+        token = serializer.validated_data["token"]
+        password = serializer.validated_data["password"]
+
+        try:
+            user = self._reset_password(token, password)
+
+            if user is None:
+                return handle_validation_error(
+                    detail="This password reset link has expired or already been used. Please request a new one."
+                )
+
+            self._blacklist_user_tokens(user)
+
+            AuditService.log(
+                request=request,
+                event_type=AuditEventTypes.AUTH_PASSWORD_RESET_COMPLETE,
+                category=AuditCategories.AUTHENTICATION,
+                description="Password reset completed",
+                metadata={},
+                user=user,
+            )
+
+            return Response(
+                {
+                    "detail": "Your password has been reset successfully. You can now log in with your new password."
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except PasswordResetToken.DoesNotExist:
+            return handle_validation_error(
+                detail="Invalid password reset link. Please request a new one."
+            )
+        except Exception as e:
+            logger.error("Password reset error: %s", str(e), exc_info=True)
+            return handle_server_error(
+                detail="Password reset failed. Please try again later.",
+                log_message=f"Password reset error: {str(e)}",
+                exception=e,
+            )

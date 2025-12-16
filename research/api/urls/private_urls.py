@@ -6,6 +6,7 @@ from research.api.viewsets.private.audit_logs_viewset import AuditLogsViewSet
 from research.api.viewsets.private.cohort_data_viewset import CohortDataViewSet
 from research.api.viewsets.private.condition_occurrence_viewset import ConditionOccurrenceViewSet
 from research.api.viewsets.private.drug_exposure_viewset import DrugExposureViewSet
+from research.api.viewsets.private.export_viewset import ExportViewSet
 from research.api.viewsets.private.filter_options_viewset import FilterOptionsViewSet
 from research.api.viewsets.private.labs_viewset import LabViewSet
 from research.api.viewsets.private.measurement_viewset import MeasurementViewSet
@@ -45,6 +46,7 @@ router.register(r"provider-surveys", ProviderSurveyViewSet, basename="v1-researc
 router.register(r"filter-options", FilterOptionsViewSet, basename="v1-research-filter-options")
 router.register(r"visits-search", VisitSearchViewSet, basename="v1-research-visit-search")
 router.register(r"labs", LabViewSet, basename="v1-research-lab")
+router.register(r"export", ExportViewSet, basename="v1-research-export")
 
 # Custom URL patterns for non-standard endpoints
 urlpatterns = [

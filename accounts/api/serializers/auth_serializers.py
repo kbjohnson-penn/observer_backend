@@ -170,3 +170,37 @@ class EmailVerificationSerializer(serializers.Serializer):
             raise serializers.ValidationError({"password": list(e.messages)})
 
         return attrs
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """
+    Serializer for password reset request (forgot password).
+    Only requires email.
+    """
+
+    email = serializers.EmailField()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """
+    Serializer for password reset confirmation.
+    Validates token and new password.
+    """
+
+    token = serializers.CharField(max_length=100)
+    password = serializers.CharField(write_only=True)
+    password_confirm = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        password = attrs.get("password")
+        password_confirm = attrs.get("password_confirm")
+
+        if password != password_confirm:
+            raise serializers.ValidationError({"password_confirm": "Password fields didn't match."})
+
+        try:
+            validate_password(password)
+        except ValidationError as e:
+            raise serializers.ValidationError({"password": list(e.messages)})
+
+        return attrs

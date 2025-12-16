@@ -52,6 +52,7 @@ RATE_LIMITS = {
     "LOGOUT": config("RATE_LIMIT_LOGOUT", default="5/m"),
     "TOKEN_REFRESH": config("RATE_LIMIT_TOKEN_REFRESH", default="30/m"),
     "TOKEN_VERIFY": config("RATE_LIMIT_TOKEN_VERIFY", default="30/m"),
+    "DATA_EXPORT": config("RATE_LIMIT_DATA_EXPORT", default="10/m"),
 }
 
 # Application definition

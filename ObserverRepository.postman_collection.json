@@ -163,6 +163,52 @@
                     "description": "Retrieves a CSRF token for subsequent state-changing requests.\n\n**Method:** GET (no request body)\n\n**Response:**\n- csrfToken (string): CSRF token value\n- Also sets CSRF cookie"
                   },
                   "response": []
+                },
+                {
+                  "name": "password-reset-request",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"email\": \"user@example.com\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/auth/password-reset/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "auth", "password-reset", ""]
+                    },
+                    "description": "Requests a password reset email.\n\n**Request Body:**\n- email (string, required): Email address associated with the account\n\n**Response:** 200 OK with success message. For security, returns the same response regardless of whether the email exists in the system.\n\n**Rate Limit:** 3 requests/minute per IP\n\n**Notes:**\n- If email exists, sends reset link valid for 1 hour\n- Invalidates any previous unused reset tokens"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "password-reset-confirm",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"token\": \"{{password_reset_token}}\",\n    \"password\": \"NewSecurePassword123!\",\n    \"password_confirm\": \"NewSecurePassword123!\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/accounts/auth/password-reset/confirm/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "accounts", "auth", "password-reset", "confirm", ""]
+                    },
+                    "description": "Confirms password reset with token from email link.\n\n**Request Body:**\n- token (string, required): Password reset token from email\n- password (string, required): New password (min 12 characters, must contain uppercase, lowercase, number, and special character)\n- password_confirm (string, required): Password confirmation (must match password)\n\n**Response:** 200 OK - Password reset successful, all sessions invalidated\n\n**Rate Limit:** 5 requests/minute per IP\n\n**Notes:**\n- Token expires after 1 hour\n- Token can only be used once\n- All existing sessions (refresh tokens) are invalidated after reset"
+                  },
+                  "response": []
                 }
               ]
             },
@@ -781,6 +827,120 @@
                       "host": ["{{base_url}}"],
                       "path": ["api", "v1", "research", "private", "visits-search", ""]
                     }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "labs",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/labs/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "labs", ""]
+                    },
+                    "description": "Retrieve lab data from research database.\n\n**Authentication:** Required (cookie-based)\n\n**Response:** List of lab records"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "export-single-table",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"cohort_id\": {{cohort_id}},\n    \"table_id\": \"visits\",\n    \"include_docs\": false\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/export/single_table/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "export", "single_table", ""]
+                    },
+                    "description": "Export a single table as CSV or ZIP (with documentation).\n\n**Authentication:** Required (cookie-based)\n\n**Request Body:**\n- cohort_id (integer, required): ID of the cohort to export data for\n- table_id (string, required): Table identifier. Valid values: persons, providers, visits, notes, conditions, drugs, procedures, measurements, observations, patient_surveys, provider_surveys, audit_logs, labs\n- include_docs (boolean, optional): Whether to include documentation (creates ZIP instead of CSV). Default: false\n\n**Response:** CSV file or ZIP file as attachment\n\n**Rate Limit:** Configured via RATE_LIMIT_DATA_EXPORT\n\n**Notes:**\n- Data is fetched server-side with tier-based access control\n- Export logged to AuditTrail for HIPAA compliance\n- Maximum 100,000 records per export"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "export-all-tables",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "POST",
+                    "header": [],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"cohort_id\": {{cohort_id}},\n    \"include_docs\": true\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/export/all_tables/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "export", "all_tables", ""]
+                    },
+                    "description": "Export all tables as a ZIP file.\n\n**Authentication:** Required (cookie-based)\n\n**Request Body:**\n- cohort_id (integer, required): ID of the cohort to export data for\n- include_docs (boolean, optional): Whether to include documentation. Default: false\n\n**Response:** ZIP file as attachment containing all tables (persons, providers, visits, notes, conditions, drugs, procedures, measurements, observations, patient_surveys, provider_surveys, audit_logs, labs)\n\n**Rate Limit:** Configured via RATE_LIMIT_DATA_EXPORT\n\n**Notes:**\n- Data is fetched server-side with tier-based access control\n- Export logged to AuditTrail for HIPAA compliance\n- Maximum 100,000 records per export"
+                  },
+                  "response": []
+                },
+                {
+                  "name": "cohort-data",
+                  "request": {
+                    "auth": {
+                      "type": "bearer",
+                      "bearer": [
+                        {
+                          "key": "token",
+                          "value": "{{auth_token}}",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/research/private/cohorts/{{cohort_id}}/data/",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "research", "private", "cohorts", "{{cohort_id}}", "data", ""]
+                    },
+                    "description": "Fetch all OMOP tables filtered by cohort.\n\n**Authentication:** Required (cookie-based)\n\n**Path Parameter:**\n- cohort_id (integer): The cohort ID to filter data by\n\n**Response:** OMOP data filtered by the specified cohort"
                   },
                   "response": []
                 }

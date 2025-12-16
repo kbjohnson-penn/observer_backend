@@ -14,6 +14,8 @@ from accounts.api.serializers import (
     CohortUpdateSerializer,
 )
 from accounts.models import Cohort
+from accounts.services import AuditService
+from accounts.services.audit_constants import AuditCategories, AuditEventTypes
 from shared.api.permissions import BaseAuthenticatedViewSet
 
 
@@ -99,6 +101,19 @@ class CohortViewSet(BaseAuthenticatedViewSet):
         # Save with current user
         cohort = serializer.save(user=request.user)
 
+        # Log cohort creation
+        AuditService.log(
+            request=request,
+            event_type=AuditEventTypes.COHORT_CREATE,
+            category=AuditCategories.COHORT_MANAGEMENT,
+            description=f"Created cohort: {cohort.name}",
+            metadata={
+                "cohort_id": cohort.id,
+                "cohort_name": cohort.name,
+                "visit_count": cohort.visit_count,
+            },
+        )
+
         # Return full cohort data
         return_serializer = CohortSerializer(cohort)
         return Response(return_serializer.data, status=status.HTTP_201_CREATED)
@@ -141,6 +156,19 @@ class CohortViewSet(BaseAuthenticatedViewSet):
 
         serializer.save()
 
+        # Log cohort update
+        AuditService.log(
+            request=request,
+            event_type=AuditEventTypes.COHORT_UPDATE,
+            category=AuditCategories.COHORT_MANAGEMENT,
+            description=f"Updated cohort: {cohort.name}",
+            metadata={
+                "cohort_id": cohort.id,
+                "cohort_name": cohort.name,
+                "updated_fields": list(request.data.keys()),
+            },
+        )
+
         # Return full cohort data
         return_serializer = CohortSerializer(cohort)
         return Response(return_serializer.data)
@@ -166,6 +194,19 @@ class CohortViewSet(BaseAuthenticatedViewSet):
 
         serializer.save()
 
+        # Log cohort partial update
+        AuditService.log(
+            request=request,
+            event_type=AuditEventTypes.COHORT_UPDATE,
+            category=AuditCategories.COHORT_MANAGEMENT,
+            description=f"Partially updated cohort: {cohort.name}",
+            metadata={
+                "cohort_id": cohort.id,
+                "cohort_name": cohort.name,
+                "updated_fields": list(request.data.keys()),
+            },
+        )
+
         # Return full cohort data
         return_serializer = CohortSerializer(cohort)
         return Response(return_serializer.data)
@@ -184,11 +225,26 @@ class CohortViewSet(BaseAuthenticatedViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        # Capture data before delete for audit logging
+        cohort_id = cohort.id
+        cohort_name = cohort.name
+
+        # Delete the cohort first
         cohort.delete()
 
-        return Response(
-            {"detail": "Cohort deleted successfully."}, status=status.HTTP_204_NO_CONTENT
+        # Log cohort deletion AFTER successful delete
+        AuditService.log(
+            request=request,
+            event_type=AuditEventTypes.COHORT_DELETE,
+            category=AuditCategories.COHORT_MANAGEMENT,
+            description=f"Deleted cohort: {cohort_name}",
+            metadata={
+                "cohort_id": cohort_id,
+                "cohort_name": cohort_name,
+            },
         )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["post"])
     def duplicate(self, request, pk=None):
@@ -222,6 +278,20 @@ class CohortViewSet(BaseAuthenticatedViewSet):
             description=original_cohort.description,
             filters=original_cohort.filters,
             visit_count=original_cohort.visit_count,
+        )
+
+        # Log cohort duplication
+        AuditService.log(
+            request=request,
+            event_type=AuditEventTypes.COHORT_DUPLICATE,
+            category=AuditCategories.COHORT_MANAGEMENT,
+            description=f"Duplicated cohort: {original_cohort.name} -> {new_name}",
+            metadata={
+                "original_cohort_id": original_cohort.id,
+                "original_cohort_name": original_cohort.name,
+                "new_cohort_id": duplicate.id,
+                "new_cohort_name": duplicate.name,
+            },
         )
 
         serializer = CohortSerializer(duplicate)
