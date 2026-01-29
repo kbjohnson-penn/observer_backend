@@ -59,8 +59,9 @@ class EmailVerificationToken(models.Model):
     def generate_token(self):
         """Generate a unique verification token"""
         while True:
-            token = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
-            if not EmailVerificationToken.objects.filter(token=token).exists():
+            # Use 64 characters to match PasswordResetToken security level
+            token = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(64))
+            if not EmailVerificationToken.objects.using("accounts").filter(token=token).exists():
                 return token
 
     def is_expired(self):
@@ -108,7 +109,7 @@ class PasswordResetToken(models.Model):
         """Generate a unique password reset token (64 characters for extra security)"""
         while True:
             token = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(64))
-            if not PasswordResetToken.objects.filter(token=token).exists():
+            if not PasswordResetToken.objects.using("accounts").filter(token=token).exists():
                 return token
 
     def is_expired(self):

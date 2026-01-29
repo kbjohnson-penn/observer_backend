@@ -117,12 +117,20 @@ class FilterSerializer(serializers.Serializer):
                 self._validate_year_of_birth_range(
                     person_demo.get("year_of_birth_from"), person_demo.get("year_of_birth_to")
                 )
+                # Validate demographic filter values
+                self._validate_demographic_values(person_demo.get("gender"), "gender")
+                self._validate_demographic_values(person_demo.get("race"), "race")
+                self._validate_demographic_values(person_demo.get("ethnicity"), "ethnicity")
 
             provider_demo = value.get("provider_demographics", {})
             if provider_demo:
                 self._validate_year_of_birth_range(
                     provider_demo.get("year_of_birth_from"), provider_demo.get("year_of_birth_to")
                 )
+                # Validate demographic filter values
+                self._validate_demographic_values(provider_demo.get("gender"), "gender")
+                self._validate_demographic_values(provider_demo.get("race"), "race")
+                self._validate_demographic_values(provider_demo.get("ethnicity"), "ethnicity")
 
         elif is_flat:
             # Validate flat structure (legacy support)
@@ -139,6 +147,27 @@ class FilterSerializer(serializers.Serializer):
             )
 
         return value
+
+    def _validate_demographic_values(self, values, field_name):
+        """
+        Validate demographic filter values.
+        Ensures values are strings and documents that NULL_MARKER is accepted.
+
+        Args:
+            values: List of filter values (may include NULL_MARKER for NULL matching)
+            field_name: Name of the field for error messages
+        """
+        if values is None:
+            return
+
+        if not isinstance(values, list):
+            raise serializers.ValidationError(f"{field_name} must be a list")
+
+        for value in values:
+            if not isinstance(value, str):
+                raise serializers.ValidationError(f"{field_name} values must be strings")
+            # NULL_MARKER is a reserved marker for filtering NULL database values
+            # Other string values will be matched directly against the database
 
     def _count_nested_filters(self, filters, depth=0):
         """

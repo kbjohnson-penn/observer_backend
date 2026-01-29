@@ -13,6 +13,7 @@ from research.api.serializers import VisitSearchResultSerializer
 from research.api.serializers.filter_serializer import FilterSerializer
 from research.models import VisitOccurrence
 from shared.api.permissions import BaseAuthenticatedViewSet, filter_queryset_by_user_tier
+from shared.constants import NULL_MARKER
 
 
 class VisitSearchViewSet(BaseAuthenticatedViewSet):
@@ -100,6 +101,36 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
             related_field="tier_id",
         )
 
+    def _apply_demographic_filter_with_null(self, queryset, values, field_lookup):
+        """
+        Apply demographic filter supporting NULL_MARKER for NULL values.
+
+        Args:
+            queryset: The queryset to filter
+            values: List of filter values (may include NULL_MARKER)
+            field_lookup: The field to filter on (e.g., "person__gender_source_value")
+
+        Returns:
+            Filtered queryset
+        """
+        if not values:
+            return queryset
+
+        include_null = NULL_MARKER in values
+        non_null_values = [v for v in values if v != NULL_MARKER]
+
+        if include_null and non_null_values:
+            return queryset.filter(
+                Q(**{f"{field_lookup}__in": non_null_values})
+                | Q(**{f"{field_lookup}__isnull": True})
+            )
+        elif include_null:
+            return queryset.filter(**{f"{field_lookup}__isnull": True})
+        elif non_null_values:
+            return queryset.filter(**{f"{field_lookup}__in": non_null_values})
+
+        return queryset
+
     def _count_active_filters(self, filters):
         """
         Count the number of active filters in the request.
@@ -180,21 +211,25 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
     def _apply_person_demographic_filters(self, queryset, demo_filters):
         """
         Apply demographic filters (via Person table join).
+        Handles NULL_MARKER to include records with NULL values.
         """
         if not demo_filters:
             return queryset
 
-        # Gender filter (multi-select)
-        if demo_filters.get("gender"):
-            queryset = queryset.filter(person__gender_source_value__in=demo_filters["gender"])
+        # Gender filter (multi-select, supports NULL_MARKER)
+        queryset = self._apply_demographic_filter_with_null(
+            queryset, demo_filters.get("gender"), "person__gender_source_value"
+        )
 
-        # Race filter (multi-select)
-        if demo_filters.get("race"):
-            queryset = queryset.filter(person__race_source_value__in=demo_filters["race"])
+        # Race filter (multi-select, supports NULL_MARKER)
+        queryset = self._apply_demographic_filter_with_null(
+            queryset, demo_filters.get("race"), "person__race_source_value"
+        )
 
-        # Ethnicity filter (multi-select)
-        if demo_filters.get("ethnicity"):
-            queryset = queryset.filter(person__ethnicity_source_value__in=demo_filters["ethnicity"])
+        # Ethnicity filter (multi-select, supports NULL_MARKER)
+        queryset = self._apply_demographic_filter_with_null(
+            queryset, demo_filters.get("ethnicity"), "person__ethnicity_source_value"
+        )
 
         # Year of birth range
         if demo_filters.get("year_of_birth_from"):
@@ -210,27 +245,25 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
     def _apply_provider_demographic_filters(self, queryset, provider_demo_filters):
         """
         Apply provider demographic filters (via Provider table join).
+        Handles NULL_MARKER to include records with NULL values.
         """
         if not provider_demo_filters:
             return queryset
 
-        # Provider gender filter (multi-select)
-        if provider_demo_filters.get("gender"):
-            queryset = queryset.filter(
-                provider__gender_source_value__in=provider_demo_filters["gender"]
-            )
+        # Provider gender filter (multi-select, supports NULL_MARKER)
+        queryset = self._apply_demographic_filter_with_null(
+            queryset, provider_demo_filters.get("gender"), "provider__gender_source_value"
+        )
 
-        # Provider race filter (multi-select)
-        if provider_demo_filters.get("race"):
-            queryset = queryset.filter(
-                provider__race_source_value__in=provider_demo_filters["race"]
-            )
+        # Provider race filter (multi-select, supports NULL_MARKER)
+        queryset = self._apply_demographic_filter_with_null(
+            queryset, provider_demo_filters.get("race"), "provider__race_source_value"
+        )
 
-        # Provider ethnicity filter (multi-select)
-        if provider_demo_filters.get("ethnicity"):
-            queryset = queryset.filter(
-                provider__ethnicity_source_value__in=provider_demo_filters["ethnicity"]
-            )
+        # Provider ethnicity filter (multi-select, supports NULL_MARKER)
+        queryset = self._apply_demographic_filter_with_null(
+            queryset, provider_demo_filters.get("ethnicity"), "provider__ethnicity_source_value"
+        )
 
         # Provider year of birth range
         if provider_demo_filters.get("year_of_birth_from"):

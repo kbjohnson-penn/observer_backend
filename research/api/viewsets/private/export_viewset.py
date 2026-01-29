@@ -421,8 +421,16 @@ class ExportViewSet(ViewSet):
         # Sanitize cohort_name to prevent log injection
         safe_cohort_name = AuditService._sanitize_string(cohort_name or "", max_length=100)
 
+        # Extract user identifier for HIPAA compliance (preserved if user is deleted)
+        user_identifier = ""
+        if request.user and hasattr(request.user, "email"):
+            user_identifier = AuditService._sanitize_string(
+                getattr(request.user, "email", ""), max_length=255
+            )
+
         AuditTrail.objects.using("accounts").create(
             user=request.user,
+            user_identifier=user_identifier,
             event_type=event_type,
             category="DATA_EXPORT",
             description=f"Exported {record_count} records from cohort '{safe_cohort_name}'",

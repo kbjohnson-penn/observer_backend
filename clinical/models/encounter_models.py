@@ -72,6 +72,7 @@ class Encounter(models.Model):
         default=5,
         null=False,
         blank=False,
+        db_index=True,  # Add index for frequent filtering
         validators=[MinValueValidator(1), MaxValueValidator(5)],
         help_text="References accounts.Tier.id (1-5, defaults to 5 for highest restriction)",
     )

@@ -79,8 +79,8 @@ class HasAccessToEncounter(BasePermission):
         else:
             return False
 
-        # Collect unique tier_ids from encounters (all encounters have tier_id now)
-        tier_ids = {encounter.tier_id for encounter in encounters}
+        # Efficiently collect unique tier_ids without loading full objects
+        tier_ids = set(encounters.values_list("tier_id", flat=True).distinct())
 
         # If no encounters found, deny access
         if not tier_ids:

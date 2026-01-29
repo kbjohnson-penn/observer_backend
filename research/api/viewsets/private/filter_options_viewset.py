@@ -4,7 +4,7 @@ Returns all available values for dropdown filters based on user's tier access.
 Uses hybrid approach: static values for common data, cached queries for visit metadata.
 """
 
-from django.db.models import Max, Min
+from django.db.models import Max, Min, Subquery
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 
@@ -12,6 +12,7 @@ from rest_framework.response import Response
 
 from research.models import Person, Provider, VisitOccurrence
 from shared.api.permissions import BaseAuthenticatedViewSet, filter_queryset_by_user_tier
+from shared.constants import NULL_MARKER
 
 
 class FilterOptionsViewSet(BaseAuthenticatedViewSet):
@@ -34,52 +35,61 @@ class FilterOptionsViewSet(BaseAuthenticatedViewSet):
         )
 
         # Demographics options - query actual values from both Person and Provider tables
-        # Get unique person and provider IDs from accessible visits
-        accessible_person_ids = accessible_visits.values_list("person_id", flat=True).distinct()
-        accessible_provider_ids = accessible_visits.values_list("provider_id", flat=True).distinct()
-
-        # Query Person and Provider tables for actual demographic values
-        accessible_persons = Person.objects.using("research").filter(id__in=accessible_person_ids)
+        # Use Subquery to avoid materializing large ID lists in memory
+        accessible_persons = Person.objects.using("research").filter(
+            id__in=Subquery(accessible_visits.values("person_id").distinct())
+        )
         accessible_providers = Provider.objects.using("research").filter(
-            id__in=accessible_provider_ids
+            id__in=Subquery(accessible_visits.values("provider_id").distinct())
         )
 
         # Combine unique values from both patients and providers
+        # Include NULL values as NULL_MARKER for frontend filtering
         patient_genders = set(
-            accessible_persons.values_list("gender_source_value", flat=True)
-            .exclude(gender_source_value__isnull=True)
-            .exclude(gender_source_value="")
+            accessible_persons.values_list("gender_source_value", flat=True).exclude(
+                gender_source_value=""
+            )
         )
         provider_genders = set(
-            accessible_providers.values_list("gender_source_value", flat=True)
-            .exclude(gender_source_value__isnull=True)
-            .exclude(gender_source_value="")
+            accessible_providers.values_list("gender_source_value", flat=True).exclude(
+                gender_source_value=""
+            )
         )
-        all_genders = sorted(patient_genders | provider_genders)
+        # Check for NULL and add marker at the end
+        has_null_gender = None in patient_genders or None in provider_genders
+        all_genders = sorted((patient_genders | provider_genders) - {None})
+        if has_null_gender:
+            all_genders.append(NULL_MARKER)
 
         patient_races = set(
-            accessible_persons.values_list("race_source_value", flat=True)
-            .exclude(race_source_value__isnull=True)
-            .exclude(race_source_value="")
+            accessible_persons.values_list("race_source_value", flat=True).exclude(
+                race_source_value=""
+            )
         )
         provider_races = set(
-            accessible_providers.values_list("race_source_value", flat=True)
-            .exclude(race_source_value__isnull=True)
-            .exclude(race_source_value="")
+            accessible_providers.values_list("race_source_value", flat=True).exclude(
+                race_source_value=""
+            )
         )
-        all_races = sorted(patient_races | provider_races)
+        has_null_race = None in patient_races or None in provider_races
+        all_races = sorted((patient_races | provider_races) - {None})
+        if has_null_race:
+            all_races.append(NULL_MARKER)
 
         patient_ethnicities = set(
-            accessible_persons.values_list("ethnicity_source_value", flat=True)
-            .exclude(ethnicity_source_value__isnull=True)
-            .exclude(ethnicity_source_value="")
+            accessible_persons.values_list("ethnicity_source_value", flat=True).exclude(
+                ethnicity_source_value=""
+            )
         )
         provider_ethnicities = set(
-            accessible_providers.values_list("ethnicity_source_value", flat=True)
-            .exclude(ethnicity_source_value__isnull=True)
-            .exclude(ethnicity_source_value="")
+            accessible_providers.values_list("ethnicity_source_value", flat=True).exclude(
+                ethnicity_source_value=""
+            )
         )
-        all_ethnicities = sorted(patient_ethnicities | provider_ethnicities)
+        has_null_ethnicity = None in patient_ethnicities or None in provider_ethnicities
+        all_ethnicities = sorted((patient_ethnicities | provider_ethnicities) - {None})
+        if has_null_ethnicity:
+            all_ethnicities.append(NULL_MARKER)
 
         # Get year of birth ranges for both
         person_yob = accessible_persons.aggregate(

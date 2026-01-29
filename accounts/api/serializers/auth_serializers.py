@@ -1,5 +1,6 @@
 import secrets
 import string
+import uuid
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
@@ -70,9 +71,32 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         }
 
     def validate_email(self, value):
-        """Ensure email is unique"""
-        if User.objects.using("accounts").filter(email=value).exists():
-            raise serializers.ValidationError("A user with this email already exists.")
+        """Ensure email is from allowed domain.
+
+        Note: Email uniqueness check is intentionally NOT done here to prevent
+        email enumeration attacks. Instead, the view handles existing emails
+        by sending a notification email rather than revealing existence.
+        """
+        from django.conf import settings
+
+        # Domain validation (mirrors frontend validation)
+        allowed_domains = list(settings.ALLOWED_EMAIL_DOMAINS)
+
+        # Allow test domains in development
+        if settings.DEBUG or settings.ALLOW_TEST_EMAILS:
+            allowed_domains.extend(settings.TEST_EMAIL_DOMAINS)
+
+        domain = value.split("@")[1].lower() if "@" in value else ""
+
+        is_allowed = any(
+            domain == allowed or domain.endswith("." + allowed) for allowed in allowed_domains
+        )
+
+        if not is_allowed:
+            raise serializers.ValidationError(
+                "Please use an institutional email address (.edu, .gov, .ac.uk, etc.)"
+            )
+
         return value
 
     def validate(self, attrs):
@@ -102,15 +126,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         organization_name = validated_data.pop("organization_name", None)
         password = validated_data.pop("password", None)
 
-        # Generate username from email
-        username = validated_data["email"].split("@")[0]
-
-        # Ensure unique username
-        base_username = username
-        counter = 1
-        while User.objects.using("accounts").filter(username=username).exists():
-            username = f"{base_username}{counter}"
-            counter += 1
+        # Generate username from email with UUID suffix to prevent race conditions
+        base_username = validated_data["email"].split("@")[0]
+        # Use UUID suffix to guarantee uniqueness without database check
+        username = f"{base_username}_{uuid.uuid4().hex[:8]}"
 
         validated_data["username"] = username
 
