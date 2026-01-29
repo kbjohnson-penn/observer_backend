@@ -25,6 +25,7 @@ AUTH_USER_MODEL = "accounts.User"
 # Basic Security Settings
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
 # Health Check Configuration
 # Whitelist IPs that can access detailed health check endpoint
@@ -251,8 +252,12 @@ SPECTACULAR_SETTINGS = {
 
 # JWT Configuration
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),  # 15 minutes for active sessions
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),  # 24 hours, requires daily re-login
+    "ACCESS_TOKEN_LIFETIME": timedelta(
+        minutes=config("JWT_ACCESS_TOKEN_LIFETIME_MINUTES", default=15, cast=int)
+    ),
+    "REFRESH_TOKEN_LIFETIME": timedelta(
+        days=config("JWT_REFRESH_TOKEN_LIFETIME_DAYS", default=1, cast=int)
+    ),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "ALGORITHM": "HS256",
@@ -274,3 +279,21 @@ DEFAULT_FROM_EMAIL = config(
 
 # Frontend URL for email verification links
 FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000")
+
+# Email Domain Validation
+# Allowed email domains for registration (institutional domains)
+ALLOWED_EMAIL_DOMAINS = config(
+    "ALLOWED_EMAIL_DOMAINS",
+    default="edu,ac.uk,gov,mil",
+    cast=lambda v: [d.strip() for d in v.split(",")],
+)
+
+# Test domains allowed in development mode (controlled by DEBUG or ALLOW_TEST_EMAILS)
+TEST_EMAIL_DOMAINS = config(
+    "TEST_EMAIL_DOMAINS",
+    default="gmail.com,outlook.com,yahoo.com",
+    cast=lambda v: [d.strip() for d in v.split(",")],
+)
+
+# Set to True to allow test email domains regardless of DEBUG setting
+ALLOW_TEST_EMAILS = config("ALLOW_TEST_EMAILS", default=False, cast=bool)

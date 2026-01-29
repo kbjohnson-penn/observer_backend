@@ -42,6 +42,6 @@ class PatientViewSet(BaseAuthenticatedViewSet):
             return Response(serializer.data)
         except Http404:
             return Response(
-                {"detail": f"Patient with ID {kwargs['pk']} not found."},
+                {"detail": "Resource not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )

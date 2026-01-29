@@ -1,3 +1,5 @@
+import logging
+
 from django.http import Http404, StreamingHttpResponse
 
 from rest_framework import status
@@ -12,6 +14,8 @@ from shared.api.permissions import (
     HasAccessToEncounter,
     filter_queryset_by_user_tier,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class EncounterFileViewSet(BaseAuthenticatedViewSet):
@@ -65,7 +69,9 @@ class EncounterFileViewSet(BaseAuthenticatedViewSet):
             response["Content-Disposition"] = f'inline; filename="{file_client.path_name}"'
             return response
         except Exception as e:
-            raise Http404(f"File not found: {str(e)}")
+            # Log full error for debugging, return generic message
+            logger.error(f"File streaming error for pk={pk}: {str(e)}")
+            raise Http404("File not found or inaccessible")
 
     @action(detail=True, methods=["get"], url_path="download")
     def download_file(self, request, pk=None):
@@ -89,7 +95,9 @@ class EncounterFileViewSet(BaseAuthenticatedViewSet):
             response["Content-Disposition"] = f'attachment; filename="{file_client.path_name}"'
             return response
         except Exception as e:
-            raise Http404(f"File not found: {str(e)}")
+            # Log full error for debugging, return generic message
+            logger.error(f"File download error for pk={pk}: {str(e)}")
+            raise Http404("File not found or inaccessible")
 
     @action(detail=False, methods=["post"], url_path="by-ids")
     def get_files_by_ids(self, request):

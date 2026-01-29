@@ -117,9 +117,17 @@ class AuditService:
             raw_username = getattr(audit_user, "username", None) or ""
             audit_metadata["_username"] = AuditService._sanitize_string(raw_username)
 
+        # Extract user identifier for HIPAA compliance (preserved if user is deleted)
+        user_identifier = ""
+        if audit_user and hasattr(audit_user, "email"):
+            user_identifier = AuditService._sanitize_string(
+                getattr(audit_user, "email", ""), max_length=255
+            )
+
         try:
             return AuditTrail.objects.using("accounts").create(
                 user=audit_user,
+                user_identifier=user_identifier,
                 event_type=event_type,
                 category=category,
                 description=description,

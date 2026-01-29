@@ -34,7 +34,8 @@ class UserRegistrationAPITest(BaseTestCase):
         # Check user was created as inactive
         user = User.objects.using("accounts").get(email="newuser@example.com")
         self.assertFalse(user.is_active)
-        self.assertEqual(user.username, "newuser")
+        # Username is generated with UUID suffix for uniqueness (e.g., "newuser_abc12345")
+        self.assertTrue(user.username.startswith("newuser_"))
 
         # Check verification token was created
         self.assertTrue(EmailVerificationToken.objects.using("accounts").filter(user=user).exists())

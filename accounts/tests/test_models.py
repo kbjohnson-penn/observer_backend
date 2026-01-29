@@ -206,7 +206,9 @@ class EmailVerificationTokenModelTest(TestCase):
         token = EmailVerificationToken.objects.db_manager("accounts").create(user=self.user)
 
         self.assertIsNotNone(token.token)
-        self.assertEqual(len(token.token), 32)
+        self.assertEqual(
+            len(token.token), 64
+        )  # Token length was increased to match PasswordResetToken
         self.assertFalse(token.is_used)
         self.assertIsNotNone(token.expires_at)
 

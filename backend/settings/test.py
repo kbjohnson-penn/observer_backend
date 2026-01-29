@@ -74,6 +74,10 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "test_media")
 # Disable rate limiting for tests
 RATELIMIT_ENABLE = False
 
+# Allow test email domains (example.com, gmail.com, etc.) in tests
+ALLOW_TEST_EMAILS = True
+TEST_EMAIL_DOMAINS = ["example.com", "gmail.com", "outlook.com", "yahoo.com"]
+
 # Disable logging during tests
 LOGGING = {
     "version": 1,

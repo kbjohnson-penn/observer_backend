@@ -321,6 +321,10 @@ class UserRegistrationView(APIView):
     User registration view. Creates inactive user and sends verification email.
     Rate limiting configured via settings.RATE_LIMITS['REGISTRATION'].
     CSRF protection enabled.
+
+    Security: To prevent email enumeration, this view returns the same response
+    whether the email is new or already registered. For existing emails, a
+    notification is sent instead of a verification email.
     """
 
     permission_classes = []  # Allow anonymous access
@@ -329,6 +333,25 @@ class UserRegistrationView(APIView):
         serializer = UserRegistrationSerializer(data=request.data)
 
         if serializer.is_valid():
+            email = serializer.validated_data.get("email")
+
+            # Check if email already exists (done here, not in serializer, to prevent enumeration)
+            existing_user = User.objects.using("accounts").filter(email=email).first()
+
+            if existing_user:
+                # Email already registered - send notification instead of revealing existence
+                self.send_existing_account_email(email)
+                logger.info("Registration attempted for existing email: %s", email)
+
+                # Return same response as successful registration to prevent enumeration
+                return Response(
+                    {
+                        "detail": "Registration successful. Please check your email to verify your account.",
+                        "email": email,
+                    },
+                    status=status.HTTP_201_CREATED,
+                )
+
             try:
                 user = serializer.save()
 
@@ -374,6 +397,46 @@ class UserRegistrationView(APIView):
         return handle_validation_error(
             detail="Registration failed due to invalid data.", errors=serializer.errors
         )
+
+    def send_existing_account_email(self, email):
+        """Send notification to existing account holder about registration attempt - non-blocking"""
+        try:
+            frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:3000")
+            login_url = f"{frontend_url}/login"
+            reset_url = f"{frontend_url}/forgot-password"
+
+            subject = "Observer account registration attempt"
+            message = f"""
+Hello,
+
+Someone attempted to register for an Observer account using this email address.
+
+If this was you, you already have an account. You can log in here:
+{login_url}
+
+If you've forgotten your password, you can reset it here:
+{reset_url}
+
+If you did not attempt to register, you can safely ignore this email.
+
+Best regards,
+The Observer Team
+            """.strip()
+
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@observer.com"),
+                recipient_list=[email],
+                fail_silently=True,
+            )
+
+            logger.info("Existing account notification sent to %s", email)
+
+        except Exception as e:
+            logger.error(
+                "Failed to send existing account email to %s: %s", email, str(e), exc_info=True
+            )
 
     def send_verification_email(self, user, token):
         """Send verification email to user - non-blocking"""
@@ -607,7 +670,9 @@ class PasswordChangeView(APIView):
 
             return response
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return handle_validation_error(
+            detail="Password change failed due to invalid data.", errors=serializer.errors
+        )
 
 
 @method_decorator(

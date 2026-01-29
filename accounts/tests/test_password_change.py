@@ -87,8 +87,9 @@ class PasswordChangeAPITest(BaseTestCase):
         response = self.client.post(url, data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("new_password_confirm", response.data)
-        self.assertEqual(response.data["new_password_confirm"], ["New passwords do not match."])
+        # Errors are nested under 'errors' key in the response
+        self.assertIn("errors", response.data)
+        self.assertIn("new_password_confirm", response.data["errors"])
 
     def test_password_change_weak_password(self):
         """Test password change with weak new password."""
@@ -102,11 +103,13 @@ class PasswordChangeAPITest(BaseTestCase):
         response = self.client.post(url, data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("new_password", response.data)
+        # Errors are nested under 'errors' key in the response
+        self.assertIn("errors", response.data)
+        self.assertIn("new_password", response.data["errors"])
         # Django's MinimumLengthValidator message (configured for 12 chars in settings)
         self.assertIn(
             "This password is too short. It must contain at least 12 characters.",
-            str(response.data["new_password"]),
+            str(response.data["errors"]["new_password"]),
         )
 
     def test_password_change_unauthenticated(self):
@@ -132,10 +135,10 @@ class PasswordChangeAPITest(BaseTestCase):
         response = self.client.post(url, data, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("new_password", response.data)
-        self.assertIn("new_password_confirm", response.data)
-        self.assertEqual(response.data["new_password"], ["This field is required."])
-        self.assertEqual(response.data["new_password_confirm"], ["This field is required."])
+        # Errors are nested under 'errors' key in the response
+        self.assertIn("errors", response.data)
+        self.assertIn("new_password", response.data["errors"])
+        self.assertIn("new_password_confirm", response.data["errors"])
 
     def test_password_change_rate_limiting(self):
         """Test that password change endpoint is rate limited."""

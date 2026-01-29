@@ -35,6 +35,11 @@ class AuditTrail(models.Model):
         related_name="audit_trail",
         help_text="The user who performed the action (null if user was deleted)",
     )
+    user_identifier = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Snapshot of user email at time of action (preserved if user is deleted)",
+    )
     timestamp = models.DateTimeField(
         auto_now_add=True,
         help_text="When the action was performed",
@@ -78,10 +83,13 @@ class AuditTrail(models.Model):
             models.Index(fields=["user", "-timestamp"]),
             models.Index(fields=["category", "-timestamp"]),
             models.Index(fields=["event_type"]),
+            models.Index(fields=["user_identifier"]),
         ]
 
     def __str__(self) -> str:
-        return f"{self.user} - {self.event_type} at {self.timestamp}"
+        # Use user_identifier as fallback if user is deleted
+        user_display = self.user or self.user_identifier or "Unknown"
+        return f"{user_display} - {self.event_type} at {self.timestamp}"
 
 
 class FailedLoginAttempt(models.Model):
