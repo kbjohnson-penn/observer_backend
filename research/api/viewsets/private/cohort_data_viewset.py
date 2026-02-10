@@ -160,7 +160,7 @@ class CohortDataViewSet(BaseAuthenticatedViewSet):
         return filter_queryset_by_user_tier(
             VisitOccurrence.objects.using("research").select_related("person", "provider").all(),
             user,
-            related_field="tier_id",
+            related_field="tier_level",
         )
 
     def _apply_filters(self, queryset, filters):

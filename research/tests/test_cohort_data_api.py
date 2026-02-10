@@ -37,7 +37,7 @@ class CohortDataViewSetTest(BaseResearchAPITestCase):
             user=self.user,
             name="Test Cohort",
             description="Test cohort description",
-            filters={"visit": {"tier_id": [1]}},  # Filter for tier 1 visits
+            filters={"visit": {"tier_level": [1]}},  # Filter for tier 1 visits
             visit_count=1,
             _using="accounts",
         )
@@ -196,7 +196,7 @@ class CohortDataViewSetTest(BaseResearchAPITestCase):
             Cohort,
             user=self.user,
             name="Empty Cohort",
-            filters={"visit": {"tier_id": [999]}},  # Non-existent tier
+            filters={"visit": {"tier_level": [999]}},  # Non-existent tier
             visit_count=0,
             _using="accounts",
         )
@@ -225,7 +225,7 @@ class CohortDataViewSetTest(BaseResearchAPITestCase):
 
         # Should return 1 visit (tier 1)
         self.assertEqual(len(data["visits"]), 1)
-        self.assertEqual(data["visits"][0]["tier_id"], 1)
+        self.assertEqual(data["visits"][0]["tier_level"], 1)
 
     def test_tier_access_control_enforced(self):
         """User can only see visits within their tier level."""
@@ -234,7 +234,7 @@ class CohortDataViewSetTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=self.person,
             provider=self.provider,
-            tier_id=2,
+            tier_level=2,
             _using="research",
         )
 
@@ -243,7 +243,7 @@ class CohortDataViewSetTest(BaseResearchAPITestCase):
             Cohort,
             user=self.user,
             name="Multi-Tier Cohort",
-            filters={"visit": {"tier_id": [1, 2]}},
+            filters={"visit": {"tier_level": [1, 2]}},
             visit_count=2,
             _using="accounts",
         )
@@ -255,7 +255,7 @@ class CohortDataViewSetTest(BaseResearchAPITestCase):
 
         # Should only see tier 1 visit (user's tier)
         self.assertEqual(len(data["visits"]), 1)
-        self.assertEqual(data["visits"][0]["tier_id"], 1)
+        self.assertEqual(data["visits"][0]["tier_level"], 1)
 
     # ============================================================================
     # Data Integrity Tests
@@ -286,7 +286,7 @@ class CohortDataViewSetTest(BaseResearchAPITestCase):
 
         # All visits should have tier_id = 1 (from cohort filters)
         for visit in data["visits"]:
-            self.assertEqual(visit["tier_id"], 1)
+            self.assertEqual(visit["tier_level"], 1)
 
     def test_person_provider_ids_match_visits(self):
         """Person and Provider IDs should match those in returned visits."""

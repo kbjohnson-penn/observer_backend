@@ -123,7 +123,7 @@ class FilterOptionsGenderTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_female,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -148,7 +148,7 @@ class FilterOptionsGenderTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_null_gender,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -158,7 +158,7 @@ class FilterOptionsGenderTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_with_gender,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -223,7 +223,7 @@ class FilterOptionsRaceTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_null_race,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -233,7 +233,7 @@ class FilterOptionsRaceTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_with_race,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -279,7 +279,7 @@ class FilterOptionsEthnicityTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_null_ethnicity,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -289,7 +289,7 @@ class FilterOptionsEthnicityTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_with_ethnicity,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -339,7 +339,7 @@ class FilterOptionsEdgeCasesTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_empty_gender,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -349,7 +349,7 @@ class FilterOptionsEdgeCasesTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_with_gender,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -379,7 +379,7 @@ class FilterOptionsEdgeCasesTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_inaccessible,
             provider=self.provider,
-            tier_id=tier_high.id,
+            tier_level=tier_high.id,
             _using="research",
         )
 
@@ -407,7 +407,7 @@ class FilterOptionsEdgeCasesTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person2,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -431,7 +431,7 @@ class FilterOptionsEdgeCasesTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_f,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -440,7 +440,7 @@ class FilterOptionsEdgeCasesTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_null,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 

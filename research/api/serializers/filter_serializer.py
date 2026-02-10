@@ -41,7 +41,7 @@ class FilterSerializer(serializers.Serializer):
         "gender",
         "race",
         "ethnicity",
-        "tier_id",
+        "tier_level",
         "visit_start_date_from",
         "visit_start_date_to",
         "visit_source_value",
@@ -59,7 +59,7 @@ class FilterSerializer(serializers.Serializer):
     ALLOWED_SORT_FIELDS = {
         "id",
         "visit_start_date",
-        "tier_id",
+        "tier_level",
         "person_id",
         "provider_id",
         "visit_source_value",
@@ -106,10 +106,10 @@ class FilterSerializer(serializers.Serializer):
                         f"Filter category '{category}' must be a dictionary"
                     )
 
-            # Validate tier_id if present in visit filters
+            # Validate tier_level if present in visit filters
             visit_filters = value.get("visit", {})
             if visit_filters:
-                self._validate_tier_id(visit_filters.get("tier_id"))
+                self._validate_tier_level(visit_filters.get("tier_level"))
 
             # Validate year of birth ranges if present
             person_demo = value.get("person_demographics", {})
@@ -138,8 +138,8 @@ class FilterSerializer(serializers.Serializer):
             if invalid_keys:
                 raise serializers.ValidationError(f"Invalid filter keys: {', '.join(invalid_keys)}")
 
-            # Validate tier_id for flat structure
-            self._validate_tier_id(value.get("tier_id"))
+            # Validate tier_level for flat structure
+            self._validate_tier_level(value.get("tier_level"))
 
             # Validate year of birth range for flat structure
             self._validate_year_of_birth_range(
@@ -186,31 +186,33 @@ class FilterSerializer(serializers.Serializer):
 
         return count
 
-    def _validate_tier_id(self, tier_id):
+    def _validate_tier_level(self, tier_level):
         """
-        Validate tier_id value(s).
+        Validate tier_level value(s).
         Can be a single integer or a list of integers.
         """
-        if tier_id is None:
+        if tier_level is None:
             return
 
-        if isinstance(tier_id, list):
+        if isinstance(tier_level, list):
             # Validate each tier ID in list
-            for tid in tier_id:
+            for tid in tier_level:
                 try:
                     tid_val = int(tid)
                     if tid_val < 1 or tid_val > 5:
-                        raise serializers.ValidationError("tier_id values must be between 1 and 5")
+                        raise serializers.ValidationError(
+                            "tier_level values must be between 1 and 5"
+                        )
                 except (ValueError, TypeError):
-                    raise serializers.ValidationError("tier_id values must be valid integers")
+                    raise serializers.ValidationError("tier_level values must be valid integers")
         else:
             # Single tier ID
             try:
-                tier_id_val = int(tier_id)
-                if tier_id_val < 1 or tier_id_val > 5:
-                    raise serializers.ValidationError("tier_id must be between 1 and 5")
+                tier_level_val = int(tier_level)
+                if tier_level_val < 1 or tier_level_val > 5:
+                    raise serializers.ValidationError("tier_level must be between 1 and 5")
             except (ValueError, TypeError):
-                raise serializers.ValidationError("tier_id must be a valid integer")
+                raise serializers.ValidationError("tier_level must be a valid integer")
 
     def _validate_year_of_birth_range(self, year_from, year_to):
         """

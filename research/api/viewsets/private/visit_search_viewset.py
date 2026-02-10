@@ -35,7 +35,7 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
         Example request body:
         {
             "filters": {
-                "visit": {"tier_id": [1, 2], "date_from": "2020-01-01"},
+                "visit": {"tier_level": [1, 2], "date_from": "2020-01-01"},
                 "demographics": {"gender": ["Male"], "year_of_birth_from": 1950},
                 "clinical": {"labs": {"result_flags": ["abnormal"]}}
             },
@@ -98,7 +98,7 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
         return filter_queryset_by_user_tier(
             VisitOccurrence.objects.using("research").select_related("person", "provider").all(),
             user,
-            related_field="tier_id",
+            related_field="tier_level",
         )
 
     def _apply_demographic_filter_with_null(self, queryset, values, field_lookup):
@@ -173,8 +173,8 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
             return queryset
 
         # Tier filter (multi-select)
-        if visit_filters.get("tier_id"):
-            queryset = queryset.filter(tier_id__in=visit_filters["tier_id"])
+        if visit_filters.get("tier_level"):
+            queryset = queryset.filter(tier_level__in=visit_filters["tier_level"])
 
         # Person ID filter
         if visit_filters.get("person_id"):
@@ -396,7 +396,7 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
             "id": "id",
             "visit_start_date": "visit_start_date",
             "visit_source_value": "visit_source_value",
-            "tier_id": "tier_id",
+            "tier_level": "tier_level",
             "person_id": "person_id",
             "provider_id": "provider_id",
         }

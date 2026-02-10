@@ -13,7 +13,7 @@ class MultiModalDataViewSet(BaseAuthenticatedViewSet):
 
     def get_queryset(self):
         accessible_encounters = filter_queryset_by_user_tier(
-            Encounter.objects.using("clinical").all(), self.request.user, related_field="tier_id"
+            Encounter.objects.using("clinical").all(), self.request.user, related_field="tier_level"
         )
         return (
             MultiModalData.objects.using("clinical")

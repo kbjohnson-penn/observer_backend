@@ -16,7 +16,7 @@ class LabViewSet(BaseAuthenticatedViewSet):
         accessible_visits = filter_queryset_by_user_tier(
             VisitOccurrence.objects.using("research").select_related("person", "provider").all(),
             self.request.user,
-            related_field="tier_id",
+            related_field="tier_level",
         )
         # Then get labs for those persons who have accessible visits
         accessible_person_ids = accessible_visits.values_list("person_id", flat=True)

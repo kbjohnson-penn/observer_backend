@@ -20,7 +20,10 @@ class LabsAPITest(BaseResearchAPITestCase):
         super().setUp()  # Sets up authenticated user, profile, tier, person, and provider
         # Create a VisitOccurrence instance with tier_id
         self.visit = VisitOccurrence.objects.using("research").create(
-            tier_id=self.tier.id, person=self.person, provider=self.provider, visit_source_id=1
+            tier_level=self.tier.level,
+            person=self.person,
+            provider=self.provider,
+            visit_source_id=1,
         )
         # Create Labs instance linked to Person
         self.lab = Labs.objects.using("research").create(

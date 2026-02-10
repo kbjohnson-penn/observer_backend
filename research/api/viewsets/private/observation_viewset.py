@@ -15,7 +15,7 @@ class ObservationViewSet(BaseAuthenticatedViewSet):
         accessible_visits = filter_queryset_by_user_tier(
             VisitOccurrence.objects.using("research").select_related("person", "provider").all(),
             self.request.user,
-            related_field="tier_id",
+            related_field="tier_level",
         )
         return (
             Observation.objects.using("research")

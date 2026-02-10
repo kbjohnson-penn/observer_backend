@@ -70,7 +70,7 @@ class EncounterSerializer(serializers.ModelSerializer):
             "is_restricted",
             "type",
             "encounterfile_ids",
-            "tier_id",
+            "tier_level",
             "multi_modal_data",
         ]
 

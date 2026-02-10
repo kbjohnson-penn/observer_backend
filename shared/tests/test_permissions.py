@@ -160,10 +160,10 @@ class TierPermissionsTest(TestCase):
             self.assertEqual(accessible_levels, [1, 2])
 
             # Test that the accessible tier IDs are correct
-            accessible_tier_ids = list(accessible_tiers.values_list("id", flat=True))
-            self.assertIn(self.tier_1.id, accessible_tier_ids)
-            self.assertIn(self.tier_2.id, accessible_tier_ids)
-            self.assertNotIn(self.tier_3.id, accessible_tier_ids)
+            accessible_tier_levels = list(accessible_tiers.values_list("id", flat=True))
+            self.assertIn(self.tier_1.id, accessible_tier_levels)
+            self.assertIn(self.tier_2.id, accessible_tier_levels)
+            self.assertNotIn(self.tier_3.id, accessible_tier_levels)
         else:
             self.fail("User should have a profile with tier")
 
@@ -273,21 +273,17 @@ class HasAccessToEncounterTest(TestCase):
 
         # Create mock encounter that passes isinstance check
         encounter = MagicMock(spec=Encounter)
-        encounter.tier_id = self.tier_1.id  # Use tier_id as expected by the permission class
+        encounter.tier_level = self.tier_1.level  # User tier 2 can access tier 1 (2 >= 1)
 
         # Create mock request and view
         request = MagicMock()
         request.user = self.user
 
         view = MagicMock()
-        view.has_access_to_tier.return_value = True
 
-        # Should have access
+        # Should have access (user has tier 2, encounter is tier 1, so 1 <= 2)
         result = self.permission.has_object_permission(request, view, encounter)
         self.assertTrue(result)
-
-        # Verify view method was called with the fetched tier object
-        view.has_access_to_tier.assert_called_once_with(self.user, self.tier_1)
 
     def test_has_object_permission_encounter_no_access(self):
         """Test object permission for encounter without access."""
@@ -296,16 +292,16 @@ class HasAccessToEncounterTest(TestCase):
 
         # Create mock encounter that passes isinstance check
         encounter = MagicMock(spec=Encounter)
-        encounter.tier_id = self.tier_2.id  # Use tier_id as expected by the permission class
+        # User has tier 2, but encounter needs tier 3 (3 > 2), so no access
+        encounter.tier_level = 3
 
         # Create mock request and view
         request = MagicMock()
         request.user = self.user
 
         view = MagicMock()
-        view.has_access_to_tier.return_value = False
 
-        # Should not have access
+        # Should not have access (user has tier 2, encounter is tier 3, so 3 > 2)
         result = self.permission.has_object_permission(request, view, encounter)
         self.assertFalse(result)
 

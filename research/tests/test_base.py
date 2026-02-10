@@ -54,7 +54,7 @@ class BaseResearchAPITestCase(APITestCase):
             VisitOccurrence,
             person=self.person,
             provider=self.provider,
-            tier_id=self.tier.id,  # Store tier ID directly
+            tier_level=self.tier.level,  # Store tier ID directly
             _using="research",
         )
 

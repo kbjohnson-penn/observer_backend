@@ -23,7 +23,7 @@ class EncounterViewSet(BaseAuthenticatedViewSet, ErrorHandlerMixin):
             )
             .prefetch_related("files"),
             self.request.user,
-            related_field="tier_id",
+            related_field="tier_level",
         ).order_by("-encounter_date_and_time", "-id")
 
     def get_object(self):

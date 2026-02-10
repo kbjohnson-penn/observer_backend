@@ -16,7 +16,7 @@ class NoteAPITest(BaseResearchAPITestCase):
     def setUp(self):
         super().setUp()  # Sets up authenticated user, profile, tier, person, and provider
         self.visit = VisitOccurrence.objects.using("research").create(
-            tier_id=self.tier.id,  # Reuse self.tier from BaseResearchAPITestCase
+            tier_level=self.tier.level,  # Reuse self.tier from BaseResearchAPITestCase
             person=self.person,
             provider=self.provider,
             visit_source_id=1,

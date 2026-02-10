@@ -31,7 +31,7 @@ class FilterOptionsViewSet(BaseAuthenticatedViewSet):
 
         # Get accessible visits based on user tier
         accessible_visits = filter_queryset_by_user_tier(
-            VisitOccurrence.objects.using("research"), user, related_field="tier_id"
+            VisitOccurrence.objects.using("research"), user, related_field="tier_level"
         )
 
         # Demographics options - query actual values from both Person and Provider tables
@@ -125,7 +125,9 @@ class FilterOptionsViewSet(BaseAuthenticatedViewSet):
 
         visit_options = {
             "tiers": list(
-                accessible_visits.values_list("tier_id", flat=True).distinct().order_by("tier_id")
+                accessible_visits.values_list("tier_level", flat=True)
+                .distinct()
+                .order_by("tier_level")
             ),
             "visit_sources": list(
                 accessible_visits.values_list("visit_source_value", flat=True)

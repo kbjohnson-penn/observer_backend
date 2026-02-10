@@ -1,33 +1,38 @@
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
-from accounts.models import Tier
 from clinical.models import Encounter, Patient, Provider
 
 
-def filter_queryset_by_user_tier(queryset, user, related_field="tier"):
+def filter_queryset_by_user_tier(queryset, user, related_field="tier_level"):
     """
-    Filters a queryset based on the user's tier level, using a related field to traverse relationships if needed.
-    For Encounter models, use related_field="tier_id" since tier is now an IntegerField.
-    For nested relationships like EncounterFile, use related_field="encounter__tier_id".
+    Filters a queryset based on the user's tier level.
+
+    The tier_level field stores the tier level (1-5) directly, allowing simple
+    integer comparison for access control. Users can access data at or below
+    their tier level.
+
+    Args:
+        queryset: The queryset to filter
+        user: The user making the request
+        related_field: Field name for tier filtering (default: "tier_level")
+                      For nested relationships, use "encounter__tier_level"
+
+    Returns:
+        Filtered queryset where tier_level <= user's tier level
+
+    Example:
+        User with tier level 3 can access data with tier_level 1, 2, or 3
     """
     if user.is_superuser:
         return queryset
+
     if hasattr(user, "profile") and user.profile.tier:
-        user_tier = user.profile.tier
-
-        # Handle different field types
-        if related_field.endswith("tier_id"):
-            # For IntegerField references to tier (direct or nested), filter by accessible tier IDs
-            accessible_tiers = Tier.objects.using("accounts").filter(level__lte=user_tier.level)
-            accessible_tier_ids = list(accessible_tiers.values_list("id", flat=True))
-            filter_kwargs = {f"{related_field}__in": accessible_tier_ids}
-        else:
-            # For ForeignKey relationships, filter by tier objects
-            accessible_tiers = Tier.objects.using("accounts").filter(level__lte=user_tier.level)
-            filter_kwargs = {f"{related_field}__in": accessible_tiers}
-
+        user_tier_level = user.profile.tier.level
+        # User can access data with tier_level <= their tier level
+        filter_kwargs = {f"{related_field}__lte": user_tier_level}
         return queryset.filter(**filter_kwargs)
+
     return queryset.none()
 
 
@@ -62,14 +67,14 @@ class HasAccessToEncounter(BasePermission):
         return request.user and request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
-        # Directly check the tier for Encounter objects
+        # For Encounter objects - check tier_level directly
         if isinstance(obj, Encounter):
-            # Manual lookup for tier from accounts database
-            try:
-                tier = Tier.objects.using("accounts").get(id=obj.tier_id)
-                return view.has_access_to_tier(request.user, tier)
-            except Tier.DoesNotExist:
-                return False  # Invalid tier_id, deny access
+            if request.user.is_superuser:
+                return True
+            if hasattr(request.user, "profile") and request.user.profile.tier:
+                user_tier_level = request.user.profile.tier.level
+                return obj.tier_level <= user_tier_level
+            return False
 
         # For Patient and Provider, check encounters linked to the object
         if isinstance(obj, Patient):
@@ -79,17 +84,16 @@ class HasAccessToEncounter(BasePermission):
         else:
             return False
 
-        # Efficiently collect unique tier_ids without loading full objects
-        tier_ids = set(encounters.values_list("tier_id", flat=True).distinct())
-
         # If no encounters found, deny access
-        if not tier_ids:
+        if not encounters.exists():
             return False
 
-        # Bulk fetch tiers from accounts database and check access
-        tiers = Tier.objects.using("accounts").filter(id__in=tier_ids)
-        for tier in tiers:
-            if view.has_access_to_tier(request.user, tier):
-                return True
+        # Check if user can access any encounter
+        if request.user.is_superuser:
+            return True
+        if hasattr(request.user, "profile") and request.user.profile.tier:
+            user_tier_level = request.user.profile.tier.level
+            # User can access if ANY encounter has tier_level <= user's level
+            return encounters.filter(tier_level__lte=user_tier_level).exists()
 
         return False

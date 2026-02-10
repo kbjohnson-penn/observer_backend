@@ -74,14 +74,14 @@ class EncounterAdmin(ClinicalModelAdmin):
         "provider",
         "department",
         "type",
-        "tier_id",
+        "tier_level",
         "encounter_date_and_time",
     ]
     list_filter = [
         "type",
         "department",
         "encounter_date_and_time",
-        "tier_id",
+        "tier_level",
         "is_deidentified",
         "is_restricted",
     ]

@@ -20,7 +20,7 @@ class VisitSearchResultSerializer(serializers.ModelSerializer):
     visit_date = serializers.DateField(source="visit_start_date", read_only=True)
     visit_time = serializers.TimeField(source="visit_start_time", read_only=True)
     visit_source = serializers.CharField(source="visit_source_value", read_only=True)
-    tier = serializers.IntegerField(source="tier_id", read_only=True)
+    tier = serializers.IntegerField(source="tier_level", read_only=True)
 
     # Patient demographics (from related Person model)
     patient_id = serializers.IntegerField(source="person_id", read_only=True)

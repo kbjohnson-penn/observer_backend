@@ -96,21 +96,21 @@ class TierBasedAccessControlTest(APITestCase):
             VisitOccurrence,
             person=self.person1,
             provider=self.provider1,
-            tier_id=self.tier1.id,
+            tier_level=self.tier1.id,
             _using="research",
         )
         self.visit2 = baker.make(
             VisitOccurrence,
             person=self.person2,
             provider=self.provider2,
-            tier_id=self.tier2.id,
+            tier_level=self.tier2.id,
             _using="research",
         )
         self.visit3 = baker.make(
             VisitOccurrence,
             person=self.person3,
             provider=self.provider3,
-            tier_id=self.tier3.id,
+            tier_level=self.tier3.id,
             _using="research",
         )
 

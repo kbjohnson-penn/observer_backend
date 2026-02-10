@@ -75,7 +75,9 @@ class DatabaseConstraintTest(TestCase):
         """Test that file paths must be unique per encounter."""
         tier = baker.make(Tier, tier_name="Test Tier", level=2, _using="accounts")
         department = baker.make(Department, name="Cardiology", _using="clinical")
-        encounter = baker.make(Encounter, department=department, tier_id=tier.id, _using="clinical")
+        encounter = baker.make(
+            Encounter, department=department, tier_level=tier.id, _using="clinical"
+        )
 
         # Create first file
         file1 = baker.make(EncounterFile, encounter=encounter, file_path="test/path/video.mp4")

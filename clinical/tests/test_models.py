@@ -719,7 +719,7 @@ class EncounterFileModelTest(TestCase):
         self.tier = baker.make(Tier, tier_name="Tier 2", level=2, _using="accounts")
         self.department = baker.make(Department, name="Cardiology", _using="clinical")
         self.encounter = baker.make(
-            Encounter, department=self.department, tier_id=self.tier.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier.level, _using="clinical"
         )
         self.encounter_file = baker.make(
             EncounterFile,
@@ -813,7 +813,7 @@ class EncounterFileModelTest(TestCase):
         """Test that same file path for different encounters is allowed."""
         # Create another encounter
         encounter2 = baker.make(
-            Encounter, department=self.department, tier_id=self.tier.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier.level, _using="clinical"
         )
 
         # Same file path but different encounter should be allowed
@@ -958,7 +958,7 @@ class EncounterModelTest(TestCase):
 
         # Create basic encounter
         self.encounter = baker.make(
-            Encounter, department=self.department, tier_id=self.tier_2.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier_2.id, _using="clinical"
         )
 
     def test_encounter_str_representation_clinic(self):
@@ -972,7 +972,7 @@ class EncounterModelTest(TestCase):
             provider=self.provider,
             encounter_date_and_time=timezone.now(),
             type="clinic",
-            tier_id=self.tier_2.id,
+            tier_level=self.tier_2.id,
             _using="clinical",
         )
 
@@ -988,7 +988,7 @@ class EncounterModelTest(TestCase):
             department=self.department,
             case_id="SIMCENTER_123",
             type="simcenter",
-            tier_id=self.tier_2.id,
+            tier_level=self.tier_2.id,
             _using="clinical",
         )
 
@@ -998,7 +998,7 @@ class EncounterModelTest(TestCase):
     def test_encounter_default_field_values(self):
         """Test encounter default field values."""
         encounter = baker.make(
-            Encounter, department=self.department, tier_id=self.tier_2.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier_2.id, _using="clinical"
         )
 
         # Test defaults
@@ -1007,7 +1007,7 @@ class EncounterModelTest(TestCase):
         self.assertEqual(encounter.type, "clinic")  # Default type
         self.assertFalse(encounter.is_deidentified)  # Default False
         self.assertTrue(encounter.is_restricted)  # Default True
-        self.assertEqual(encounter.tier_id, self.tier_2.id)  # Default tier 5 or set value
+        self.assertEqual(encounter.tier_level, self.tier_2.id)  # Default tier 5 or set value
         self.assertIsNotNone(encounter.encounter_date_and_time)  # Should have default
         self.assertIsNotNone(encounter.timestamp)  # Auto-created
 
@@ -1020,7 +1020,7 @@ class EncounterModelTest(TestCase):
             patient=self.patient,
             provider=self.provider,
             multi_modal_data=self.multimodal_data,
-            tier_id=self.tier_2.id,
+            tier_level=self.tier_2.id,
             _using="clinical",
         )
 
@@ -1035,7 +1035,7 @@ class EncounterModelTest(TestCase):
         """Test that EncounterService is called during save."""
         # Create encounter without explicit multi_modal_data
         encounter = baker.make(
-            Encounter, department=self.department, tier_id=self.tier_2.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier_2.id, _using="clinical"
         )
 
         # EncounterService should have created MultiModalData automatically
@@ -1046,19 +1046,19 @@ class EncounterModelTest(TestCase):
         """Test tier-based access control validation."""
         # Create encounters with different tier levels
         encounter_tier1 = baker.make(
-            Encounter, department=self.department, tier_id=self.tier_1.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier_1.id, _using="clinical"
         )
         encounter_tier2 = baker.make(
-            Encounter, department=self.department, tier_id=self.tier_2.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier_2.id, _using="clinical"
         )
         encounter_tier3 = baker.make(
-            Encounter, department=self.department, tier_id=self.tier_3.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier_3.id, _using="clinical"
         )
 
         # All should be created successfully
-        self.assertEqual(encounter_tier1.tier_id, self.tier_1.id)
-        self.assertEqual(encounter_tier2.tier_id, self.tier_2.id)
-        self.assertEqual(encounter_tier3.tier_id, self.tier_3.id)
+        self.assertEqual(encounter_tier1.tier_level, self.tier_1.id)
+        self.assertEqual(encounter_tier2.tier_level, self.tier_2.id)
+        self.assertEqual(encounter_tier3.tier_level, self.tier_3.id)
 
     def test_encounter_timestamp_and_datetime_handling(self):
         """Test encounter timestamp and datetime field handling."""
@@ -1069,7 +1069,7 @@ class EncounterModelTest(TestCase):
             Encounter,
             department=self.department,
             encounter_date_and_time=specific_time,
-            tier_id=self.tier_2.id,
+            tier_level=self.tier_2.id,
             _using="clinical",
         )
 
@@ -1088,7 +1088,7 @@ class EncounterModelTest(TestCase):
         self.assertIn(self.encounter, all_encounters)
 
         # Test filtering by tier
-        tier2_encounters = manager.filter(tier_id=self.tier_2.id)
+        tier2_encounters = manager.filter(tier_level=self.tier_2.id)
         self.assertIn(self.encounter, tier2_encounters)
 
         # Test filtering by type
@@ -1103,14 +1103,14 @@ class EncounterModelTest(TestCase):
             Encounter,
             department=self.department,
             type="simcenter",
-            tier_id=self.tier_1.id,
+            tier_level=self.tier_1.id,
             _using="clinical",
         )
         baker.make(
             Encounter,
             department=self.department,
             type="clinic",
-            tier_id=self.tier_3.id,
+            tier_level=self.tier_3.id,
             _using="clinical",
         )
 
@@ -1120,7 +1120,7 @@ class EncounterModelTest(TestCase):
 
         # Test tier filtering
         high_tier_encounters = Encounter.objects.using("clinical").filter(
-            tier_id__in=[self.tier_3.id]
+            tier_level__in=[self.tier_3.id]
         )
         self.assertGreater(high_tier_encounters.count(), 0)
 
@@ -1140,7 +1140,7 @@ class EncounterModelTest(TestCase):
                 Encounter,
                 department=self.department,
                 csn_number="1234567890",  # Valid 10-digit number
-                tier_id=self.tier_2.id,
+                tier_level=self.tier_2.id,
                 _using="clinical",
             )
             self.assertEqual(encounter.csn_number, "1234567890")
@@ -1154,7 +1154,7 @@ class EncounterModelTest(TestCase):
             department=self.department,
             provider_satisfaction=5,
             patient_satisfaction=3,
-            tier_id=self.tier_2.id,
+            tier_level=self.tier_2.id,
             _using="clinical",
         )
         self.assertEqual(encounter.provider_satisfaction, 5)
@@ -1167,7 +1167,7 @@ class EncounterModelTest(TestCase):
             Encounter,
             department=self.department,
             type="clinic",
-            tier_id=self.tier_2.id,
+            tier_level=self.tier_2.id,
             _using="clinical",
         )
 
@@ -1182,7 +1182,7 @@ class EncounterModelTest(TestCase):
             Encounter,
             department=self.department,
             type="simcenter",
-            tier_id=self.tier_2.id,
+            tier_level=self.tier_2.id,
             _using="clinical",
         )
 
@@ -1217,7 +1217,7 @@ class EncounterModelTest(TestCase):
             patient=self.patient,
             provider=self.provider,
             encounter_date_and_time=timezone.now(),
-            tier_id=self.tier_2.id,
+            tier_level=self.tier_2.id,
             _using="clinical",
         )
 
@@ -1238,7 +1238,7 @@ class EncounterModelTest(TestCase):
             type="clinic",
             patient=self.patient,
             provider=self.provider,
-            tier_id=self.tier_2.id,
+            tier_level=self.tier_2.id,
             _using="clinical",
         )
 
@@ -1247,7 +1247,7 @@ class EncounterModelTest(TestCase):
             Encounter,
             department=self.department,
             type="simcenter",
-            tier_id=self.tier_2.id,
+            tier_level=self.tier_2.id,
             _using="clinical",
         )
 
@@ -1266,7 +1266,7 @@ class EncounterModelTest(TestCase):
             Encounter,
             department=self.department,
             type="emergency",
-            tier_id=self.tier_3.id,
+            tier_level=self.tier_3.id,
             _using="clinical",
         )
         self.assertEqual(new_encounter.type, "emergency")
@@ -1294,7 +1294,7 @@ class EncounterModelTest(TestCase):
             Encounter,
             department=self.department,
             type="simcenter",  # This creates patient/provider automatically
-            tier_id=self.tier_2.id,
+            tier_level=self.tier_2.id,
             _using="clinical",
         )
 
@@ -1326,7 +1326,7 @@ class EncounterModelTest(TestCase):
         encounter = Encounter.objects.using("clinical").create(department=self.department)
 
         # Should have default tier_id of 5
-        self.assertEqual(encounter.tier_id, 5)
+        self.assertEqual(encounter.tier_level, 5)
 
         # Test boolean defaults
         self.assertFalse(encounter.is_deidentified)
@@ -1345,7 +1345,7 @@ class EncounterModelTest(TestCase):
             patient=self.patient,
             provider=self.provider,
             type="simcenter",  # Even for simcenter, should preserve existing
-            tier_id=self.tier_2.id,
+            tier_level=self.tier_2.id,
             _using="clinical",
         )
 

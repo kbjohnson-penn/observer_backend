@@ -19,7 +19,10 @@ class PatientSurveyAPITest(BaseResearchAPITestCase):
     def setUp(self):
         super().setUp()  # Sets up authenticated user, profile, tier, person, and provider
         self.visit = VisitOccurrence.objects.using("research").create(
-            tier_id=self.tier.id, person=self.person, provider=self.provider, visit_source_id=1
+            tier_level=self.tier.level,
+            person=self.person,
+            provider=self.provider,
+            visit_source_id=1,
         )
         self.patient_survey = PatientSurvey.objects.using("research").create(
             visit_occurrence_id=self.visit.id,

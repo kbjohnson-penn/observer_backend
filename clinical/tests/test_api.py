@@ -30,7 +30,7 @@ class EncounterAPITest(BaseClinicalTestCase):
         encounter = baker.make(
             Encounter,
             department=self.department,
-            tier_id=self.tier_2.id,  # User's tier level
+            tier_level=self.tier_2.id,  # User's tier level
             _using="clinical",
         )
 
@@ -55,7 +55,7 @@ class EncounterAPITest(BaseClinicalTestCase):
         self.authenticate_user()
 
         encounter = baker.make(
-            Encounter, department=self.department, tier_id=self.tier_2.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier_2.id, _using="clinical"
         )
 
         url = f"/api/v1/clinical/private/encounters/{encounter.id}/"
@@ -70,13 +70,13 @@ class EncounterAPITest(BaseClinicalTestCase):
 
         # Create encounters at different tier levels
         encounter_tier1 = baker.make(
-            Encounter, department=self.department, tier_id=self.tier_1.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier_1.id, _using="clinical"
         )
         encounter_tier2 = baker.make(
-            Encounter, department=self.department, tier_id=self.tier_2.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier_2.id, _using="clinical"
         )
         encounter_tier3 = baker.make(
-            Encounter, department=self.department, tier_id=self.tier_3.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier_3.id, _using="clinical"
         )
 
         url = "/api/v1/clinical/private/encounters/"
@@ -97,7 +97,7 @@ class EncounterAPITest(BaseClinicalTestCase):
             "department": self.department.id,
             "patient": self.patient.id,
             "provider": self.provider.id,
-            "tier_id": self.tier_2.id,
+            "tier_level": self.tier_2.id,
             "type": "clinic",
             "encounter_date_and_time": timezone.now().isoformat(),
         }
@@ -132,7 +132,7 @@ class EncounterAPITest(BaseClinicalTestCase):
 
         # Create encounter with tier 3 (higher than user's access)
         encounter_tier3 = baker.make(
-            Encounter, department=self.department, tier_id=self.tier_3.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier_3.id, _using="clinical"
         )
 
         # Authenticate as tier 1 user
@@ -149,7 +149,7 @@ class EncounterAPITest(BaseClinicalTestCase):
         self.authenticate_user()
 
         encounter = baker.make(
-            Encounter, department=self.department, tier_id=self.tier_2.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier_2.id, _using="clinical"
         )
 
         url = f"/api/v1/clinical/private/encounters/{encounter.id}/"
@@ -164,7 +164,7 @@ class EncounterAPITest(BaseClinicalTestCase):
         self.authenticate_user()
 
         encounter = baker.make(
-            Encounter, department=self.department, tier_id=self.tier_2.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier_2.id, _using="clinical"
         )
 
         url = f"/api/v1/clinical/private/encounters/{encounter.id}/"
@@ -184,7 +184,7 @@ class PatientAPITest(BaseClinicalTestCase):
             Encounter,
             department=self.department,
             patient=self.patient,
-            tier_id=self.tier_2.id,  # User's tier level
+            tier_level=self.tier_2.id,  # User's tier level
             _using="clinical",
         )
 
@@ -250,7 +250,7 @@ class ProviderAPITest(BaseClinicalTestCase):
             Encounter,
             department=self.department,
             provider=self.provider,
-            tier_id=self.tier_2.id,  # User's tier level
+            tier_level=self.tier_2.id,  # User's tier level
             _using="clinical",
         )
 
@@ -434,7 +434,7 @@ class MultiModalDataAPITest(BaseClinicalTestCase):
         self.encounter_with_mmdata = baker.make(
             Encounter,
             department=self.department,
-            tier_id=self.tier_2.id,  # User's tier level
+            tier_level=self.tier_2.id,  # User's tier level
             multi_modal_data=self.mmdata,
             _using="clinical",
         )
@@ -500,7 +500,7 @@ class EncounterFileAPITest(BaseClinicalTestCase):
     def setUp(self):
         super().setUp()
         self.encounter = baker.make(
-            Encounter, department=self.department, tier_id=self.tier_2.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier_2.id, _using="clinical"
         )
         self.encounter_file = baker.make(
             EncounterFile,
@@ -605,7 +605,7 @@ class EncounterFileAPITest(BaseClinicalTestCase):
 
         # Create encounter with tier 3 (higher than user's access)
         encounter_tier3 = baker.make(
-            Encounter, department=self.department, tier_id=self.tier_3.id, _using="clinical"
+            Encounter, department=self.department, tier_level=self.tier_3.id, _using="clinical"
         )
         file_tier3 = baker.make(EncounterFile, encounter=encounter_tier3, _using="clinical")
 

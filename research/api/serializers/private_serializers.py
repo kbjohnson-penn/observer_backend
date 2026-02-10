@@ -62,7 +62,7 @@ class VisitOccurrenceSerializer(serializers.ModelSerializer):
             "visit_start_time",
             "visit_source_value",
             "visit_source_id",
-            "tier_id",
+            "tier_level",
             "person_id",
             "provider_id",
         ]

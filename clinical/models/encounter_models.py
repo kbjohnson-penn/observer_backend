@@ -68,13 +68,13 @@ class Encounter(models.Model):
     is_restricted = models.BooleanField(
         choices=BOOLEAN_CHOICES, default=True, verbose_name="Is Restricted"
     )
-    tier_id = models.IntegerField(
+    tier_level = models.IntegerField(
         default=5,
         null=False,
         blank=False,
         db_index=True,  # Add index for frequent filtering
         validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="References accounts.Tier.id (1-5, defaults to 5 for highest restriction)",
+        help_text="Tier level (1-5) for data access control. Defaults to 5 for highest restriction.",
     )
     timestamp = models.DateTimeField(auto_now_add=True)
 

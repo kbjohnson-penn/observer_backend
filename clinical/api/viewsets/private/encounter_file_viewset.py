@@ -33,7 +33,7 @@ class EncounterFileViewSet(BaseAuthenticatedViewSet):
         return filter_queryset_by_user_tier(
             EncounterFile.objects.using("clinical").select_related("encounter").all(),
             self.request.user,
-            related_field="encounter__tier_id",
+            related_field="encounter__tier_level",
         ).order_by("-id")
 
     def get_object(self):

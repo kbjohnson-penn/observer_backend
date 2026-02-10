@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from .person_provider_models import Person, Provider
@@ -34,7 +35,12 @@ class VisitOccurrence(models.Model):
     visit_start_time = models.TimeField(null=True, blank=True)
     visit_source_value = models.CharField(max_length=255)
     visit_source_id = models.IntegerField()
-    tier_id = models.IntegerField(help_text="Tier level for data access control")
+    tier_level = models.PositiveSmallIntegerField(
+        default=5,
+        db_index=True,
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="Tier level (1-5) for data access control. Higher levels can access lower tier data.",
+    )
 
     def __str__(self):
         return f"Visit Occurrence {self.id}"

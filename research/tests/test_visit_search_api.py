@@ -58,7 +58,7 @@ class VisitSearchBasicFilteringTest(BaseResearchAPITestCase):
         self.assertEqual(response.data["count"], 1)
 
     def test_visit_search_filter_by_tier(self):
-        """Test filtering by tier_id."""
+        """Test filtering by tier_level."""
         self.authenticate_user()
 
         # Create visit on different tier
@@ -68,14 +68,14 @@ class VisitSearchBasicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person2,
             provider=self.provider,
-            tier_id=tier2.id,
+            tier_level=tier2.id,
             _using="research",
         )
 
         # Filter for tier 1 only
         response = self.client.post(
             "/api/v1/research/private/visits-search/",
-            data={"filters": {"visit": {"tier_id": [self.tier.id]}}},
+            data={"filters": {"visit": {"tier_level": [self.tier.id]}}},
             format="json",
         )
 
@@ -96,7 +96,7 @@ class VisitSearchBasicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person2,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             visit_start_date=date(2024, 1, 15),
             _using="research",
         )
@@ -125,7 +125,7 @@ class VisitSearchBasicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person2,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             visit_source_value="sim_center",
             _using="research",
         )
@@ -158,7 +158,7 @@ class VisitSearchPersonDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_f,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -186,7 +186,7 @@ class VisitSearchPersonDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_f,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -214,7 +214,7 @@ class VisitSearchPersonDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_m,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -244,7 +244,7 @@ class VisitSearchPersonDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_m,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -254,7 +254,7 @@ class VisitSearchPersonDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_f,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -282,7 +282,7 @@ class VisitSearchPersonDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_other,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -310,7 +310,7 @@ class VisitSearchPersonDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_w,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -338,7 +338,7 @@ class VisitSearchPersonDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_other,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -366,7 +366,7 @@ class VisitSearchPersonDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_nh,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -394,7 +394,7 @@ class VisitSearchPersonDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_null,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -424,7 +424,7 @@ class VisitSearchPersonDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_older,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -457,7 +457,7 @@ class VisitSearchProviderDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person2,
             provider=provider_m,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -486,7 +486,7 @@ class VisitSearchProviderDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person2,
             provider=provider_m,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -515,7 +515,7 @@ class VisitSearchProviderDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person2,
             provider=provider_w,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -544,7 +544,7 @@ class VisitSearchProviderDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person2,
             provider=provider_nh,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -573,7 +573,7 @@ class VisitSearchProviderDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person2,
             provider=provider_w,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -602,7 +602,7 @@ class VisitSearchProviderDemographicFilteringTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person2,
             provider=provider_nh,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -636,7 +636,7 @@ class VisitSearchCombinedFiltersTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_f,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -647,7 +647,7 @@ class VisitSearchCombinedFiltersTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_m2,
             provider=provider_m,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             _using="research",
         )
 
@@ -682,7 +682,7 @@ class VisitSearchCombinedFiltersTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person_m,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             visit_source_value="sim_center",
             _using="research",
         )
@@ -719,7 +719,7 @@ class VisitSearchSortingPaginationTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person2,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             visit_start_date=date(2024, 6, 1),
             _using="research",
         )
@@ -748,7 +748,7 @@ class VisitSearchSortingPaginationTest(BaseResearchAPITestCase):
             VisitOccurrence,
             person=person2,
             provider=self.provider,
-            tier_id=self.tier.id,
+            tier_level=self.tier.level,
             visit_start_date=date(2024, 6, 1),
             _using="research",
         )
@@ -779,7 +779,7 @@ class VisitSearchSortingPaginationTest(BaseResearchAPITestCase):
                 VisitOccurrence,
                 person=person,
                 provider=self.provider,
-                tier_id=self.tier.id,
+                tier_level=self.tier.level,
                 _using="research",
             )
 
@@ -804,7 +804,7 @@ class VisitSearchSortingPaginationTest(BaseResearchAPITestCase):
             "/api/v1/research/private/visits-search/",
             data={
                 "filters": {
-                    "visit": {"tier_id": [1]},
+                    "visit": {"tier_level": [1]},
                     "person_demographics": {"gender": ["M"]},
                 }
             },
