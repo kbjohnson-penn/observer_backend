@@ -46,6 +46,8 @@ FILE_TYPE_CHOICES = [
     ("patient_view", "Patient View"),
     ("patient_survey", "Patient Survey"),
     ("provider_survey", "Provider Survey"),
+    ("provider_annotation", "Provider Annotation"),
+    ("patient_annotation", "Patient Annotation"),
 ]
 
 FILE_TYPE_CHOICES_DICT = dict(FILE_TYPE_CHOICES)
