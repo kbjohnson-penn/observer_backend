@@ -41,12 +41,11 @@ FILE_TYPE_CHOICES = [
     ("image", "Image"),
     ("document", "Document"),
     ("transcript", "Transcript"),
+    ("room_view", "Room View"),
+    ("provider_view", "Provider View"),
+    ("patient_view", "Patient View"),
+    ("patient_survey", "Patient Survey"),
+    ("provider_survey", "Provider Survey"),
 ]
 
-FILE_TYPE_CHOICES_DICT = {
-    "video": "Video",
-    "audio": "Audio",
-    "image": "Image",
-    "document": "Document",
-    "transcript": "Transcript",
-}
+FILE_TYPE_CHOICES_DICT = dict(FILE_TYPE_CHOICES)
