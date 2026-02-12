@@ -17,3 +17,4 @@ class BasePublicReadOnlyViewSet(ReadOnlyModelViewSet):
     """
 
     permission_classes = [IsReadOnly]
+    pagination_class = None
