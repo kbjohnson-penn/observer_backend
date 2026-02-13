@@ -98,6 +98,9 @@ celerybeat-schedule.*
 
 # Environments
 .env
+.env.*
+!.env.example
+!.env.template
 .venv
 env/
 venv/
@@ -109,6 +112,22 @@ ENV/
 
 # mypy
 .mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Ruff
+.ruff_cache/
+
+# Local development databases
+*.db
+*.sqlite
+*.sqlite3
+
+# IDEs
+.idea/
+*.swp
+*.swo
+*~
 
 # Sublime Text #
 *.tmlanguage.cache
@@ -140,3 +159,6 @@ media/*
 
 # System Files
 .DS_Store
+
+# Data
+data/

@@ -1,0 +1,31 @@
+# Install production dependencies first
+-r requirements.txt
+
+# Testing
+pytest==8.3.4
+pytest-django==4.9.0
+pytest-cov==6.0.0
+pytest-mock==3.14.0
+pytest-xdist==3.6.1  # Parallel test execution
+
+# Code formatting
+black==24.10.0
+isort==5.13.2
+
+# Linting
+flake8==7.3.0
+pylint==3.3.9  # Latest 3.x version compatible with pylint-django 2.6.1
+pylint-django==2.6.1  # Django-specific pylint checks
+
+# Pre-commit hooks
+pre-commit==4.0.1
+
+# Development tools
+django-debug-toolbar==4.4.6
+ipython==8.29.0
+ipdb==0.13.13
+
+# Type checking (optional)
+mypy==1.13.0
+django-stubs==5.1.1
+djangorestframework-stubs==3.15.1
