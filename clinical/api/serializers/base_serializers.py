@@ -22,7 +22,7 @@ class PersonSerializer(serializers.ModelSerializer):
             return None
         if age > 89:
             # Per HIPAA, ages over 89 are aggregated to protect identity.
-            max_year_of_birth = date.today().year - 90
+            max_year_of_birth = date.today().year - 89
             return str(max_year_of_birth)
         return str(instance.date_of_birth.year) if instance.date_of_birth else None
 
