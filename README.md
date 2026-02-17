@@ -14,7 +14,7 @@ Django 5.0.1 REST API backend for healthcare encounter data management.
 - **Admin Interface**: Comprehensive Django admin for data management
 - **Mock Data**: Automated test data generation
 
-**Note**: This is a Git submodule. For Docker deployment, see the main repository README.
+**Note**: This is a Git submodule. For container deployment, see the main repository README.
 
 ## Development Setup
 
@@ -32,84 +32,187 @@ Django 5.0.1 REST API backend for healthcare encounter data management.
 
 ### Local Development
 
-For local development without Docker:
-
 ```bash
 # Install dependencies
 pip install -r requirements.txt
-pip install -r requirements-dev.txt  # Development tools
+pip install -r requirements-dev.txt
 
-# Set up pre-commit hooks (recommended)
+# Set up pre-commit hooks
 make pre-commit
 
-# Set up MariaDB databases
-./helpers/clean_db.sh  # From main project directory
+# Set up MariaDB databases (from main project directory)
+./helpers/clean_db.sh
 
 # Run migrations
 make migrate
-# OR manually:
-# python manage.py migrate --database=accounts
-# python manage.py migrate --database=clinical
-# python manage.py migrate --database=research
 
 # Create admin user
 python manage.py createsuperuser
 
 # Run server
 make run
-# OR: python manage.py runserver
 ```
 
-### Development Workflow
+### Pre-commit Hooks
 
-This project uses several tools to maintain code quality:
+Pre-commit hooks run automatically on `git commit` and prevent commits if checks fail.
+
+**Installed hooks:**
+1. Trailing whitespace removal
+2. End-of-file fixer
+3. YAML/JSON validation
+4. Large file check
+5. Black formatting
+6. isort import sorting
+7. Flake8 linting
+8. Django system checks
 
 ```bash
-# Format code automatically
-make format              # Runs Black and isort
+# Run hooks on all files manually
+pre-commit run --all-files
 
-# Run linting checks
-make lint               # Runs flake8 and pylint
-make lint-quick         # Runs flake8 only (faster)
-
-# Run tests
-make test               # With coverage report
-make test-fast          # Without coverage (faster)
-
-# Run Django checks
-make check              # System checks
-
-# Clean cache files
-make clean
-
-# View all commands
-make help
+# Run specific hook
+pre-commit run black --all-files
 ```
 
-**Pre-commit Hooks**: Automatically format and lint code before committing:
+## Development Workflow
+
+1. **Before starting work:**
+   ```bash
+   git checkout dev
+   git pull origin dev
+   git checkout -b feature/your-feature-name
+   ```
+
+2. **While developing:**
+   ```bash
+   make run        # Run server
+   make test-fast  # Run tests as you code
+   ```
+
+3. **Before committing:**
+   ```bash
+   make format     # Format and lint
+   make lint-quick
+   make test       # Full test suite
+   git add .
+   git commit -m "feat: add new feature"
+   ```
+
+4. **Before pushing:**
+   ```bash
+   make check
+   make test
+   git push origin feature/your-feature-name
+   ```
+
+## Makefile Commands
+
+| Command | Description |
+|---------|-------------|
+| `make help` | Show all available commands |
+| `make install` | Install production dependencies |
+| `make install-dev` | Install development dependencies |
+| `make format` | Format code with Black and isort |
+| `make lint` | Run all linters (flake8 + pylint) |
+| `make lint-quick` | Run flake8 only (faster) |
+| `make test` | Run tests with coverage |
+| `make test-fast` | Run tests without coverage |
+| `make migrate` | Run migrations for all databases |
+| `make migrate-make` | Create new migrations |
+| `make clean` | Clean cache and build files |
+| `make run` | Run development server |
+| `make shell` | Open Django shell |
+| `make check` | Run Django system checks |
+| `make pre-commit` | Install pre-commit hooks |
+| `make coverage` | Generate and open HTML coverage report |
+
+## Code Quality Tools
+
+### Black (Code Formatter)
+
 ```bash
-make pre-commit  # Install hooks (run once)
+make format          # Format all code
+black --check .      # Check without changes
 ```
 
-After installation, hooks will run on `git commit` to ensure code quality.
+**Configuration**: `pyproject.toml` → `[tool.black]` (line length: 100, Python 3.10)
 
-### Environment-Specific Settings
-
-The application supports three environments:
-
-- **Development** (`ENVIRONMENT=development`): Relaxed security, console email, debug mode
-
-### Mock Data Generation
+### isort (Import Sorter)
 
 ```bash
-# Generate test data
+make format          # Sort imports
+isort --check-only . # Check without changes
+```
+
+**Configuration**: `pyproject.toml` → `[tool.isort]` (profile: black)
+
+### Flake8 (Linter)
+
+```bash
+make lint-quick      # Run linting
+```
+
+**Configuration**: `.flake8` (max line length: 100, max complexity: 10)
+
+### Pylint (Deep Analysis)
+
+```bash
+make lint            # Run pylint (optional, for local use)
+```
+
+**Configuration**: `.pylintrc` (Django plugin enabled)
+
+## Testing
+
+### Running Tests
+
+```bash
+make test                    # With coverage
+make test-fast               # Without coverage (faster)
+make test-verbose            # Verbose output
+
+# Run specific tests
+pytest accounts/tests/test_models.py
+pytest accounts/tests/test_models.py::TestUserModel::test_create_user
+```
+
+**Configuration**: `pyproject.toml` → `[tool.pytest.ini_options]`
+
+## Mock Data Generation
+
+```bash
 python manage.py generate_mock_data
-
-# Custom generation
 python manage.py generate_mock_data --clinic-patients 100 --seed 42
 ```
 
-### API Features
+## CI/CD Pipeline
+
+The CI pipeline runs on every push and pull request to `main` or `dev` branches.
+
+**Pipeline steps:**
+1. Checkout code
+2. Setup Python 3.10
+3. Install dependencies
+4. Run Black format check
+5. Run isort import check
+6. Run Flake8 linting
+7. Run Django system checks
+8. Check for pending migrations
+9. Run tests with coverage
+10. Upload coverage to Codecov
+
+### Local CI Simulation
+
+```bash
+make format
+make lint-quick
+make check
+python manage.py makemigrations --check --dry-run
+make test
+```
+
+## API Features
 
 - **Browsable API**: Visit <http://localhost:8000/api> for interactive documentation
 - **Secure Authentication**: JWT tokens with httpOnly cookies and CSRF protection
@@ -121,7 +224,7 @@ python manage.py generate_mock_data --clinic-patients 100 --seed 42
 
 ## Project Structure
 
-```
+```text
 backend/
 ├── settings/              # Environment-specific settings
 │   ├── base.py           # Common settings
@@ -151,44 +254,6 @@ shared/                   # Shared utilities
 ├── db_router.py         # Database routing
 └── api/                 # Shared API components
 ```
-
-## Code Quality & CI/CD
-
-### Automated CI Pipeline
-
-This project uses GitHub Actions for continuous integration. On every push or pull request to `main` or `dev` branches, the following checks run automatically:
-
-1. **Code Formatting**: Black and isort format checks
-2. **Linting**: Flake8 code quality checks
-3. **Django Checks**: System validation and migration checks
-4. **Tests**: Full test suite with coverage reporting
-
-### Code Quality Tools
-
-- **Black**: Code formatter (line length: 100)
-- **isort**: Import statement organizer
-- **Flake8**: PEP 8 compliance and code quality linter
-- **Pylint**: Deep code analysis (optional, for local use)
-- **pytest**: Test framework with coverage tracking
-
-### Local Quality Checks
-
-Before pushing code, run:
-```bash
-make format      # Auto-format code
-make lint-quick  # Quick linting
-make test        # Run tests
-```
-
-## Contributing
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
-
-All pull requests must pass CI checks before merging.
-
-## Changelog
-
-Check [CHANGELOG.md](CHANGELOG.md) to get the version details.
 
 ## Database Setup
 
@@ -220,15 +285,10 @@ FLUSH PRIVILEGES;
 ### 2. Run Database Migrations
 
 ```bash
-# Create migrations for each app
 python manage.py makemigrations accounts
 python manage.py makemigrations clinical
 python manage.py makemigrations research
 
-# Apply migrations to default database (Django built-ins)
-python manage.py migrate
-
-# Apply migrations to specific databases
 python manage.py migrate --database=accounts
 python manage.py migrate --database=clinical
 python manage.py migrate --database=research
@@ -237,7 +297,6 @@ python manage.py migrate --database=research
 ### 3. Verify Database Setup
 
 ```bash
-# Check tables were created in each database
 mysql -u observer -pobserver_password -e "USE observer_accounts; SHOW TABLES;"
 mysql -u observer -pobserver_password -e "USE observer_clinical; SHOW TABLES;"
 mysql -u observer -pobserver_password -e "USE observer_research; SHOW TABLES;"
@@ -251,3 +310,35 @@ mysql -u observer -pobserver_password -e "USE observer_research; SHOW TABLES;"
 - **Security Headers**: HSTS, XSS protection, clickjacking prevention
 - **Environment-based Security**: Different security levels for development vs production
 - **Multi-Database Isolation**: Separate databases for different data types
+
+## Troubleshooting
+
+### Pre-commit Hook Failures
+
+1. **Formatting issues**: Run `make format` to auto-fix
+2. **Linting issues**: Review flake8 errors and fix manually
+3. **Django check failures**: Fix Django configuration issues
+
+### Import Errors After Installing New Package
+
+```bash
+pip freeze > requirements.txt
+pip freeze > requirements-dev.txt
+```
+
+### Coverage Not Updating
+
+```bash
+make clean
+make test
+```
+
+## Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+
+All pull requests must pass CI checks before merging.
+
+## Changelog
+
+Check [CHANGELOG.md](CHANGELOG.md) to get the version details.
