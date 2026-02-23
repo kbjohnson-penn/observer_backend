@@ -7,6 +7,7 @@ Uses hybrid approach: static values for common data, cached queries for visit me
 from django.db.models import Max, Min, Subquery
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_cookie
 
 from rest_framework.response import Response
 
@@ -19,10 +20,11 @@ class FilterOptionsViewSet(BaseAuthenticatedViewSet):
     """
     ViewSet for retrieving filter options.
     Only implements list() method - no CRUD operations.
-    Cached for 5 minutes to improve performance.
+    Cached for 5 minutes per user session to improve performance.
     """
 
     @method_decorator(cache_page(60 * 5))  # Cache for 5 minutes
+    @method_decorator(vary_on_cookie)  # Separate cache per user session
     def list(self, request):
         """
         GET endpoint that returns all available filter options based on user's tier access.
