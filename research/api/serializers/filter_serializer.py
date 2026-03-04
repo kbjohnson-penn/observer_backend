@@ -111,12 +111,13 @@ class FilterSerializer(serializers.Serializer):
             if visit_filters:
                 self._validate_tier_level(visit_filters.get("tier_level"))
 
-            # Validate year of birth ranges if present
+            # Validate year of birth and age ranges if present
             person_demo = value.get("person_demographics", {})
             if person_demo:
                 self._validate_year_of_birth_range(
                     person_demo.get("year_of_birth_from"), person_demo.get("year_of_birth_to")
                 )
+                self._validate_age_range(person_demo.get("age_from"), person_demo.get("age_to"))
                 # Validate demographic filter values
                 self._validate_demographic_values(person_demo.get("gender"), "gender")
                 self._validate_demographic_values(person_demo.get("race"), "race")
@@ -127,6 +128,7 @@ class FilterSerializer(serializers.Serializer):
                 self._validate_year_of_birth_range(
                     provider_demo.get("year_of_birth_from"), provider_demo.get("year_of_birth_to")
                 )
+                self._validate_age_range(provider_demo.get("age_from"), provider_demo.get("age_to"))
                 # Validate demographic filter values
                 self._validate_demographic_values(provider_demo.get("gender"), "gender")
                 self._validate_demographic_values(provider_demo.get("race"), "race")
@@ -243,6 +245,26 @@ class FilterSerializer(serializers.Serializer):
 
             except (ValueError, TypeError):
                 raise serializers.ValidationError("year_of_birth values must be valid integers")
+
+    def _validate_age_range(self, age_from, age_to):
+        """
+        Validate age range values (age at time of visit).
+        """
+        if age_from is None and age_to is None:
+            return
+
+        for label, val in [("age_from", age_from), ("age_to", age_to)]:
+            if val is not None:
+                try:
+                    age_val = int(val)
+                    if age_val < 0 or age_val > 150:
+                        raise serializers.ValidationError(f"{label} must be between 0 and 150")
+                except (ValueError, TypeError):
+                    raise serializers.ValidationError(f"{label} must be a valid integer")
+
+        if age_from is not None and age_to is not None:
+            if int(age_from) > int(age_to):
+                raise serializers.ValidationError("age_from cannot be greater than age_to")
 
     def validate_sort(self, value):
         """

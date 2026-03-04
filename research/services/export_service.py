@@ -7,6 +7,7 @@ ensuring consistent formatting and enabling audit logging.
 
 import csv
 import io
+import os
 import zipfile
 from datetime import datetime
 from typing import Any
@@ -81,11 +82,15 @@ class ExportService:
             writer.writerows(sanitized_data)
         return output.getvalue()
 
+    # Path to dataset documentation PDF (relative to backend project root)
+    DOCUMENTATION_PDF_FILENAME = "Observer Dataset Documentation.pdf"
+
     def generate_zip(
         self,
         tables_data: dict[str, list[dict[str, Any]]],
         include_docs: bool = False,
         table_headers: dict[str, list[str]] | None = None,
+        documentation_pdf_path: str | None = None,
     ) -> bytes:
         """
         Generate ZIP file with multiple CSV files.
@@ -95,6 +100,7 @@ class ExportService:
             include_docs: Whether to include documentation README
             table_headers: Optional dict mapping table_id to list of column names
                           (used to generate headers for empty tables)
+            documentation_pdf_path: Optional path to the dataset documentation PDF
 
         Returns:
             ZIP file as bytes
@@ -112,6 +118,10 @@ class ExportService:
             if include_docs:
                 readme_content = self._generate_readme(tables_data)
                 zf.writestr("README.txt", readme_content)
+
+            # Include dataset documentation PDF if available
+            if documentation_pdf_path and os.path.isfile(documentation_pdf_path):
+                zf.write(documentation_pdf_path, self.DOCUMENTATION_PDF_FILENAME)
 
         buffer.seek(0)
         return buffer.getvalue()
@@ -148,6 +158,22 @@ class ExportService:
                 "-" * 40,
                 f"Total records: {total_records}",
                 f"Total tables: {len(tables_data)}",
+                "",
+                "ID RELATIONSHIPS",
+                "-" * 40,
+                "The following ID columns link records across tables:",
+                "",
+                "  Person table:",
+                "    'id' is the primary key (referenced as 'person_id' in other tables)",
+                "",
+                "  Provider table:",
+                "    'id' is the primary key (referenced as 'provider_id' in other tables)",
+                "",
+                "  VisitOccurrence table:",
+                "    'id' is the primary key (referenced as 'visit_occurrence_id' in other tables)",
+                "",
+                "  Example: To join Person with VisitOccurrence,",
+                "           match Person.id = VisitOccurrence.person_id",
                 "",
                 "NOTICE",
                 "-" * 40,

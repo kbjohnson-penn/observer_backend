@@ -22,6 +22,7 @@ from research.models import (
     VisitOccurrence,
 )
 from shared.api.permissions import BaseAuthenticatedViewSet, filter_queryset_by_user_tier
+from shared.constants import MAX_COHORT_DATA_VISITS
 
 
 class CohortDataViewSet(BaseAuthenticatedViewSet):
@@ -63,6 +64,20 @@ class CohortDataViewSet(BaseAuthenticatedViewSet):
             # 3. Get filtered visits using cohort's saved filters
             queryset = self._get_base_queryset(request.user)
             queryset = self._apply_filters(queryset, cohort.filters or {})
+
+            # 4. Guard against loading too much data into memory
+            visit_count = queryset.count()
+            if visit_count > MAX_COHORT_DATA_VISITS:
+                return Response(
+                    {
+                        "detail": (
+                            f"Cohort contains {visit_count:,} visits, which exceeds "
+                            f"the maximum of {MAX_COHORT_DATA_VISITS:,}. "
+                            "Please refine your cohort filters."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
             # Get all visits as list of dicts
             visits = list(queryset.values())
