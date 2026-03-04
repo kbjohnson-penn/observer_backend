@@ -6,6 +6,7 @@ with tier-based access control, generating CSV/ZIP files, and logging
 each export for HIPAA compliance.
 """
 
+import os
 import re
 from typing import Optional
 
@@ -124,9 +125,17 @@ class ExportViewSet(ViewSet):
 
     permission_classes = [IsAuthenticated]
 
+    # Relative path from project BASE_DIR to the documentation PDF
+    DOCUMENTATION_PDF_RELATIVE_PATH = os.path.join("dumps", "Observer Dataset Documentation.pdf")
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.export_service = ExportService()
+
+    def _get_documentation_pdf_path(self) -> str | None:
+        """Resolve the path to the dataset documentation PDF, or None if not found."""
+        pdf_path = os.path.join(settings.BASE_DIR, self.DOCUMENTATION_PDF_RELATIVE_PATH)
+        return pdf_path if os.path.isfile(pdf_path) else None
 
     def _validate_cohort_id(self, cohort_id) -> tuple[Optional[int], Optional[Response]]:
         """Validate cohort_id parameter. Returns (validated_id, error_response)."""
@@ -223,7 +232,10 @@ class ExportViewSet(ViewSet):
         # Generate export
         if include_docs:
             content = self.export_service.generate_zip(
-                {table_id: data}, include_docs=True, table_headers=table_headers
+                {table_id: data},
+                include_docs=True,
+                table_headers=table_headers,
+                documentation_pdf_path=self._get_documentation_pdf_path(),
             )
             content_type = "application/zip"
             filename = f"{table_id}_export.zip"
@@ -291,7 +303,12 @@ class ExportViewSet(ViewSet):
         table_headers = self._get_table_headers(all_table_ids)
 
         # Generate export
-        content = self.export_service.generate_zip(tables_data, include_docs, table_headers)
+        content = self.export_service.generate_zip(
+            tables_data,
+            include_docs,
+            table_headers,
+            documentation_pdf_path=self._get_documentation_pdf_path(),
+        )
 
         # Log audit trail
         event_type = "EXPORT_ALL_TABLES_WITH_DOCS" if include_docs else "EXPORT_ALL_TABLES_CSV"

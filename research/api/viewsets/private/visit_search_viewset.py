@@ -3,7 +3,7 @@ Visit search viewset with JSON body-based filtering.
 Handles complex filtering across visit, demographic, and clinical data.
 """
 
-from django.db.models import Count, Q
+from django.db.models import Count, F, Q
 
 from rest_framework import status as http_status
 from rest_framework.response import Response
@@ -13,7 +13,13 @@ from research.api.serializers import VisitSearchResultSerializer
 from research.api.serializers.filter_serializer import FilterSerializer
 from research.models import VisitOccurrence
 from shared.api.permissions import BaseAuthenticatedViewSet, filter_queryset_by_user_tier
-from shared.constants import NULL_MARKER
+from shared.constants import (
+    NULL_MARKER,
+    SIMCENTER_PATIENT_ID_LOWER_LIMIT,
+    SIMCENTER_PATIENT_ID_UPPER_LIMIT,
+    SIMCENTER_PROVIDER_ID_LOWER_LIMIT,
+    SIMCENTER_PROVIDER_ID_UPPER_LIMIT,
+)
 
 
 class VisitSearchViewSet(BaseAuthenticatedViewSet):
@@ -212,9 +218,16 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
         """
         Apply demographic filters (via Person table join).
         Handles NULL_MARKER to include records with NULL values.
+        Excludes SimCenter patients when any demographic filter is active.
         """
         if not demo_filters:
             return queryset
+
+        # Exclude SimCenter patients when any demographic filter is active
+        queryset = queryset.exclude(
+            person_id__gte=SIMCENTER_PATIENT_ID_LOWER_LIMIT,
+            person_id__lte=SIMCENTER_PATIENT_ID_UPPER_LIMIT,
+        )
 
         # Gender filter (multi-select, supports NULL_MARKER)
         queryset = self._apply_demographic_filter_with_null(
@@ -231,7 +244,18 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
             queryset, demo_filters.get("ethnicity"), "person__ethnicity_source_value"
         )
 
-        # Year of birth range
+        # Age at time of visit (computed as visit_year - year_of_birth)
+        if demo_filters.get("age_from") is not None or demo_filters.get("age_to") is not None:
+            queryset = queryset.exclude(person__year_of_birth__isnull=True)
+            queryset = queryset.annotate(
+                _patient_age_at_visit=F("visit_start_date__year") - F("person__year_of_birth")
+            )
+            if demo_filters.get("age_from") is not None:
+                queryset = queryset.filter(_patient_age_at_visit__gte=demo_filters["age_from"])
+            if demo_filters.get("age_to") is not None:
+                queryset = queryset.filter(_patient_age_at_visit__lte=demo_filters["age_to"])
+
+        # Year of birth range (backward compatibility)
         if demo_filters.get("year_of_birth_from"):
             queryset = queryset.filter(
                 person__year_of_birth__gte=demo_filters["year_of_birth_from"]
@@ -246,9 +270,16 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
         """
         Apply provider demographic filters (via Provider table join).
         Handles NULL_MARKER to include records with NULL values.
+        Excludes SimCenter providers when any demographic filter is active.
         """
         if not provider_demo_filters:
             return queryset
+
+        # Exclude SimCenter providers when any demographic filter is active
+        queryset = queryset.exclude(
+            provider_id__gte=SIMCENTER_PROVIDER_ID_LOWER_LIMIT,
+            provider_id__lte=SIMCENTER_PROVIDER_ID_UPPER_LIMIT,
+        )
 
         # Provider gender filter (multi-select, supports NULL_MARKER)
         queryset = self._apply_demographic_filter_with_null(
@@ -265,7 +296,25 @@ class VisitSearchViewSet(BaseAuthenticatedViewSet):
             queryset, provider_demo_filters.get("ethnicity"), "provider__ethnicity_source_value"
         )
 
-        # Provider year of birth range
+        # Age at time of visit (computed as visit_year - year_of_birth)
+        if (
+            provider_demo_filters.get("age_from") is not None
+            or provider_demo_filters.get("age_to") is not None
+        ):
+            queryset = queryset.exclude(provider__year_of_birth__isnull=True)
+            queryset = queryset.annotate(
+                _provider_age_at_visit=F("visit_start_date__year") - F("provider__year_of_birth")
+            )
+            if provider_demo_filters.get("age_from") is not None:
+                queryset = queryset.filter(
+                    _provider_age_at_visit__gte=provider_demo_filters["age_from"]
+                )
+            if provider_demo_filters.get("age_to") is not None:
+                queryset = queryset.filter(
+                    _provider_age_at_visit__lte=provider_demo_filters["age_to"]
+                )
+
+        # Provider year of birth range (backward compatibility)
         if provider_demo_filters.get("year_of_birth_from"):
             queryset = queryset.filter(
                 provider__year_of_birth__gte=provider_demo_filters["year_of_birth_from"]
