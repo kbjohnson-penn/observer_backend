@@ -49,7 +49,7 @@ lint:
 	@echo "Running flake8..."
 	$(PYTHON) -m flake8 .
 	@echo "Running pylint..."
-	@$(PYTHON) -m pylint accounts/ clinical/ research/ shared/ backend/; \
+	@$(PYTHON) -m pylint accounts/ clinical/ research/ search/ shared/ backend/; \
 	PYLINT_EXIT=$$?; \
 	if [ $$PYLINT_EXIT -eq 1 ] || [ $$PYLINT_EXIT -eq 32 ]; then \
 		echo "✗ Pylint found fatal errors"; \

@@ -4,6 +4,18 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from clinical.models import Encounter, Patient, Provider
 
 
+def get_user_tier(user) -> int | None:
+    """
+    Returns the authenticated user's tier level (1-5), or None if not assigned.
+    Superusers always return None — the caller should skip tier filtering for them.
+    """
+    if user.is_superuser:
+        return None
+    if hasattr(user, "profile") and user.profile and user.profile.tier:
+        return user.profile.tier.level
+    return None
+
+
 def filter_queryset_by_user_tier(queryset, user, related_field="tier_level"):
     """
     Filters a queryset based on the user's tier level.
@@ -29,9 +41,14 @@ def filter_queryset_by_user_tier(queryset, user, related_field="tier_level"):
 
     if hasattr(user, "profile") and user.profile.tier:
         user_tier_level = user.profile.tier.level
-        # User can access data with tier_level <= their tier level
-        filter_kwargs = {f"{related_field}__lte": user_tier_level}
-        return queryset.filter(**filter_kwargs)
+        # User can access data with 0 < tier_level <= their tier level
+        # tier_level=0 means unassigned — hidden from all non-superusers
+        return queryset.filter(
+            **{
+                f"{related_field}__gt": 0,
+                f"{related_field}__lte": user_tier_level,
+            }
+        )
 
     return queryset.none()
 

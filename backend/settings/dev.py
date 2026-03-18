@@ -72,6 +72,9 @@ DATABASES["research"]["TEST"] = {
     "DEPENDENCIES": [],
 }
 
+# Elasticsearch - point to Docker service name in dev
+ELASTICSEARCH_HOST = config("ELASTICSEARCH_HOST", default="http://elasticsearch:9200")
+
 # Development logging
 LOGGING = {
     "version": 1,

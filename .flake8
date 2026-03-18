@@ -51,6 +51,8 @@ per-file-ignores =
     research/api/viewsets/private/visit_search_viewset.py:C901
     # Time validation with multiple format checks
     shared/validators.py:C901
+    # Multi-model data gathering for ES sync — complexity is inherent to the number of models
+    search/management/commands/sync_elasticsearch.py:C901
 
 # Maximum cyclomatic complexity (informational - specific files ignored above)
 max-complexity = 10
