@@ -41,6 +41,7 @@ class VisitOccurrence(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(5)],
         help_text="Tier level (1-5) for data access control. Higher levels can access lower tier data.",
     )
+    department = models.CharField(max_length=255, blank=True, default="")
 
     def __str__(self):
         return f"Visit Occurrence {self.id}"

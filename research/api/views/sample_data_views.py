@@ -228,7 +228,7 @@ class PublicVideoStreamView(APIView):
         response["Cache-Control"] = "public, max-age=3600"
         return response
 
-    def head(self, request, file_path):
+    def head(self, request, file_path):  # pylint: disable=method-hidden
         """Handle HEAD requests for file size checking."""
         try:
             full_path, file_size, content_type = self._get_file_info(file_path)

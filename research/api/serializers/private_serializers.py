@@ -63,6 +63,7 @@ class VisitOccurrenceSerializer(serializers.ModelSerializer):
             "visit_source_value",
             "visit_source_id",
             "tier_level",
+            "department",
             "person_id",
             "provider_id",
         ]
@@ -79,8 +80,6 @@ class NoteSerializer(serializers.ModelSerializer):
             "note_text",
             "note_type",
             "note_status",
-            "person_id",
-            "provider_id",
             "visit_occurrence_id",
         ]
 

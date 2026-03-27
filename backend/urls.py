@@ -29,6 +29,7 @@ v1_patterns = (
         path("accounts/", include("accounts.api.urls")),
         path("clinical/", include("clinical.api.urls")),
         path("research/", include("research.api.urls")),
+        path("search/", include("search.api.urls")),
     ],
     "v1",
 )

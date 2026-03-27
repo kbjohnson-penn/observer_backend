@@ -54,6 +54,7 @@ RATE_LIMITS = {
     "TOKEN_REFRESH": config("RATE_LIMIT_TOKEN_REFRESH", default="30/m"),
     "TOKEN_VERIFY": config("RATE_LIMIT_TOKEN_VERIFY", default="30/m"),
     "DATA_EXPORT": config("RATE_LIMIT_DATA_EXPORT", default="10/m"),
+    "SEARCH": config("RATE_LIMIT_SEARCH", default="30/m"),
 }
 
 # Application definition
@@ -67,6 +68,7 @@ INSTALLED_APPS = [
     "accounts",
     "clinical",
     "research",
+    "search",
     "shared",
     "rest_framework",
     "corsheaders",
@@ -167,6 +169,15 @@ DATABASES = {
 
 # Database routing
 DATABASE_ROUTERS = ["shared.db_router.DatabaseRouter"]
+
+# Elasticsearch configuration
+ELASTICSEARCH_HOST = config("ELASTICSEARCH_HOST", default="http://localhost:9200")
+ELASTICSEARCH_INDEX_ENCOUNTERS = config(
+    "ELASTICSEARCH_INDEX_ENCOUNTERS", default="observer-encounters"
+)
+ELASTICSEARCH_INDEX_TEXTS = config("ELASTICSEARCH_INDEX_TEXTS", default="observer-texts")
+ELASTICSEARCH_TIMEOUT = config("ELASTICSEARCH_TIMEOUT", default=30, cast=int)
+SEARCH_FEATURES = {"semantic_enabled": False}
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
