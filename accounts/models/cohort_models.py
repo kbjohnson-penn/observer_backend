@@ -2,8 +2,13 @@
 Cohort model for saving user's research filter configurations.
 
 A cohort represents a saved set of filter criteria that a user can reuse
-for querying research data. This allows researchers to save interesting
-filter combinations for repeated analysis.
+for querying research data. Cohorts can originate from two sources:
+
+- **research**: Dashboard research tab (nested VisitSearchFilters format)
+- **search**: Encounter Search page (flat EncounterSearchFilters format)
+
+Optionally, a cohort may store explicit encounter IDs instead of (or in
+addition to) filter criteria, enabling users to hand-pick specific visits.
 """
 
 from django.conf import settings
@@ -14,18 +19,11 @@ class Cohort(models.Model):
     """
     Represents a saved cohort (filtered set of visits) for research purposes.
 
-    A cohort captures a specific filter configuration and the number of visits
-    that matched those filters at creation time. This allows researchers to:
-    - Save interesting subsets of data for later analysis
-    - Share filter configurations with colleagues
-    - Track which data subsets are being used in research
+    A cohort can be created from two sources:
+    - **research**: Dashboard research tab — filters stored in nested VisitSearchFilters format
+    - **search**: Encounter Search page — filters stored in flat EncounterSearchFilters format
 
-    Relationships:
-        - user: The researcher who created this cohort (ForeignKey to User)
-
-    Filter Storage:
-        - filters: JSON field storing VisitSearchFilters structure
-        - Supports nested filters: visit, person_demographics, provider_demographics, clinical
+    Optionally stores ``encounter_ids`` for hand-picked visit selections.
 
     Database:
         Routed to 'accounts' database via DatabaseRouter (same as User model).
@@ -48,8 +46,42 @@ class Cohort(models.Model):
         blank=True, default="", help_text="Optional description of the cohort's purpose"
     )
 
+    # Source discriminator
+    SOURCE_RESEARCH = "research"
+    SOURCE_SEARCH = "search"
+    SOURCE_CHOICES = [
+        (SOURCE_RESEARCH, "Research Tab"),
+        (SOURCE_SEARCH, "Encounter Search"),
+    ]
+    source = models.CharField(
+        max_length=20,
+        choices=SOURCE_CHOICES,
+        default=SOURCE_RESEARCH,
+        help_text="Origin of the cohort: 'research' for nested filters, 'search' for flat ES filters",
+    )
+
     # Filter Configuration (JSON)
-    filters = models.JSONField(help_text="VisitSearchFilters structure as JSON")
+    filters = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Filter criteria as JSON (format depends on source field)",
+    )
+
+    # Optional: explicit encounter IDs (for hand-picked cohorts)
+    encounter_ids = models.JSONField(
+        null=True,
+        blank=True,
+        default=None,
+        help_text="Optional list of encounter ID strings. When set, overrides filter-based lookup.",
+    )
+
+    # Free-text query captured from Encounter Search
+    search_query = models.CharField(
+        max_length=500,
+        blank=True,
+        default="",
+        help_text="Free-text search query (only used when source='search')",
+    )
 
     # Metadata
     visit_count = models.IntegerField(
@@ -65,6 +97,7 @@ class Cohort(models.Model):
         indexes = [
             models.Index(fields=["user", "-created_at"]),
             models.Index(fields=["name"]),
+            models.Index(fields=["source"]),
         ]
 
     def __str__(self):
